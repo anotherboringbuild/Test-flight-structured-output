@@ -203,6 +203,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save document to database
       console.log("Saving to database...");
+      const documentData = {
+        name: file.originalname,
+        fileType,
+        filePath: file.path,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        folderId: folderId || null,
+        isProcessed: true,
+        extractedText,
+        structuredData,
+      };
       console.log("Document data:", {
         name: file.originalname,
         fileType,
@@ -213,19 +223,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         structuredDataKeys: Object.keys(structuredData || {}),
       });
       
-      const document = await storage.createDocument({
-        name: file.originalname,
-        fileType,
-        filePath: file.path,
-        size: `${(file.size / 1024).toFixed(2)} KB`,
-        folderId: folderId || null,
-        isProcessed: true,
-        extractedText,
-        structuredData,
-      }).catch((dbError) => {
-        console.error("Database save error:", dbError);
+      let document;
+      try {
+        console.log("Calling storage.createDocument...");
+        document = await storage.createDocument(documentData);
+        console.log("Document created successfully:", document.id);
+      } catch (dbError: any) {
+        console.error("=== DATABASE SAVE ERROR ===");
+        console.error("Error name:", dbError.name);
+        console.error("Error message:", dbError.message);
+        console.error("Error stack:", dbError.stack);
+        console.error("Full error:", JSON.stringify(dbError, null, 2));
         throw new Error(`Database error: ${dbError.message}`);
-      });
+      }
 
       // Remove filePath from response for security
       const { filePath: _, ...safeDocument } = document;
