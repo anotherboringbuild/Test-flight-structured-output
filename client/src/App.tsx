@@ -75,10 +75,7 @@ function AppContent() {
   // Update document mutation
   const updateDocumentMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest(`/api/documents/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ structuredData: data }),
-      });
+      return await apiRequest("PATCH", `/api/documents/${id}`, { structuredData: data });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
@@ -164,7 +161,8 @@ function AppContent() {
   // Format documents for sidebar
   const formattedDocuments = documents.map((doc) => ({
     ...doc,
-    date: formatDate(doc.createdAt),
+    fileType: doc.fileType as "docx" | "pdf" | "pages",
+    date: formatDate(doc.createdAt.toString()),
   }));
 
   // Calculate folder counts
