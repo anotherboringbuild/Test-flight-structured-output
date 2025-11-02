@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Download, Edit } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit, Loader2 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,6 +10,7 @@ interface ComparisonViewProps {
   documentName: string;
   extractedText: string;
   structuredData: string;
+  isProcessing?: boolean;
   onBack: () => void;
   onExport: () => void;
   onSave?: (newData: string) => void;
@@ -19,6 +20,7 @@ export function ComparisonView({
   documentName,
   extractedText,
   structuredData,
+  isProcessing = false,
   onBack,
   onExport,
   onSave,
@@ -64,12 +66,17 @@ export function ComparisonView({
                 {documentName}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Side-by-side comparison
+                Document to JSON extraction
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {isProcessing ? (
+              <Badge variant="secondary" className="gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Processing...
+              </Badge>
+            ) : isEditing ? (
               <>
                 <Button
                   variant="outline"
@@ -117,8 +124,8 @@ export function ComparisonView({
         <div className="border-r">
           <div className="border-b bg-muted/30 px-6 py-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">Original Text</h3>
-              <Badge variant="secondary">Extracted</Badge>
+              <h3 className="font-medium">Original Document</h3>
+              <Badge variant="secondary">Extracted Text</Badge>
             </div>
           </div>
           <ScrollArea className="h-[calc(100vh-12rem)]">
@@ -133,8 +140,8 @@ export function ComparisonView({
         <div>
           <div className="border-b bg-muted/30 px-6 py-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">Structured Data</h3>
-              <Badge variant="default">JSON</Badge>
+              <h3 className="font-medium">Product JSON Output</h3>
+              <Badge variant="default">Structured</Badge>
             </div>
           </div>
           <div className="h-[calc(100vh-12rem)]">
@@ -155,7 +162,7 @@ export function ComparisonView({
               />
             ) : (
               <ScrollArea className="h-full">
-                <pre className="p-6 font-mono text-xs" data-testid="text-structured">
+                <pre className="p-6 font-mono text-xs leading-relaxed" data-testid="text-structured">
                   {editedData}
                 </pre>
               </ScrollArea>

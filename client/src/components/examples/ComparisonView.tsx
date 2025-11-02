@@ -2,49 +2,47 @@ import { ComparisonView } from "../ComparisonView";
 import { Toaster } from "@/components/ui/toaster";
 
 export default function ComparisonViewExample() {
-  const mockExtractedText = `Annual Report 2024
+  const mockExtractedText = `iPhone 15 Pro - Product Specifications
 
-Executive Summary
-This year has been marked by significant growth and expansion across all business units...
+The most advanced iPhone ever created. Experience the power of A17 Pro chip with breakthrough performance and efficiency.
 
-Financial Overview
-Revenue increased by 24% year-over-year, reaching $150 million in total sales...
+Key Features:
+• Titanium design - Stronger. Lighter. More Pro.
+• A17 Pro chip with 6-core GPU
+• ProMotion display with 120Hz refresh rate
+• Advanced 48MP camera system
+• All-day battery life
+• Action button for quick shortcuts
+• USB-C connectivity
 
-Market Analysis
-Our market share has grown from 15% to 22% in the past year...`;
+Legal Information:
+• Display has rounded corners
+• Battery life varies by use
+• Available space is less than total capacity
+• 5G available in select markets
+• Some features may not be available for all countries`;
 
   const mockStructuredData = JSON.stringify(
     {
-      documentType: "Annual Report",
-      year: 2024,
-      sections: [
-        {
-          heading: "Executive Summary",
-          content:
-            "This year has been marked by significant growth and expansion across all business units...",
-          order: 1,
-        },
-        {
-          heading: "Financial Overview",
-          content:
-            "Revenue increased by 24% year-over-year, reaching $150 million in total sales...",
-          order: 2,
-          metrics: {
-            revenue: "$150M",
-            growth: "24%",
-          },
-        },
-        {
-          heading: "Market Analysis",
-          content:
-            "Our market share has grown from 15% to 22% in the past year...",
-          order: 3,
-          metrics: {
-            marketShare: "22%",
-            previousShare: "15%",
-          },
-        },
+      officialProductName: "iPhone 15 Pro",
+      featureCopy: "The most advanced iPhone ever created. Experience the power of A17 Pro chip with breakthrough performance and efficiency.",
+      featureBullets: [
+        "Titanium design - Stronger. Lighter. More Pro.",
+        "A17 Pro chip with 6-core GPU",
+        "ProMotion display with 120Hz refresh rate",
+        "Advanced 48MP camera system",
+        "All-day battery life",
+        "Action button for quick shortcuts",
+        "USB-C connectivity"
       ],
+      legalBullets: [
+        "Display has rounded corners",
+        "Battery life varies by use",
+        "Available space is less than total capacity",
+        "5G available in select markets",
+        "Some features may not be available for all countries"
+      ],
+      advertisingCopy: "Experience the power of A17 Pro chip with breakthrough performance and efficiency in the most advanced iPhone ever created."
     },
     null,
     2
@@ -54,7 +52,7 @@ Our market share has grown from 15% to 22% in the past year...`;
     <>
       <div className="h-screen">
         <ComparisonView
-          documentName="Annual Report 2024.docx"
+          documentName="iPhone 15 Pro Specs.docx"
           extractedText={mockExtractedText}
           structuredData={mockStructuredData}
           onBack={() => console.log("Back clicked")}
