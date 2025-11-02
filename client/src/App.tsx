@@ -41,22 +41,36 @@ function AppContent() {
   // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log("Starting upload for file:", file.name);
       const formData = new FormData();
       formData.append("file", file);
       
+      console.log("Sending POST to /api/documents/upload");
       const response = await fetch("/api/documents/upload", {
         method: "POST",
         body: formData,
       });
 
+      console.log("Response status:", response.status);
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Upload failed");
+        const errorText = await response.text();
+        console.error("Upload failed with error:", errorText);
+        let errorMessage = "Upload failed";
+        try {
+          const error = JSON.parse(errorText);
+          errorMessage = error.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log("Upload successful:", result);
+      return result;
     },
     onSuccess: () => {
+      console.log("Upload mutation onSuccess called");
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       toast({
         title: "Success",
@@ -64,6 +78,7 @@ function AppContent() {
       });
     },
     onError: (error: Error) => {
+      console.error("Upload mutation onError called:", error);
       toast({
         title: "Upload failed",
         description: error.message,
