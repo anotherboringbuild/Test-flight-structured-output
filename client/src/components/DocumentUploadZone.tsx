@@ -14,7 +14,11 @@ export function DocumentUploadZone({
   disabled = false,
 }: DocumentUploadZoneProps) {
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    (acceptedFiles: File[], rejectedFiles: any[]) => {
+      console.log("onDrop called - accepted:", acceptedFiles.length, "rejected:", rejectedFiles.length);
+      if (rejectedFiles.length > 0) {
+        console.log("Rejected files:", rejectedFiles);
+      }
       onFilesSelected(acceptedFiles);
     },
     [onFilesSelected]

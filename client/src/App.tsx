@@ -89,12 +89,24 @@ function AppContent() {
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
+    console.log("handleUpload called with files:", files);
+    
+    if (!files || files.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select a .docx or .pdf file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     toast({
       title: "Processing",
       description: `Uploading and processing ${files.length} file(s) with AI...`,
     });
 
     for (const file of files) {
+      console.log("Uploading file:", file.name, file.type);
       await uploadMutation.mutateAsync(file);
     }
   };
