@@ -1,5 +1,5 @@
 import { type Document, type InsertDocument, type Folder, type InsertFolder } from "@shared/schema";
-import { db } from "@db";
+import { db } from "./db";
 import { documents, folders } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
