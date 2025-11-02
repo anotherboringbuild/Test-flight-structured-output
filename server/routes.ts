@@ -178,22 +178,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
+    console.log("=== UPLOAD REQUEST RECEIVED ===");
+    console.log("File:", req.file?.originalname);
     try {
       if (!req.file) {
+        console.log("ERROR: No file in request");
         return res.status(400).json({ error: "No file uploaded" });
       }
 
       const { folderId } = req.body;
       const file = req.file;
       const fileType = file.originalname.split(".").pop()?.toLowerCase() || "";
+      console.log("File type:", fileType, "Size:", file.size, "bytes");
 
       // Extract text from the uploaded file
+      console.log("Starting text extraction...");
       const extractedText = await extractTextFromFile(file.path, fileType);
+      console.log("Text extracted, length:", extractedText.length, "characters");
 
       // Process with GPT-5
+      console.log("Sending to OpenAI for processing...");
       const structuredData = await processWithGPT5(extractedText);
+      console.log("OpenAI processing complete");
 
       // Save document to database
+      console.log("Saving to database...");
       const document = await storage.createDocument({
         name: file.originalname,
         fileType,
@@ -207,9 +216,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Remove filePath from response for security
       const { filePath: _, ...safeDocument } = document;
+      console.log("=== UPLOAD COMPLETE ===", "Document ID:", document.id);
       res.json(safeDocument);
     } catch (error) {
-      console.error("Error uploading document:", error);
+      console.error("=== UPLOAD ERROR ===", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to upload document" });
     }
   });
