@@ -41,8 +41,8 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  folders,
-  documents,
+  folders = [],
+  documents = [],
   currentView,
   selectedDocumentId,
   onViewChange,

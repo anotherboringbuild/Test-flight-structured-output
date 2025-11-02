@@ -1,203 +1,105 @@
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider, useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { DocumentUploadZone } from "@/components/DocumentUploadZone";
 import { ComparisonView } from "@/components/ComparisonView";
-import { ApiKeyModal } from "@/components/ApiKeyModal";
 import { ExportModal } from "@/components/ExportModal";
 import { useToast } from "@/hooks/use-toast";
+import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
-interface Document {
-  id: string;
-  name: string;
-  fileType: "docx" | "pdf" | "pages";
-  date: string;
-  isProcessed: boolean;
-  extractedText?: string;
-  structuredData?: string;
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-interface Folder {
-  id: string;
-  name: string;
-  count: number;
-}
-
-function App() {
+function AppContent() {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState("");
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
   const [currentView, setCurrentView] = useState("upload");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-  const [exportingDocument, setExportingDocument] = useState<Document | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportingDocument, setExportingDocument] = useState<DocumentType | null>(null);
 
-  const [folders] = useState<Folder[]>([
-    { id: "1", name: "Product Specs", count: 2 },
-    { id: "2", name: "Marketing", count: 1 },
-  ]);
+  // Fetch documents
+  const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<DocumentType[]>({
+    queryKey: ["/api/documents"],
+  });
 
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: "1",
-      name: "iPhone 15 Pro Specs.docx",
-      fileType: "docx",
-      date: "Nov 2, 2025",
-      isProcessed: true,
-      extractedText: `iPhone 15 Pro - Product Specifications
+  // Fetch folders
+  const { data: folders = [], isLoading: isLoadingFolders } = useQuery<FolderType[]>({
+    queryKey: ["/api/folders"],
+  });
 
-The most advanced iPhone ever created. Experience the power of A17 Pro chip with breakthrough performance and efficiency.
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-Key Features:
-• Titanium design - Stronger. Lighter. More Pro.
-• A17 Pro chip with 6-core GPU delivering console-quality gaming
-• ProMotion display with 120Hz adaptive refresh rate
-• Advanced 48MP camera system with 5x telephoto lens
-• All-day battery life with up to 29 hours video playback
-• Customizable Action button for quick shortcuts
-• USB-C connectivity with USB 3 speeds
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Upload failed");
+      }
 
-Technical Specifications:
-• Display: 6.1-inch Super Retina XDR display
-• Storage options: 128GB, 256GB, 512GB, 1TB
-• 5G capable (sub-6 GHz and mmWave)
-• Face ID for secure authentication
-• Emergency SOS via satellite
-• Crash Detection
-
-Legal Information:
-• Display has rounded corners that follow a beautiful curved design
-• Battery life varies by use and configuration
-• Actual storage capacity available is less than total capacity
-• 5G available in select markets; check with carrier for availability
-• Some features may not be available for all countries or regions
-• Accessories sold separately
-• Screen size measured diagonally`,
-      structuredData: JSON.stringify(
-        {
-          officialProductName: "iPhone 15 Pro",
-          featureCopy: "The most advanced iPhone ever created. Experience the power of A17 Pro chip with breakthrough performance and efficiency.",
-          featureBullets: [
-            "Titanium design - Stronger. Lighter. More Pro.",
-            "A17 Pro chip with 6-core GPU delivering console-quality gaming",
-            "ProMotion display with 120Hz adaptive refresh rate",
-            "Advanced 48MP camera system with 5x telephoto lens",
-            "All-day battery life with up to 29 hours video playback",
-            "Customizable Action button for quick shortcuts",
-            "USB-C connectivity with USB 3 speeds",
-            "6.1-inch Super Retina XDR display",
-            "Storage options: 128GB, 256GB, 512GB, 1TB",
-            "5G capable (sub-6 GHz and mmWave)",
-            "Face ID for secure authentication",
-            "Emergency SOS via satellite",
-            "Crash Detection"
-          ],
-          legalBullets: [
-            "Display has rounded corners that follow a beautiful curved design",
-            "Battery life varies by use and configuration",
-            "Actual storage capacity available is less than total capacity",
-            "5G available in select markets; check with carrier for availability",
-            "Some features may not be available for all countries or regions",
-            "Accessories sold separately",
-            "Screen size measured diagonally"
-          ],
-          advertisingCopy: "Experience the power of A17 Pro chip with breakthrough performance and efficiency in the most advanced iPhone ever created. With titanium design and professional-grade camera capabilities, iPhone 15 Pro redefines what's possible."
-        },
-        null,
-        2
-      ),
+      return response.json();
     },
-    {
-      id: "2",
-      name: "MacBook Air M3.pdf",
-      fileType: "pdf",
-      date: "Nov 1, 2025",
-      isProcessed: true,
-      extractedText: `MacBook Air with M3 Chip
-
-Supercharged by the M3 chip. The world's best-selling laptop just got even better.
-
-Key Features:
-• M3 chip with 8-core CPU and up to 10-core GPU
-• Up to 18 hours of battery life
-• 13.6-inch Liquid Retina display with 500 nits of brightness
-• 1080p FaceTime HD camera
-• Four-speaker sound system with Spatial Audio
-• MagSafe charging port
-• Two Thunderbolt ports
-
-Performance:
-• Up to 60% faster than M1
-• Supports up to two external displays
-• 8GB or 16GB unified memory options
-• Fanless design for silent operation
-
-Legal:
-• Battery life varies by use
-• Display size is measured diagonally
-• Actual diagonal screen measure is 13.6 inches
-• Testing conducted by Apple in February 2024`,
-      structuredData: JSON.stringify(
-        {
-          officialProductName: "MacBook Air with M3 Chip",
-          featureCopy: "Supercharged by the M3 chip. The world's best-selling laptop just got even better.",
-          featureBullets: [
-            "M3 chip with 8-core CPU and up to 10-core GPU",
-            "Up to 18 hours of battery life",
-            "13.6-inch Liquid Retina display with 500 nits of brightness",
-            "1080p FaceTime HD camera",
-            "Four-speaker sound system with Spatial Audio",
-            "MagSafe charging port",
-            "Two Thunderbolt ports",
-            "Up to 60% faster than M1",
-            "Supports up to two external displays",
-            "8GB or 16GB unified memory options",
-            "Fanless design for silent operation"
-          ],
-          legalBullets: [
-            "Battery life varies by use",
-            "Display size is measured diagonally",
-            "Actual diagonal screen measure is 13.6 inches",
-            "Testing conducted by Apple in February 2024"
-          ],
-          advertisingCopy: "The world's best-selling laptop just got even better. MacBook Air with M3 chip delivers up to 60% faster performance with up to 18 hours of battery life, all in a fanless design that stays perfectly silent."
-        },
-        null,
-        2
-      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Success",
+        description: "Document processed successfully",
+      });
     },
-    {
-      id: "3",
-      name: "AirPods Pro Brief.pages",
-      fileType: "pages",
-      date: "Oct 30, 2025",
-      isProcessed: false,
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
-  ]);
+  });
+
+  // Update document mutation
+  const updateDocumentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest(`/api/documents/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ structuredData: data }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Saved",
+        description: "Changes saved successfully",
+      });
+    },
+  });
 
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
-  const handleUpload = (files: File[]) => {
-    if (!apiKey) {
-      setShowApiKeyModal(true);
-      toast({
-        title: "API Key Required",
-        description: "Please configure your OpenAI API key to process documents.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleUpload = async (files: File[]) => {
     toast({
-      title: "Files uploaded",
-      description: `${files.length} file(s) are being processed with GPT-5...`,
+      title: "Processing",
+      description: `Uploading and processing ${files.length} file(s) with AI...`,
     });
-    console.log("Uploading files:", files);
+
+    for (const file of files) {
+      await uploadMutation.mutateAsync(file);
+    }
   };
 
   const handleDocumentClick = (id: string) => {
@@ -222,18 +124,20 @@ Legal:
   };
 
   const handleExport = (format: string, filename: string) => {
-    console.log(`Exporting as ${format}: ${filename}`);
+    if (!exportingDocument) return;
+
+    const dataStr = JSON.stringify(exportingDocument.structuredData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${filename}.${format}`;
+    link.click();
+    URL.revokeObjectURL(url);
+
     toast({
       title: "Export successful",
       description: `Document exported as ${filename}.${format}`,
-    });
-  };
-
-  const handleSaveApiKey = (key: string) => {
-    setApiKey(key);
-    toast({
-      title: "API Key saved",
-      description: "Your OpenAI API key has been saved securely.",
     });
   };
 
@@ -257,93 +161,122 @@ Legal:
     "--sidebar-width-icon": "3rem",
   };
 
+  // Format documents for sidebar
+  const formattedDocuments = documents.map((doc) => ({
+    ...doc,
+    date: formatDate(doc.createdAt),
+  }));
+
+  // Calculate folder counts
+  const foldersWithCounts = folders.map((folder) => ({
+    ...folder,
+    count: documents.filter((d) => d.folderId === folder.id).length,
+  }));
+
+  return (
+    <TooltipProvider>
+      <SidebarProvider style={style as React.CSSProperties}>
+        <div className="flex h-screen w-full">
+          <AppSidebar
+            folders={foldersWithCounts}
+            documents={formattedDocuments}
+            currentView={currentView}
+            selectedDocumentId={selectedDocumentId}
+            onViewChange={(view) => {
+              setCurrentView(view);
+              setSelectedDocumentId(null);
+            }}
+            onCreateFolder={handleCreateFolder}
+            onFolderClick={handleFolderClick}
+            onDocumentClick={handleDocumentClick}
+          />
+          <div className="flex flex-1 flex-col">
+            <div className="flex items-center gap-2 border-b px-4 py-2">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+            </div>
+            <TopBar
+              onSettingsClick={() => {
+                toast({
+                  title: "Settings",
+                  description: "OpenAI API key is configured via environment variables",
+                });
+              }}
+              hasApiKey={true}
+            />
+            <main className="flex-1 overflow-auto">
+              {selectedDocument ? (
+                <ComparisonView
+                  documentName={selectedDocument.name}
+                  extractedText={selectedDocument.extractedText || ""}
+                  structuredData={
+                    selectedDocument.structuredData
+                      ? JSON.stringify(selectedDocument.structuredData, null, 2)
+                      : ""
+                  }
+                  onBack={() => {
+                    setSelectedDocumentId(null);
+                    setCurrentView("upload");
+                  }}
+                  onExport={handleExportDocument}
+                  onSave={(newData) => {
+                    updateDocumentMutation.mutate({
+                      id: selectedDocument.id,
+                      data: JSON.parse(newData),
+                    });
+                  }}
+                />
+              ) : (
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      Upload Document
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Upload a product document to extract structured JSON data using AI
+                    </p>
+                  </div>
+                  <DocumentUploadZone
+                    onFilesSelected={handleUpload}
+                    disabled={uploadMutation.isPending}
+                  />
+                  {isLoadingDocuments && (
+                    <p className="mt-4 text-center text-sm text-muted-foreground">
+                      Loading documents...
+                    </p>
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+
+        {exportingDocument && (
+          <ExportModal
+            open={showExportModal}
+            onClose={() => {
+              setShowExportModal(false);
+              setExportingDocument(null);
+            }}
+            onExport={handleExport}
+            documentName={exportingDocument.name}
+            jsonData={
+              exportingDocument.structuredData
+                ? JSON.stringify(exportingDocument.structuredData, null, 2)
+                : "{}"
+            }
+          />
+        )}
+
+        <Toaster />
+      </SidebarProvider>
+    </TooltipProvider>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SidebarProvider style={style as React.CSSProperties}>
-          <div className="flex h-screen w-full">
-            <AppSidebar
-              folders={folders}
-              documents={documents}
-              currentView={currentView}
-              selectedDocumentId={selectedDocumentId}
-              onViewChange={(view) => {
-                setCurrentView(view);
-                setSelectedDocumentId(null);
-              }}
-              onCreateFolder={handleCreateFolder}
-              onFolderClick={handleFolderClick}
-              onDocumentClick={handleDocumentClick}
-            />
-            <div className="flex flex-1 flex-col">
-              <div className="flex items-center gap-2 border-b px-4 py-2">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
-              </div>
-              <TopBar
-                onSettingsClick={() => setShowApiKeyModal(true)}
-                hasApiKey={!!apiKey}
-              />
-              <main className="flex-1 overflow-auto">
-                {selectedDocument ? (
-                  <ComparisonView
-                    documentName={selectedDocument.name}
-                    extractedText={selectedDocument.extractedText || ""}
-                    structuredData={selectedDocument.structuredData || ""}
-                    onBack={() => {
-                      setSelectedDocumentId(null);
-                      setCurrentView("upload");
-                    }}
-                    onExport={handleExportDocument}
-                    onSave={(newData) => {
-                      setDocuments(
-                        documents.map((d) =>
-                          d.id === selectedDocument.id
-                            ? { ...d, structuredData: newData }
-                            : d
-                        )
-                      );
-                    }}
-                  />
-                ) : (
-                  <div className="p-8">
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-semibold tracking-tight">
-                        Upload Document
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Upload a product document to extract structured JSON data
-                      </p>
-                    </div>
-                    <DocumentUploadZone onFilesSelected={handleUpload} />
-                  </div>
-                )}
-              </main>
-            </div>
-          </div>
-
-          <ApiKeyModal
-            open={showApiKeyModal}
-            onClose={() => setShowApiKeyModal(false)}
-            onSave={handleSaveApiKey}
-            currentApiKey={apiKey}
-          />
-
-          {exportingDocument && (
-            <ExportModal
-              open={showExportModal}
-              onClose={() => {
-                setShowExportModal(false);
-                setExportingDocument(null);
-              }}
-              onExport={handleExport}
-              documentName={exportingDocument.name}
-              jsonData={exportingDocument.structuredData || "{}"}
-            />
-          )}
-
-          <Toaster />
-        </SidebarProvider>
-      </TooltipProvider>
+      <AppContent />
     </QueryClientProvider>
   );
 }
