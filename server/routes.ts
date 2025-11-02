@@ -203,6 +203,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save document to database
       console.log("Saving to database...");
+      console.log("Document data:", {
+        name: file.originalname,
+        fileType,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        folderId: folderId || null,
+        isProcessed: true,
+        extractedTextLength: extractedText.length,
+        structuredDataKeys: Object.keys(structuredData || {}),
+      });
+      
       const document = await storage.createDocument({
         name: file.originalname,
         fileType,
@@ -212,6 +222,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isProcessed: true,
         extractedText,
         structuredData,
+      }).catch((dbError) => {
+        console.error("Database save error:", dbError);
+        throw new Error(`Database error: ${dbError.message}`);
       });
 
       // Remove filePath from response for security
