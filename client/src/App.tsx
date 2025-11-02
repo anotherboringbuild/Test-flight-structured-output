@@ -122,7 +122,12 @@ function AppContent() {
 
     for (const file of files) {
       console.log("Uploading file:", file.name, file.type);
-      await uploadMutation.mutateAsync(file);
+      try {
+        await uploadMutation.mutateAsync(file);
+      } catch (error) {
+        console.error("Error in handleUpload:", error);
+        // Error toast is already shown by onError callback
+      }
     }
   };
 
