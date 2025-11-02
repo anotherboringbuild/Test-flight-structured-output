@@ -58,7 +58,6 @@ export function DocumentUploadZone({
           variant="outline"
           disabled={disabled}
           data-testid="button-browse"
-          onClick={(e) => e.stopPropagation()}
         >
           <FileText className="mr-2 h-4 w-4" />
           Choose Files
