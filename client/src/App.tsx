@@ -219,10 +219,19 @@ function AppContent() {
                   }}
                   onExport={handleExportDocument}
                   onSave={(newData) => {
-                    updateDocumentMutation.mutate({
-                      id: selectedDocument.id,
-                      data: JSON.parse(newData),
-                    });
+                    try {
+                      const parsedData = JSON.parse(newData);
+                      updateDocumentMutation.mutate({
+                        id: selectedDocument.id,
+                        data: parsedData,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Invalid JSON",
+                        description: "Please check your JSON syntax and try again.",
+                        variant: "destructive",
+                      });
+                    }
                   }}
                 />
               ) : (

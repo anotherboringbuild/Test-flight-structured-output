@@ -12,6 +12,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Schema for structured product data
+const structuredDataSchema = insertDocumentSchema.pick({ structuredData: true }).shape.structuredData;
+
 // Configure multer for file uploads
 const upload = multer({
   dest: "/tmp/uploads",
@@ -31,9 +34,9 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       const data = await pdfParseFunc(dataBuffer);
       return data.text;
     } else if (fileType === "pages") {
-      // Pages files are actually zip archives - for now we'll return a message
-      // In production, you'd need a more sophisticated parser
-      return "Pages file format requires specialized parsing. Please convert to PDF or DOCX.";
+      // Pages files are proprietary zip archives that require specialized parsing
+      // For production use, recommend converting to PDF or DOCX first
+      throw new Error("Pages format not supported. Please convert to PDF or DOCX format.");
     }
     throw new Error(`Unsupported file type: ${fileType}`);
   } catch (error) {
@@ -44,6 +47,8 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
 
 async function processWithGPT5(extractedText: string): Promise<any> {
   try {
+    // Note: Using gpt-4o as GPT-5 is not publicly available yet
+    // This is the most advanced model for structured JSON extraction
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -69,7 +74,23 @@ Extract all available information. If a field is not present in the text, use re
     });
 
     const content = response.choices[0].message.content;
-    return JSON.parse(content || "{}");
+    const parsedData = JSON.parse(content || "{}");
+    
+    // Validate the structure
+    if (!parsedData.officialProductName || !parsedData.featureCopy || 
+        !Array.isArray(parsedData.featureBullets) || !Array.isArray(parsedData.legalBullets) ||
+        !parsedData.advertisingCopy) {
+      console.warn("AI response missing required fields, using defaults");
+      return {
+        officialProductName: parsedData.officialProductName || "Unknown Product",
+        featureCopy: parsedData.featureCopy || "",
+        featureBullets: Array.isArray(parsedData.featureBullets) ? parsedData.featureBullets : [],
+        legalBullets: Array.isArray(parsedData.legalBullets) ? parsedData.legalBullets : [],
+        advertisingCopy: parsedData.advertisingCopy || "",
+      };
+    }
+    
+    return parsedData;
   } catch (error) {
     console.error("GPT processing error:", error);
     throw new Error("Failed to process document with AI");
@@ -131,7 +152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documents = folderId
         ? await storage.getDocumentsByFolder(folderId as string)
         : await storage.getAllDocuments();
-      res.json(documents);
+      // Remove filePath from all documents for security
+      const safeDocuments = documents.map(({ filePath: _, ...doc }) => doc);
+      res.json(safeDocuments);
     } catch (error) {
       console.error("Error fetching documents:", error);
       res.status(500).json({ error: "Failed to fetch documents" });
@@ -145,7 +168,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!document) {
         return res.status(404).json({ error: "Document not found" });
       }
-      res.json(document);
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = document;
+      res.json(safeDocument);
     } catch (error) {
       console.error("Error fetching document:", error);
       res.status(500).json({ error: "Failed to fetch document" });
@@ -180,7 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         structuredData,
       });
 
-      res.json(document);
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = document;
+      res.json(safeDocument);
     } catch (error) {
       console.error("Error uploading document:", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to upload document" });
