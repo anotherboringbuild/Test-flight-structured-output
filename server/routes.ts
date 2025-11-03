@@ -54,6 +54,10 @@ async function processWithGPT5(extractedText: string): Promise<any> {
     const copySectionSchema = {
       type: "object",
       properties: {
+        ProductName: {
+          type: "string",
+          description: "Name of the product this copy is for"
+        },
         Headlines: {
           type: "array",
           description: "Array of headline strings",
@@ -74,7 +78,7 @@ async function processWithGPT5(extractedText: string): Promise<any> {
           items: { type: "string" }
         }
       },
-      required: ["Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"],
+      required: ["ProductName", "Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"],
       additionalProperties: false
     };
 
@@ -161,6 +165,7 @@ Extract sections that exist in the document. If a section is not present, omit i
       if (!section || section === null) return null;
       
       return {
+        ProductName: section.ProductName || "",
         Headlines: Array.isArray(section.Headlines) ? section.Headlines : [],
         AdvertisingCopy: section.AdvertisingCopy || "",
         KeyFeatureBullets: Array.isArray(section.KeyFeatureBullets) ? section.KeyFeatureBullets : [],

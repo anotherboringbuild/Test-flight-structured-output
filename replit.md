@@ -121,18 +121,21 @@ The AI extracts product information into this JSON structure with support for mu
 ```json
 {
   "ProductCopy": {
+    "ProductName": "Product name identifier",
     "Headlines": ["array of headline strings"],
     "AdvertisingCopy": "string - main advertising copy/description",
     "KeyFeatureBullets": ["array of feature bullets"],
     "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
   },
   "BusinessCopy": {
+    "ProductName": "Product name identifier",
     "Headlines": ["array of headline strings"],
     "AdvertisingCopy": "string - business-focused copy",
     "KeyFeatureBullets": ["array of feature bullets"],
     "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
   },
   "UpgraderCopy": {
+    "ProductName": "Product name identifier",
     "Headlines": ["array of headline strings"],
     "AdvertisingCopy": "string - upgrade-focused copy",
     "KeyFeatureBullets": ["array of feature bullets"],
@@ -146,7 +149,7 @@ The AI extracts product information into this JSON structure with support for mu
 - **BusinessCopy**: Copy targeted at business customers
 - **UpgraderCopy**: Copy for customers upgrading from previous versions
 
-Each copy type is optional - only sections found in the document are included. Within each section, LegalReferences is always the last field to maintain consistent ordering.
+Each copy type is optional - only sections found in the document are included. Within each section, fields appear in this order: ProductName (first), Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (always last).
 
 **Superscript Handling**:
 The system handles superscripts in three distinct ways:
