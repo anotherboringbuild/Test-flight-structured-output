@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Download, Edit, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +13,7 @@ interface ComparisonViewProps {
   onBack: () => void;
   onExport: () => void;
   onSave?: (newData: string) => void;
+  onReprocess?: () => void;
 }
 
 interface TextSegment {
@@ -30,6 +31,7 @@ export function ComparisonView({
   onBack,
   onExport,
   onSave,
+  onReprocess,
 }: ComparisonViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(structuredData);
@@ -262,6 +264,16 @@ export function ComparisonView({
               </>
             ) : (
               <>
+                {onReprocess && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onReprocess}
+                    data-testid="button-reprocess"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="icon"
