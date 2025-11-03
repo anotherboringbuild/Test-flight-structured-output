@@ -376,7 +376,7 @@ function AppContent() {
               }}
               hasApiKey={true}
             />
-            <main className="flex-1 overflow-auto">
+            <main className={`flex-1 relative ${selectedDocument ? 'overflow-hidden' : 'overflow-auto'}`}>
               {selectedDocument ? (
                 <ComparisonView
                   documentName={selectedDocument.name}

@@ -219,8 +219,8 @@ export function ComparisonView({
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b bg-background px-6 py-4">
+    <div className="absolute inset-0 flex flex-col">
+      <div className="border-b bg-background px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -290,27 +290,27 @@ export function ComparisonView({
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
-        <div className="flex flex-col border-r">
-          <div className="border-b bg-muted/30 px-6 py-3">
+      <div className="grid flex-1 min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-2">
+        <div className="flex flex-col border-r min-h-0">
+          <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Original Document</h3>
               <Badge variant="secondary">Extracted Text</Badge>
             </div>
           </div>
-          <div className="flex-1 overflow-x-auto overflow-y-auto p-6" data-testid="text-extracted">
+          <div className="flex-1 min-h-0 overflow-auto p-6" data-testid="text-extracted">
             {renderHighlightedText()}
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="border-b bg-muted/30 px-6 py-3">
+        <div className="flex flex-col min-h-0">
+          <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Product JSON Output</h3>
               <Badge variant="default">Structured</Badge>
             </div>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {isEditing ? (
               <Editor
                 height="100%"
@@ -327,7 +327,7 @@ export function ComparisonView({
                 }}
               />
             ) : (
-              <div className="h-full overflow-x-auto overflow-y-auto p-6" data-testid="text-structured">
+              <div className="h-full overflow-auto p-6" data-testid="text-structured">
                 <pre className="font-mono text-xs leading-relaxed">
                   {renderHighlightedJson()}
                 </pre>
