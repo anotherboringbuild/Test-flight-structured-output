@@ -40,6 +40,8 @@ function AppContent() {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [movingDocument, setMovingDocument] = useState<DocumentType | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [showDeleteDocDialog, setShowDeleteDocDialog] = useState(false);
   const [deletingDocument, setDeletingDocument] = useState<DocumentType | null>(null);
 
@@ -55,12 +57,18 @@ function AppContent() {
 
   // Upload mutation
   const uploadMutation = useMutation({
-    mutationFn: async ({ file, folderId }: { file: File; folderId?: string | null }) => {
-      console.log("Starting upload for file:", file.name, "to folder:", folderId);
+    mutationFn: async ({ file, folderId, month, year }: { file: File; folderId?: string | null; month?: string | null; year?: string | null }) => {
+      console.log("Starting upload for file:", file.name, "to folder:", folderId, "month:", month, "year:", year);
       const formData = new FormData();
       formData.append("file", file);
       if (folderId) {
         formData.append("folderId", folderId);
+      }
+      if (month) {
+        formData.append("month", month);
+      }
+      if (year) {
+        formData.append("year", year);
       }
       
       console.log("Sending POST to /api/documents/upload");
@@ -275,7 +283,12 @@ function AppContent() {
     for (const file of files) {
       console.log("Uploading file:", file.name, file.type);
       try {
-        await uploadMutation.mutateAsync({ file, folderId: selectedFolderId });
+        await uploadMutation.mutateAsync({ 
+          file, 
+          folderId: selectedFolderId,
+          month: selectedMonth,
+          year: selectedYear
+        });
       } catch (error) {
         console.error("Error in handleUpload:", error);
         // Error toast is already shown by onError callback
@@ -554,6 +567,10 @@ function AppContent() {
                     folders={folders}
                     selectedFolderId={selectedFolderId}
                     onFolderChange={setSelectedFolderId}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    selectedYear={selectedYear}
+                    onYearChange={setSelectedYear}
                   />
                   {isLoadingDocuments && (
                     <p className="mt-4 text-center text-sm text-muted-foreground">
