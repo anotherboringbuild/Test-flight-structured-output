@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Copy, Download, Edit, Loader2 } from "lucide-react";
 import Editor from "@monaco-editor/react";
@@ -16,6 +15,13 @@ interface ComparisonViewProps {
   onSave?: (newData: string) => void;
 }
 
+interface TextSegment {
+  text: string;
+  start: number;
+  end: number;
+  field?: string;
+}
+
 export function ComparisonView({
   documentName,
   extractedText,
@@ -27,7 +33,171 @@ export function ComparisonView({
 }: ComparisonViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(structuredData);
+  const [hoveredField, setHoveredField] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Parse JSON and create text segments with field mappings
+  const { jsonSegments, textSegments } = useMemo(() => {
+    try {
+      const parsed = JSON.parse(editedData);
+      const jsonSegs: TextSegment[] = [];
+      const textSegs: TextSegment[] = [];
+
+      // Helper to find text in extracted content
+      const findInText = (value: string, fieldName: string) => {
+        if (!value || typeof value !== 'string' || value.length < 10) return;
+        
+        // Clean the value for searching (remove extra whitespace)
+        const cleanValue = value.trim().slice(0, 100); // First 100 chars for matching
+        const index = extractedText.indexOf(cleanValue);
+        
+        if (index !== -1) {
+          textSegs.push({
+            text: value,
+            start: index,
+            end: index + value.length,
+            field: fieldName,
+          });
+        }
+      };
+
+      // Extract segments from JSON structure
+      if (parsed.officialProductName) {
+        const name = typeof parsed.officialProductName === 'string' 
+          ? parsed.officialProductName 
+          : parsed.officialProductName.base;
+        findInText(name, 'officialProductName');
+      }
+
+      if (parsed.featureCopy) {
+        findInText(parsed.featureCopy, 'featureCopy');
+      }
+
+      if (parsed.advertisingCopy) {
+        findInText(parsed.advertisingCopy, 'advertisingCopy');
+      }
+
+      if (Array.isArray(parsed.featureBullets)) {
+        parsed.featureBullets.forEach((bullet: string, idx: number) => {
+          findInText(bullet, `featureBullet-${idx}`);
+        });
+      }
+
+      if (Array.isArray(parsed.legalBullets)) {
+        parsed.legalBullets.forEach((bullet: string, idx: number) => {
+          findInText(bullet, `legalBullet-${idx}`);
+        });
+      }
+
+      return { jsonSegments: jsonSegs, textSegments: textSegs };
+    } catch (e) {
+      return { jsonSegments: [], textSegments: [] };
+    }
+  }, [editedData, extractedText]);
+
+  // Create highlighted text with hover regions
+  const renderHighlightedText = () => {
+    if (textSegments.length === 0) {
+      return <pre className="whitespace-pre font-sans text-sm leading-relaxed">{extractedText}</pre>;
+    }
+
+    // Sort segments by start position
+    const sorted = [...textSegments].sort((a, b) => a.start - b.start);
+    const elements: JSX.Element[] = [];
+    let lastIndex = 0;
+
+    sorted.forEach((segment, idx) => {
+      // Add text before this segment
+      if (segment.start > lastIndex) {
+        elements.push(
+          <span key={`text-${idx}`}>
+            {extractedText.slice(lastIndex, segment.start)}
+          </span>
+        );
+      }
+
+      // Add highlighted segment
+      const isHovered = hoveredField === segment.field;
+      elements.push(
+        <mark
+          key={`mark-${idx}`}
+          data-field={segment.field}
+          onMouseEnter={() => setHoveredField(segment.field || null)}
+          onMouseLeave={() => setHoveredField(null)}
+          className={`cursor-pointer transition-all ${
+            isHovered
+              ? 'bg-primary/30 font-medium'
+              : 'bg-primary/10 hover:bg-primary/20'
+          }`}
+        >
+          {extractedText.slice(segment.start, segment.end)}
+        </mark>
+      );
+
+      lastIndex = segment.end;
+    });
+
+    // Add remaining text
+    if (lastIndex < extractedText.length) {
+      elements.push(
+        <span key="text-end">{extractedText.slice(lastIndex)}</span>
+      );
+    }
+
+    return <pre className="whitespace-pre font-sans text-sm leading-relaxed">{elements}</pre>;
+  };
+
+  // Render JSON with hover regions
+  const renderHighlightedJson = () => {
+    try {
+      const parsed = JSON.parse(editedData);
+      const lines = JSON.stringify(parsed, null, 2).split('\n');
+      
+      return lines.map((line, idx) => {
+        let field: string | null = null;
+        
+        // Detect which field this line belongs to
+        if (line.includes('"officialProductName"')) field = 'officialProductName';
+        else if (line.includes('"featureCopy"')) field = 'featureCopy';
+        else if (line.includes('"advertisingCopy"')) field = 'advertisingCopy';
+        else if (line.includes('"featureBullets"')) field = 'featureBullets-header';
+        else if (line.includes('"legalBullets"')) field = 'legalBullets-header';
+
+        // Check if line is inside a bullets array
+        const featureBulletMatch = textSegments.find(s => 
+          s.field?.startsWith('featureBullet-') && line.includes(s.text.slice(0, 30))
+        );
+        const legalBulletMatch = textSegments.find(s => 
+          s.field?.startsWith('legalBullet-') && line.includes(s.text.slice(0, 30))
+        );
+        
+        if (featureBulletMatch) field = featureBulletMatch.field || null;
+        if (legalBulletMatch) field = legalBulletMatch.field || null;
+
+        const isHovered = field && hoveredField === field;
+        
+        return (
+          <div
+            key={idx}
+            data-field={field}
+            onMouseEnter={() => field && setHoveredField(field)}
+            onMouseLeave={() => setHoveredField(null)}
+            className={`transition-all ${
+              isHovered
+                ? 'bg-primary/30 font-medium'
+                : field
+                ? 'hover:bg-primary/20 cursor-pointer'
+                : ''
+            }`}
+          >
+            {line}
+          </div>
+        );
+      });
+    } catch (e) {
+      return <pre>{editedData}</pre>;
+    }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(editedData);
@@ -66,7 +236,7 @@ export function ComparisonView({
                 {documentName}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Document to JSON extraction
+                Document to JSON extraction • Hover to highlight matching sections
               </p>
             </div>
           </div>
@@ -120,31 +290,27 @@ export function ComparisonView({
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
-        <div className="border-r">
+      <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
+        <div className="flex flex-col border-r">
           <div className="border-b bg-muted/30 px-6 py-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Original Document</h3>
               <Badge variant="secondary">Extracted Text</Badge>
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-12rem)]">
-            <div className="overflow-x-auto p-6">
-              <pre className="whitespace-pre font-sans text-sm leading-relaxed" data-testid="text-extracted">
-                {extractedText}
-              </pre>
-            </div>
-          </ScrollArea>
+          <div className="flex-1 overflow-auto p-6" data-testid="text-extracted">
+            {renderHighlightedText()}
+          </div>
         </div>
 
-        <div>
+        <div className="flex flex-col">
           <div className="border-b bg-muted/30 px-6 py-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Product JSON Output</h3>
               <Badge variant="default">Structured</Badge>
             </div>
           </div>
-          <div className="h-[calc(100vh-12rem)]">
+          <div className="flex-1 overflow-hidden">
             {isEditing ? (
               <Editor
                 height="100%"
@@ -157,17 +323,15 @@ export function ComparisonView({
                   fontSize: 14,
                   lineNumbers: "on",
                   scrollBeyondLastLine: false,
-                  wordWrap: "on",
+                  wordWrap: "off",
                 }}
               />
             ) : (
-              <ScrollArea className="h-full">
-                <div className="overflow-x-auto p-6">
-                  <pre className="whitespace-pre font-mono text-xs leading-relaxed" data-testid="text-structured">
-                    {editedData}
-                  </pre>
-                </div>
-              </ScrollArea>
+              <div className="h-full overflow-auto p-6" data-testid="text-structured">
+                <pre className="font-mono text-xs leading-relaxed">
+                  {renderHighlightedJson()}
+                </pre>
+              </div>
             )}
           </div>
         </div>
