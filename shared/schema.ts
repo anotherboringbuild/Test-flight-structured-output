@@ -20,6 +20,7 @@ export const documents = pgTable("documents", {
   year: varchar("year", { length: 4 }),
   isProcessed: boolean("is_processed").notNull().default(false),
   extractedText: text("extracted_text"),
+  translatedText: text("translated_text"),
   structuredData: json("structured_data"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

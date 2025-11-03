@@ -370,6 +370,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/documents/:id/translate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      if (!document.extractedText) {
+        return res.status(400).json({ error: "Document has no extracted text to translate" });
+      }
+
+      // Translate the extracted text to English using OpenAI
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional translator. Translate the provided text to English. Maintain all formatting, structure, and superscript markers (like ¹, ², ³, etc.). Only translate the content, not the structure.",
+          },
+          {
+            role: "user",
+            content: document.extractedText,
+          },
+        ],
+        temperature: 0.3,
+      });
+
+      const translatedText = response.choices[0].message.content || "";
+
+      // Update the document with the translated text
+      const updatedDocument = await storage.updateDocument(id, {
+        translatedText,
+      });
+
+      if (!updatedDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = updatedDocument;
+      res.json(safeDocument);
+    } catch (error) {
+      console.error("Translation error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to translate document" });
+    }
+  });
+
   app.delete("/api/documents/:id", async (req, res) => {
     try {
       const { id } = req.params;

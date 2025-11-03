@@ -39,16 +39,17 @@ Preferred communication style: Simple, everyday language.
 **Key Features**:
 1. **Document Upload** - Drag-and-drop interface for uploading DOCX/PDF files with folder selection
 2. **Comparison View** - Side-by-side view of extracted text and structured JSON with hover-to-highlight
-3. **Document Library** - Table-based document management with:
+3. **Translation Toggle** - View non-English documents translated to English with a toggle switch (uses OpenAI for translation, automatically enables when translation completes)
+4. **Document Library** - Table-based document management with:
    - Real-time search by document name
-   - Filtering by folder, file type (DOCX/PDF), and processing status
+   - Filtering by folder, file type (DOCX/PDF), processing status, month, and year
    - Sorting by name, date, or size (ascending/descending)
    - Bulk selection with checkboxes
    - Bulk operations: export, move to folder, delete
    - Individual document actions: rename, move, delete via context menu
-4. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
-5. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
-6. **Export Functionality** - Export individual or multiple documents as JSON files
+5. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
+6. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
+7. **Export Functionality** - Export individual or multiple documents as JSON files
 
 ## Backend Architecture
 
@@ -68,6 +69,7 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/documents/:id` - Get specific document
 - `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, etc.)
 - `POST /api/documents/:id/reprocess` - Reprocess document with latest AI extraction
+- `POST /api/documents/:id/translate` - Translate document text to English using OpenAI
 - `DELETE /api/documents/:id` - Delete document
 - Folder management endpoints (CRUD operations)
 
@@ -98,9 +100,12 @@ Preferred communication style: Simple, everyday language.
 - filePath (text - local file system path)
 - size (text)
 - folderId (foreign key to folders, nullable, cascades to null on delete)
+- month (varchar, nullable - for filtering/tagging)
+- year (varchar, nullable - for filtering/tagging)
 - isProcessed (boolean, default false)
 - extractedText (text, nullable)
-- structuredData (jsonb, nullable)
+- translatedText (text, nullable - English translation of extractedText)
+- structuredData (json, nullable - using json type to preserve field order)
 - createdAt (timestamp)
 - updatedAt (timestamp)
 

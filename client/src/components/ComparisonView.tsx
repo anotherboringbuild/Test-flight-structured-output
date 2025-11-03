@@ -1,19 +1,24 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ComparisonViewProps {
   documentName: string;
   extractedText: string;
+  translatedText?: string | null;
   structuredData: string;
   isProcessing?: boolean;
+  isTranslating?: boolean;
   onBack: () => void;
   onExport: () => void;
   onSave?: (newData: string) => void;
   onReprocess?: () => void;
+  onTranslate?: () => void;
 }
 
 interface TextSegment {
@@ -26,17 +31,31 @@ interface TextSegment {
 export function ComparisonView({
   documentName,
   extractedText,
+  translatedText,
   structuredData,
   isProcessing = false,
+  isTranslating = false,
   onBack,
   onExport,
   onSave,
   onReprocess,
+  onTranslate,
 }: ComparisonViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(structuredData);
   const [hoveredField, setHoveredField] = useState<string | null>(null);
+  const [showTranslation, setShowTranslation] = useState(false);
   const { toast } = useToast();
+
+  // Auto-enable translation toggle when translation becomes available
+  useEffect(() => {
+    if (translatedText && !isTranslating) {
+      setShowTranslation(true);
+    }
+  }, [translatedText, isTranslating]);
+
+  // Determine which text to display
+  const displayText = showTranslation && translatedText ? translatedText : extractedText;
 
   // Parse JSON and create text segments with field mappings
   const { jsonSegments, textSegments } = useMemo(() => {
@@ -51,7 +70,7 @@ export function ComparisonView({
         
         // Clean the value for searching (remove extra whitespace)
         const cleanValue = value.trim().slice(0, 100); // First 100 chars for matching
-        const index = extractedText.indexOf(cleanValue);
+        const index = displayText.indexOf(cleanValue);
         
         if (index !== -1) {
           textSegs.push({
@@ -90,12 +109,12 @@ export function ComparisonView({
     } catch (e) {
       return { jsonSegments: [], textSegments: [] };
     }
-  }, [editedData, extractedText]);
+  }, [editedData, displayText]);
 
   // Create highlighted text with hover regions
   const renderHighlightedText = () => {
     if (textSegments.length === 0) {
-      return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{extractedText}</pre>;
+      return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{displayText}</pre>;
     }
 
     // Sort segments by start position
@@ -108,7 +127,7 @@ export function ComparisonView({
       if (segment.start > lastIndex) {
         elements.push(
           <span key={`text-${idx}`}>
-            {extractedText.slice(lastIndex, segment.start)}
+            {displayText.slice(lastIndex, segment.start)}
           </span>
         );
       }
@@ -127,7 +146,7 @@ export function ComparisonView({
               : 'bg-primary/10 hover:bg-primary/20'
           }`}
         >
-          {extractedText.slice(segment.start, segment.end)}
+          {displayText.slice(segment.start, segment.end)}
         </mark>
       );
 
@@ -135,9 +154,9 @@ export function ComparisonView({
     });
 
     // Add remaining text
-    if (lastIndex < extractedText.length) {
+    if (lastIndex < displayText.length) {
       elements.push(
-        <span key="text-end">{extractedText.slice(lastIndex)}</span>
+        <span key="text-end">{displayText.slice(lastIndex)}</span>
       );
     }
 
@@ -303,9 +322,33 @@ export function ComparisonView({
       <div className="grid flex-1 min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-2">
         <div className="flex flex-col border-r min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <h3 className="font-medium">Original Document</h3>
-              <Badge variant="secondary">Extracted Text</Badge>
+              <div className="flex items-center gap-3">
+                {onTranslate && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="translation-toggle"
+                      checked={showTranslation}
+                      onCheckedChange={(checked) => {
+                        if (checked && !translatedText) {
+                          onTranslate();
+                        }
+                        setShowTranslation(checked);
+                      }}
+                      disabled={isTranslating}
+                      data-testid="switch-translation"
+                    />
+                    <Label htmlFor="translation-toggle" className="text-sm cursor-pointer flex items-center gap-1">
+                      <Languages className="h-4 w-4" />
+                      {isTranslating ? 'Translating...' : 'English'}
+                    </Label>
+                  </div>
+                )}
+                <Badge variant="secondary">
+                  {showTranslation && translatedText ? 'Translated' : 'Extracted Text'}
+                </Badge>
+              </div>
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-auto p-6" data-testid="text-extracted">

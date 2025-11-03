@@ -218,6 +218,33 @@ function AppContent() {
     },
   });
 
+  const translateDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/documents/${id}/translate`);
+    },
+    onSuccess: (updatedDocument: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      // Update the selectedDocument immediately so translatedText is available
+      if (selectedDocumentId === updatedDocument.id) {
+        queryClient.setQueryData<DocumentType[]>(["/api/documents"], (old) => {
+          if (!old) return old;
+          return old.map((doc) => (doc.id === updatedDocument.id ? updatedDocument : doc));
+        });
+      }
+      toast({
+        title: "Translation complete",
+        description: "Document has been translated to English.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Translation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const renameDocumentMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       return await apiRequest("PATCH", `/api/documents/${id}`, { name });
@@ -507,12 +534,14 @@ function AppContent() {
                 <ComparisonView
                   documentName={selectedDocument.name}
                   extractedText={selectedDocument.extractedText || ""}
+                  translatedText={selectedDocument.translatedText}
                   structuredData={
                     selectedDocument.structuredData
                       ? JSON.stringify(selectedDocument.structuredData, null, 2)
                       : ""
                   }
                   isProcessing={reprocessDocumentMutation.isPending}
+                  isTranslating={translateDocumentMutation.isPending}
                   onBack={() => {
                     setSelectedDocumentId(null);
                     setCurrentView("library");
@@ -536,6 +565,11 @@ function AppContent() {
                   onReprocess={() => {
                     if (selectedDocument.id) {
                       reprocessDocumentMutation.mutate(selectedDocument.id);
+                    }
+                  }}
+                  onTranslate={() => {
+                    if (selectedDocument.id) {
+                      translateDocumentMutation.mutate(selectedDocument.id);
                     }
                   }}
                 />
