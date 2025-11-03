@@ -15,6 +15,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ interface AppSidebarProps {
   onEditFolder: (folder: Folder) => void;
   onDeleteFolder: (folder: Folder) => void;
   onMoveDocument: (document: Document) => void;
+  onDeleteDocument: (document: Document) => void;
 }
 
 export function AppSidebar({
@@ -62,6 +64,7 @@ export function AppSidebar({
   onEditFolder,
   onDeleteFolder,
   onMoveDocument,
+  onDeleteDocument,
 }: AppSidebarProps) {
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
@@ -127,11 +130,20 @@ export function AppSidebar({
                       </ContextMenuTrigger>
                       <ContextMenuContent>
                         <ContextMenuItem
-                          onClick={() => onMoveDocument(doc)}
+                          onClick={() => onMoveDocument(doc as any)}
                           data-testid={`button-move-document-${doc.id}`}
                         >
                           <FolderOpen className="mr-2 h-4 w-4" />
                           Move to Folder
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem
+                          onClick={() => onDeleteDocument(doc as any)}
+                          data-testid={`button-delete-document-${doc.id}`}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>

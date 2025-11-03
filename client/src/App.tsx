@@ -12,6 +12,7 @@ import { ExportModal } from "@/components/ExportModal";
 import { FolderDialog } from "@/components/FolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveToFolderDialog } from "@/components/MoveToFolderDialog";
+import { DeleteDocumentDialog } from "@/components/DeleteDocumentDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
@@ -38,6 +39,8 @@ function AppContent() {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [movingDocument, setMovingDocument] = useState<DocumentType | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [showDeleteDocDialog, setShowDeleteDocDialog] = useState(false);
+  const [deletingDocument, setDeletingDocument] = useState<DocumentType | null>(null);
 
   // Fetch documents
   const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<DocumentType[]>({
@@ -170,6 +173,22 @@ function AppContent() {
     },
   });
 
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/documents/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      setSelectedDocumentId(null);
+      setCurrentView("upload");
+      toast({
+        title: "Document deleted",
+        description: "The document has been deleted successfully.",
+      });
+    },
+  });
+
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
@@ -292,6 +311,19 @@ function AppContent() {
     }
   };
 
+  const handleDeleteDocument = (document: DocumentType) => {
+    setDeletingDocument(document);
+    setShowDeleteDocDialog(true);
+  };
+
+  const handleConfirmDeleteDocument = () => {
+    if (deletingDocument) {
+      deleteDocumentMutation.mutate(deletingDocument.id);
+      setShowDeleteDocDialog(false);
+      setDeletingDocument(null);
+    }
+  };
+
   const style = {
     "--sidebar-width": "18rem",
     "--sidebar-width-icon": "3rem",
@@ -329,6 +361,7 @@ function AppContent() {
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
             onMoveDocument={handleMoveDocument}
+            onDeleteDocument={handleDeleteDocument}
           />
           <div className="flex flex-1 flex-col">
             <div className="flex items-center gap-2 border-b px-4 py-2">
@@ -452,6 +485,16 @@ function AppContent() {
           folders={folders}
           currentFolderId={movingDocument?.folderId}
           documentName={movingDocument?.name || ""}
+        />
+
+        <DeleteDocumentDialog
+          open={showDeleteDocDialog}
+          onClose={() => {
+            setShowDeleteDocDialog(false);
+            setDeletingDocument(null);
+          }}
+          onConfirm={handleConfirmDeleteDocument}
+          documentName={deletingDocument?.name || ""}
         />
 
         <Toaster />
