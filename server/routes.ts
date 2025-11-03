@@ -81,12 +81,11 @@ C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
    - Keep as literal Unicode characters
    - These are semantic content, not formatting
 
-Return JSON with this structure:
+Return JSON with this structure (IMPORTANT: LegalReferences must always be the last field):
 {
   "Headlines": ["array of headline strings from the document"],
   "AdvertisingCopy": "string - main advertising copy/description (with {{sup:N}} tokens for footnotes)",
   "KeyFeatureBullets": ["array of feature bullets with {{sup:N}} tokens for footnotes"],
-  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text"],
   "sup_annotations": [
     {
       "key": "1",
@@ -94,7 +93,8 @@ Return JSON with this structure:
       "footnote_id": "descriptive_identifier",
       "original_text": "original footnote text if available"
     }
-  ]
+  ],
+  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text - ALWAYS LAST"]
 }
 
 Extract all available information. If a field is not present, use reasonable defaults or empty strings/arrays.`,
@@ -110,18 +110,20 @@ Extract all available information. If a field is not present, use reasonable def
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
-    // Validate and normalize the structure
+    // Validate and normalize the structure - LegalReferences must always be last
     const normalized: any = {
       Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
       AdvertisingCopy: parsedData.AdvertisingCopy || "",
       KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
-      LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
     };
 
-    // Add optional fields if present
+    // Add optional annotations before legal references
     if (Array.isArray(parsedData.sup_annotations) && parsedData.sup_annotations.length > 0) {
       normalized.sup_annotations = parsedData.sup_annotations;
     }
+    
+    // Always add LegalReferences last
+    normalized.LegalReferences = Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [];
     
     return normalized;
   } catch (error) {
