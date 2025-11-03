@@ -225,8 +225,8 @@ export function DocumentLibrary({
   const someSelected = selectedIds.size > 0 && selectedIds.size < filteredAndSortedDocuments.length;
 
   // Get unique months and years from documents
-  const uniqueMonths = Array.from(new Set(documents.map((d) => d.month).filter(Boolean)));
-  const uniqueYears = Array.from(new Set(documents.map((d) => d.year).filter(Boolean))).sort();
+  const uniqueMonths = Array.from(new Set(documents.map((d) => d.month).filter(Boolean))) as string[];
+  const uniqueYears = Array.from(new Set(documents.map((d) => d.year).filter(Boolean))).sort() as string[];
 
   const months = [
     "January", "February", "March", "April", "May", "June",
