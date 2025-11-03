@@ -16,6 +16,8 @@ export const documents = pgTable("documents", {
   filePath: text("file_path").notNull(),
   size: text("size").notNull(),
   folderId: varchar("folder_id").references(() => folders.id, { onDelete: "set null" }),
+  month: varchar("month", { length: 20 }),
+  year: varchar("year", { length: 4 }),
   isProcessed: boolean("is_processed").notNull().default(false),
   extractedText: text("extracted_text"),
   structuredData: jsonb("structured_data"),
