@@ -189,6 +189,26 @@ function AppContent() {
     },
   });
 
+  const reprocessDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/documents/${id}/reprocess`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Reprocessing complete",
+        description: "Document has been reprocessed with the latest AI extraction.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reprocessing failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
@@ -386,6 +406,7 @@ function AppContent() {
                       ? JSON.stringify(selectedDocument.structuredData, null, 2)
                       : ""
                   }
+                  isProcessing={reprocessDocumentMutation.isPending}
                   onBack={() => {
                     setSelectedDocumentId(null);
                     setCurrentView("upload");
@@ -404,6 +425,11 @@ function AppContent() {
                         description: "Please check your JSON syntax and try again.",
                         variant: "destructive",
                       });
+                    }
+                  }}
+                  onReprocess={() => {
+                    if (selectedDocument.id) {
+                      reprocessDocumentMutation.mutate(selectedDocument.id);
                     }
                   }}
                 />
