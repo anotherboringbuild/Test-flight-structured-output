@@ -10,10 +10,18 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { FileText, FolderOpen, Plus, CheckCircle2, Clock as ClockIcon } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+
+import type { Folder as FolderType } from "@shared/schema";
 
 interface Document {
   id: string;
@@ -23,9 +31,7 @@ interface Document {
   date: string;
 }
 
-interface Folder {
-  id: string;
-  name: string;
+interface Folder extends FolderType {
   count: number;
 }
 
@@ -38,6 +44,8 @@ interface AppSidebarProps {
   onCreateFolder: () => void;
   onFolderClick: (folderId: string) => void;
   onDocumentClick: (documentId: string) => void;
+  onEditFolder: (folder: Folder) => void;
+  onDeleteFolder: (folder: Folder) => void;
 }
 
 export function AppSidebar({
@@ -49,6 +57,8 @@ export function AppSidebar({
   onCreateFolder,
   onFolderClick,
   onDocumentClick,
+  onEditFolder,
+  onDeleteFolder,
 }: AppSidebarProps) {
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
@@ -135,17 +145,38 @@ export function AppSidebar({
               <SidebarMenu>
                 {folders.map((folder) => (
                   <SidebarMenuItem key={folder.id}>
-                    <SidebarMenuButton
-                      isActive={currentView === `folder-${folder.id}`}
-                      onClick={() => onFolderClick(folder.id)}
-                      data-testid={`button-folder-${folder.id}`}
-                    >
-                      <FolderOpen className="h-5 w-5" />
-                      <span className="flex-1 truncate">{folder.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {folder.count}
-                      </span>
-                    </SidebarMenuButton>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={currentView === `folder-${folder.id}`}
+                          onClick={() => onFolderClick(folder.id)}
+                          data-testid={`button-folder-${folder.id}`}
+                        >
+                          <FolderOpen className="h-5 w-5" />
+                          <span className="flex-1 truncate">{folder.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {folder.count}
+                          </span>
+                        </SidebarMenuButton>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem
+                          onClick={() => onEditFolder(folder)}
+                          data-testid={`button-edit-folder-${folder.id}`}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Rename
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => onDeleteFolder(folder)}
+                          data-testid={`button-delete-folder-${folder.id}`}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

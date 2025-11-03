@@ -9,6 +9,8 @@ import { TopBar } from "@/components/TopBar";
 import { DocumentUploadZone } from "@/components/DocumentUploadZone";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
+import { FolderDialog } from "@/components/FolderDialog";
+import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
@@ -27,6 +29,11 @@ function AppContent() {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportingDocument, setExportingDocument] = useState<DocumentType | null>(null);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [folderDialogMode, setFolderDialogMode] = useState<"create" | "edit">("create");
+  const [editingFolder, setEditingFolder] = useState<FolderType | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingFolder, setDeletingFolder] = useState<FolderType | null>(null);
 
   // Fetch documents
   const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<DocumentType[]>({
@@ -101,6 +108,47 @@ function AppContent() {
     },
   });
 
+  // Folder mutations
+  const createFolderMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return await apiRequest("POST", "/api/folders", { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      toast({
+        title: "Folder created",
+        description: "Your new folder has been created.",
+      });
+    },
+  });
+
+  const updateFolderMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      return await apiRequest("PATCH", `/api/folders/${id}`, { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      toast({
+        title: "Folder renamed",
+        description: "Folder has been renamed successfully.",
+      });
+    },
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/folders/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Folder deleted",
+        description: "The folder has been deleted.",
+      });
+    },
+  });
+
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
@@ -171,18 +219,40 @@ function AppContent() {
   };
 
   const handleCreateFolder = () => {
-    toast({
-      title: "Create folder",
-      description: "Folder creation feature coming soon!",
-    });
+    setFolderDialogMode("create");
+    setEditingFolder(null);
+    setShowFolderDialog(true);
+  };
+
+  const handleEditFolder = (folder: FolderType) => {
+    setFolderDialogMode("edit");
+    setEditingFolder(folder);
+    setShowFolderDialog(true);
+  };
+
+  const handleDeleteFolder = (folder: FolderType) => {
+    setDeletingFolder(folder);
+    setShowDeleteDialog(true);
+  };
+
+  const handleFolderSubmit = (name: string) => {
+    if (folderDialogMode === "create") {
+      createFolderMutation.mutate(name);
+    } else if (editingFolder) {
+      updateFolderMutation.mutate({ id: editingFolder.id, name });
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingFolder) {
+      deleteFolderMutation.mutate(deletingFolder.id);
+      setShowDeleteDialog(false);
+      setDeletingFolder(null);
+    }
   };
 
   const handleFolderClick = (id: string) => {
     setCurrentView(`folder-${id}`);
-    toast({
-      title: "Folder opened",
-      description: `Viewing folder contents...`,
-    });
   };
 
   const style = {
@@ -219,6 +289,8 @@ function AppContent() {
             onCreateFolder={handleCreateFolder}
             onFolderClick={handleFolderClick}
             onDocumentClick={handleDocumentClick}
+            onEditFolder={handleEditFolder}
+            onDeleteFolder={handleDeleteFolder}
           />
           <div className="flex flex-1 flex-col">
             <div className="flex items-center gap-2 border-b px-4 py-2">
@@ -305,6 +377,29 @@ function AppContent() {
             }
           />
         )}
+
+        <FolderDialog
+          open={showFolderDialog}
+          onClose={() => setShowFolderDialog(false)}
+          onSubmit={handleFolderSubmit}
+          initialName={editingFolder?.name || ""}
+          mode={folderDialogMode}
+        />
+
+        <DeleteFolderDialog
+          open={showDeleteDialog}
+          onClose={() => {
+            setShowDeleteDialog(false);
+            setDeletingFolder(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          folderName={deletingFolder?.name || ""}
+          documentCount={
+            deletingFolder
+              ? documents.filter((d) => d.folderId === deletingFolder.id).length
+              : 0
+          }
+        />
 
         <Toaster />
       </SidebarProvider>
