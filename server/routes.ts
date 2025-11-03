@@ -120,15 +120,32 @@ Extract sections that exist in the document. If a section is not present, omit i
         type: "json_schema",
         json_schema: {
           name: "product_extraction",
-          strict: true,
           schema: {
             type: "object",
             properties: {
-              ProductCopy: copySectionSchema,
-              BusinessCopy: copySectionSchema,
-              UpgraderCopy: copySectionSchema
+              ProductCopy: {
+                anyOf: [
+                  copySectionSchema,
+                  { type: "null" }
+                ],
+                description: "General product marketing copy section (optional)"
+              },
+              BusinessCopy: {
+                anyOf: [
+                  copySectionSchema,
+                  { type: "null" }
+                ],
+                description: "Business-focused copy section (optional)"
+              },
+              UpgraderCopy: {
+                anyOf: [
+                  copySectionSchema,
+                  { type: "null" }
+                ],
+                description: "Upgrade-focused copy section (optional)"
+              }
             },
-            required: [],
+            required: ["ProductCopy", "BusinessCopy", "UpgraderCopy"],
             additionalProperties: false
           }
         }
@@ -139,26 +156,36 @@ Extract sections that exist in the document. If a section is not present, omit i
     const parsedData = JSON.parse(content || "{}");
     
     // Helper function to normalize a copy section with correct field order
-    const normalizeCopySection = (section: any) => ({
-      Headlines: Array.isArray(section?.Headlines) ? section.Headlines : [],
-      AdvertisingCopy: section?.AdvertisingCopy || "",
-      KeyFeatureBullets: Array.isArray(section?.KeyFeatureBullets) ? section.KeyFeatureBullets : [],
-      LegalReferences: Array.isArray(section?.LegalReferences) ? section.LegalReferences : [],
-    });
+    const normalizeCopySection = (section: any) => {
+      // Return null if section is null or undefined
+      if (!section || section === null) return null;
+      
+      return {
+        Headlines: Array.isArray(section.Headlines) ? section.Headlines : [],
+        AdvertisingCopy: section.AdvertisingCopy || "",
+        KeyFeatureBullets: Array.isArray(section.KeyFeatureBullets) ? section.KeyFeatureBullets : [],
+        LegalReferences: Array.isArray(section.LegalReferences) ? section.LegalReferences : [],
+      };
+    };
     
     // CRITICAL: Explicitly reconstruct the object in the correct order
     // This ensures JSON.stringify outputs fields in this exact sequence
     const normalized: any = {};
     
-    // Add sections in order if they exist
-    if (parsedData.ProductCopy) {
-      normalized.ProductCopy = normalizeCopySection(parsedData.ProductCopy);
+    // Add sections in order, only if they're not null
+    const productCopy = normalizeCopySection(parsedData.ProductCopy);
+    if (productCopy !== null) {
+      normalized.ProductCopy = productCopy;
     }
-    if (parsedData.BusinessCopy) {
-      normalized.BusinessCopy = normalizeCopySection(parsedData.BusinessCopy);
+    
+    const businessCopy = normalizeCopySection(parsedData.BusinessCopy);
+    if (businessCopy !== null) {
+      normalized.BusinessCopy = businessCopy;
     }
-    if (parsedData.UpgraderCopy) {
-      normalized.UpgraderCopy = normalizeCopySection(parsedData.UpgraderCopy);
+    
+    const upgraderCopy = normalizeCopySection(parsedData.UpgraderCopy);
+    if (upgraderCopy !== null) {
+      normalized.UpgraderCopy = upgraderCopy;
     }
     
     // Verify the order is correct by stringifying and re-parsing
