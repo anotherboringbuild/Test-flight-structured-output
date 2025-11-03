@@ -100,6 +100,24 @@ Preferred communication style: Simple, everyday language.
 - Used for intelligent text structuring from extracted content
 - Schema-based structured output extraction
 
+**Structured JSON Output Format**:
+The AI extracts product information into this JSON structure:
+```json
+{
+  "Headlines": ["array of headline strings from the document"],
+  "AdvertisingCopy": "string - main advertising copy/description",
+  "KeyFeatureBullets": ["array of feature bullets"],
+  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text"],
+  "sup_annotations": [/* optional superscript annotations */]
+}
+```
+
+**Superscript Handling**:
+The system handles superscripts in three distinct ways:
+- A. Footnote references (¹, ², ³) → Replaced with tokens like {{sup:1}}
+- B. Legal marks (™, ®, ℠) → Extracted as structured objects with mark_type and render_pref
+- C. Units and scientific notation (cm², CO₂e) → Kept as literal Unicode characters
+
 **File Processing Libraries**:
 - mammoth: DOCX text extraction
 - pdf-parse: PDF text extraction

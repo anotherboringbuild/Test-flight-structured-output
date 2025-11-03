@@ -62,30 +62,25 @@ export function ComparisonView({
       };
 
       // Extract segments from JSON structure
-      if (parsed.officialProductName) {
-        const name = typeof parsed.officialProductName === 'string' 
-          ? parsed.officialProductName 
-          : parsed.officialProductName.base;
-        findInText(name, 'officialProductName');
-      }
-
-      if (parsed.featureCopy) {
-        findInText(parsed.featureCopy, 'featureCopy');
-      }
-
-      if (parsed.advertisingCopy) {
-        findInText(parsed.advertisingCopy, 'advertisingCopy');
-      }
-
-      if (Array.isArray(parsed.featureBullets)) {
-        parsed.featureBullets.forEach((bullet: string, idx: number) => {
-          findInText(bullet, `featureBullet-${idx}`);
+      if (Array.isArray(parsed.Headlines)) {
+        parsed.Headlines.forEach((headline: string, idx: number) => {
+          findInText(headline, `Headline-${idx}`);
         });
       }
 
-      if (Array.isArray(parsed.legalBullets)) {
-        parsed.legalBullets.forEach((bullet: string, idx: number) => {
-          findInText(bullet, `legalBullet-${idx}`);
+      if (parsed.AdvertisingCopy) {
+        findInText(parsed.AdvertisingCopy, 'AdvertisingCopy');
+      }
+
+      if (Array.isArray(parsed.KeyFeatureBullets)) {
+        parsed.KeyFeatureBullets.forEach((bullet: string, idx: number) => {
+          findInText(bullet, `KeyFeatureBullet-${idx}`);
+        });
+      }
+
+      if (Array.isArray(parsed.LegalReferences)) {
+        parsed.LegalReferences.forEach((legal: string, idx: number) => {
+          findInText(legal, `LegalReference-${idx}`);
         });
       }
 
@@ -157,22 +152,25 @@ export function ComparisonView({
         let field: string | null = null;
         
         // Detect which field this line belongs to
-        if (line.includes('"officialProductName"')) field = 'officialProductName';
-        else if (line.includes('"featureCopy"')) field = 'featureCopy';
-        else if (line.includes('"advertisingCopy"')) field = 'advertisingCopy';
-        else if (line.includes('"featureBullets"')) field = 'featureBullets-header';
-        else if (line.includes('"legalBullets"')) field = 'legalBullets-header';
+        if (line.includes('"Headlines"')) field = 'Headlines-header';
+        else if (line.includes('"AdvertisingCopy"')) field = 'AdvertisingCopy';
+        else if (line.includes('"KeyFeatureBullets"')) field = 'KeyFeatureBullets-header';
+        else if (line.includes('"LegalReferences"')) field = 'LegalReferences-header';
 
-        // Check if line is inside a bullets array
-        const featureBulletMatch = textSegments.find(s => 
-          s.field?.startsWith('featureBullet-') && line.includes(s.text.slice(0, 30))
+        // Check if line is inside a bullets/headlines array
+        const headlineMatch = textSegments.find(s => 
+          s.field?.startsWith('Headline-') && line.includes(s.text.slice(0, 30))
         );
-        const legalBulletMatch = textSegments.find(s => 
-          s.field?.startsWith('legalBullet-') && line.includes(s.text.slice(0, 30))
+        const featureBulletMatch = textSegments.find(s => 
+          s.field?.startsWith('KeyFeatureBullet-') && line.includes(s.text.slice(0, 30))
+        );
+        const legalRefMatch = textSegments.find(s => 
+          s.field?.startsWith('LegalReference-') && line.includes(s.text.slice(0, 30))
         );
         
+        if (headlineMatch) field = headlineMatch.field || null;
         if (featureBulletMatch) field = featureBulletMatch.field || null;
-        if (legalBulletMatch) field = legalBulletMatch.field || null;
+        if (legalRefMatch) field = legalRefMatch.field || null;
 
         const isHovered = field && hoveredField === field;
         

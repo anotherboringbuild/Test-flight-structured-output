@@ -83,14 +83,10 @@ C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
 
 Return JSON with this structure:
 {
-  "officialProductName": {
-    "base": "string",
-    "marks": [{"mark_type": "TM|R|SM", "render_pref": "superscript"}] // optional
-  },
-  "featureCopy": "string (with {{sup:N}} tokens for footnotes)",
-  "featureBullets": ["array with {{sup:N}} tokens for footnotes"],
-  "legalBullets": ["array of legal disclaimers"],
-  "advertisingCopy": "string (with {{sup:N}} tokens for footnotes)",
+  "Headlines": ["array of headline strings from the document"],
+  "AdvertisingCopy": "string - main advertising copy/description (with {{sup:N}} tokens for footnotes)",
+  "KeyFeatureBullets": ["array of feature bullets with {{sup:N}} tokens for footnotes"],
+  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text"],
   "sup_annotations": [
     {
       "key": "1",
@@ -116,11 +112,10 @@ Extract all available information. If a field is not present, use reasonable def
     
     // Validate and normalize the structure
     const normalized: any = {
-      officialProductName: parsedData.officialProductName || "Unknown Product",
-      featureCopy: parsedData.featureCopy || "",
-      featureBullets: Array.isArray(parsedData.featureBullets) ? parsedData.featureBullets : [],
-      legalBullets: Array.isArray(parsedData.legalBullets) ? parsedData.legalBullets : [],
-      advertisingCopy: parsedData.advertisingCopy || "",
+      Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
+      AdvertisingCopy: parsedData.AdvertisingCopy || "",
+      KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
+      LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
     };
 
     // Add optional fields if present
