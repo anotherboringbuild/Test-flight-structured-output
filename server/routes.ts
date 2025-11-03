@@ -59,23 +59,15 @@ async function processWithGPT5(extractedText: string): Promise<any> {
 CRITICAL: Handle superscripts in THREE distinct ways:
 
 A. FOOTNOTES / CLAIM REFERENCES (¹, ², ³, etc.)
-   - Replace with tokens: {{sup:1}}, {{sup:2}}, {{sup:3}}
-   - Add to sup_annotations array with metadata:
-   {
-     "key": "1",
-     "type": "footnote_ref",
-     "footnote_id": "descriptive_id"
-   }
-   Example: "battery for several days¹" → "battery for several days{{sup:1}}"
+   - Replace with tokens in text: {{sup:1}}, {{sup:2}}, {{sup:3}}
+   - Add the SAME token at the START of the corresponding legal reference
+   - Example: 
+     * In content: "battery for several days{{sup:1}}"
+     * In LegalReferences: "{{sup:1}} Battery life varies by use and configuration."
 
 B. LEGAL MARKS (™, ®, ℠)
-   - Extract product names as structured objects:
-   {
-     "base": "Vision Pro",
-     "marks": [{"mark_type": "TM", "render_pref": "superscript"}]
-   }
-   - Do NOT include marks in the base text strings
-   - Mark types: "TM" for ™, "R" for ®, "SM" for ℠
+   - Do NOT include these marks in the text
+   - These are just visual indicators, not content
 
 C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
    - Keep as literal Unicode characters
@@ -86,15 +78,11 @@ Return JSON with this structure (IMPORTANT: LegalReferences must always be the l
   "Headlines": ["array of headline strings from the document"],
   "AdvertisingCopy": "string - main advertising copy/description (with {{sup:N}} tokens for footnotes)",
   "KeyFeatureBullets": ["array of feature bullets with {{sup:N}} tokens for footnotes"],
-  "sup_annotations": [
-    {
-      "key": "1",
-      "type": "footnote_ref",
-      "footnote_id": "descriptive_identifier",
-      "original_text": "original footnote text if available"
-    }
-  ],
-  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text - ALWAYS LAST"]
+  "LegalReferences": [
+    "{{sup:1}} First legal disclaimer/footnote text",
+    "{{sup:2}} Second legal disclaimer/footnote text",
+    "Legal text without footnote marker (if no reference in content)"
+  ]
 }
 
 Extract all available information. If a field is not present, use reasonable defaults or empty strings/arrays.`,
@@ -115,15 +103,9 @@ Extract all available information. If a field is not present, use reasonable def
       Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
       AdvertisingCopy: parsedData.AdvertisingCopy || "",
       KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
+      // Always add LegalReferences last (with {{sup:N}} tokens at the start of each)
+      LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
     };
-
-    // Add optional annotations before legal references
-    if (Array.isArray(parsedData.sup_annotations) && parsedData.sup_annotations.length > 0) {
-      normalized.sup_annotations = parsedData.sup_annotations;
-    }
-    
-    // Always add LegalReferences last
-    normalized.LegalReferences = Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [];
     
     return normalized;
   } catch (error) {

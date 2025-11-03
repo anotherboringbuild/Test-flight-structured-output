@@ -107,16 +107,24 @@ The AI extracts product information into this JSON structure:
   "Headlines": ["array of headline strings from the document"],
   "AdvertisingCopy": "string - main advertising copy/description",
   "KeyFeatureBullets": ["array of feature bullets"],
-  "LegalReferences": ["array of legal disclaimers, footnotes, and regulatory text"],
-  "sup_annotations": [/* optional superscript annotations */]
+  "LegalReferences": [
+    "{{sup:1}} First legal disclaimer/footnote text",
+    "{{sup:2}} Second legal disclaimer/footnote text",
+    "Legal text without marker (if no reference in content)"
+  ]
 }
 ```
 
 **Superscript Handling**:
 The system handles superscripts in three distinct ways:
-- A. Footnote references (¹, ², ³) → Replaced with tokens like {{sup:1}}
-- B. Legal marks (™, ®, ℠) → Extracted as structured objects with mark_type and render_pref
+- A. Footnote references (¹, ², ³) → Replaced with tokens like {{sup:1}} in content, and the SAME token prefixes the corresponding legal reference for traceability
+- B. Legal marks (™, ®, ℠) → Removed from text (just visual indicators)
 - C. Units and scientific notation (cm², CO₂e) → Kept as literal Unicode characters
+
+**Example**:
+If content says "battery lasts for days¹", the JSON will contain:
+- In KeyFeatureBullets: "battery lasts for days{{sup:1}}"
+- In LegalReferences: "{{sup:1}} Battery life varies by use and configuration."
 
 **File Processing Libraries**:
 - mammoth: DOCX text extraction
