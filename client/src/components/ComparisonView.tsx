@@ -98,7 +98,7 @@ export function ComparisonView({
   // Create highlighted text with hover regions
   const renderHighlightedText = () => {
     if (textSegments.length === 0) {
-      return <pre className="whitespace-pre font-sans text-sm leading-relaxed">{extractedText}</pre>;
+      return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{extractedText}</pre>;
     }
 
     // Sort segments by start position
@@ -144,7 +144,7 @@ export function ComparisonView({
       );
     }
 
-    return <pre className="whitespace-pre font-sans text-sm leading-relaxed">{elements}</pre>;
+    return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{elements}</pre>;
   };
 
   // Render JSON with hover regions
@@ -298,7 +298,7 @@ export function ComparisonView({
               <Badge variant="secondary">Extracted Text</Badge>
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-6" data-testid="text-extracted">
+          <div className="flex-1 overflow-x-auto overflow-y-auto p-6" data-testid="text-extracted">
             {renderHighlightedText()}
           </div>
         </div>
@@ -327,7 +327,7 @@ export function ComparisonView({
                 }}
               />
             ) : (
-              <div className="h-full overflow-auto p-6" data-testid="text-structured">
+              <div className="h-full overflow-x-auto overflow-y-auto p-6" data-testid="text-structured">
                 <pre className="font-mono text-xs leading-relaxed">
                   {renderHighlightedJson()}
                 </pre>
