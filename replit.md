@@ -117,19 +117,36 @@ Preferred communication style: Simple, everyday language.
 - Schema-based structured output extraction
 
 **Structured JSON Output Format**:
-The AI extracts product information into this JSON structure:
+The AI extracts product information into this JSON structure with support for multiple copy types:
 ```json
 {
-  "Headlines": ["array of headline strings from the document"],
-  "AdvertisingCopy": "string - main advertising copy/description",
-  "KeyFeatureBullets": ["array of feature bullets"],
-  "LegalReferences": [
-    "{{sup:1}} First legal disclaimer/footnote text",
-    "{{sup:2}} Second legal disclaimer/footnote text",
-    "Legal text without marker (if no reference in content)"
-  ]
+  "ProductCopy": {
+    "Headlines": ["array of headline strings"],
+    "AdvertisingCopy": "string - main advertising copy/description",
+    "KeyFeatureBullets": ["array of feature bullets"],
+    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+  },
+  "BusinessCopy": {
+    "Headlines": ["array of headline strings"],
+    "AdvertisingCopy": "string - business-focused copy",
+    "KeyFeatureBullets": ["array of feature bullets"],
+    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+  },
+  "UpgraderCopy": {
+    "Headlines": ["array of headline strings"],
+    "AdvertisingCopy": "string - upgrade-focused copy",
+    "KeyFeatureBullets": ["array of feature bullets"],
+    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+  }
 }
 ```
+
+**Copy Types**:
+- **ProductCopy**: General product marketing copy (most common)
+- **BusinessCopy**: Copy targeted at business customers
+- **UpgraderCopy**: Copy for customers upgrading from previous versions
+
+Each copy type is optional - only sections found in the document are included. Within each section, LegalReferences is always the last field to maintain consistent ordering.
 
 **Superscript Handling**:
 The system handles superscripts in three distinct ways:

@@ -49,12 +49,48 @@ async function processWithGPT5(extractedText: string): Promise<any> {
   try {
     // Note: Using gpt-4o-2024-08-06 or later for structured outputs
     // This enforces strict JSON schema with guaranteed field order
+    
+    // Define the copy section schema (reusable for ProductCopy, BusinessCopy, UpgraderCopy)
+    const copySectionSchema = {
+      type: "object",
+      properties: {
+        Headlines: {
+          type: "array",
+          description: "Array of headline strings",
+          items: { type: "string" }
+        },
+        AdvertisingCopy: {
+          type: "string",
+          description: "Main advertising copy/description with {{sup:N}} tokens for footnotes"
+        },
+        KeyFeatureBullets: {
+          type: "array",
+          description: "Array of feature bullets with {{sup:N}} tokens for footnotes",
+          items: { type: "string" }
+        },
+        LegalReferences: {
+          type: "array",
+          description: "Legal disclaimers/footnotes, each prefixed with {{sup:N}} token or standalone legal text",
+          items: { type: "string" }
+        }
+      },
+      required: ["Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"],
+      additionalProperties: false
+    };
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o-2024-08-06",
       messages: [
         {
           role: "system",
           content: `You are a product documentation extraction specialist. Extract structured product information from the provided text.
+
+Documents can contain different copy sections:
+- ProductCopy: General product marketing copy
+- BusinessCopy: Copy targeted at business customers
+- UpgraderCopy: Copy for customers upgrading from previous versions
+
+Each section (if present) contains: Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (ALWAYS LAST).
 
 CRITICAL: Handle superscripts in THREE distinct ways:
 
@@ -73,7 +109,7 @@ C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
    - Keep as literal Unicode characters
    - These are semantic content, not formatting
 
-Extract all available information. If a field is not present, use reasonable defaults or empty strings/arrays.`,
+Extract sections that exist in the document. If a section is not present, omit it entirely.`,
         },
         {
           role: "user",
@@ -88,27 +124,11 @@ Extract all available information. If a field is not present, use reasonable def
           schema: {
             type: "object",
             properties: {
-              Headlines: {
-                type: "array",
-                description: "Array of headline strings from the document",
-                items: { type: "string" }
-              },
-              AdvertisingCopy: {
-                type: "string",
-                description: "Main advertising copy/description with {{sup:N}} tokens for footnotes"
-              },
-              KeyFeatureBullets: {
-                type: "array",
-                description: "Array of feature bullets with {{sup:N}} tokens for footnotes",
-                items: { type: "string" }
-              },
-              LegalReferences: {
-                type: "array",
-                description: "Legal disclaimers/footnotes, each prefixed with {{sup:N}} token or standalone legal text",
-                items: { type: "string" }
-              }
+              ProductCopy: copySectionSchema,
+              BusinessCopy: copySectionSchema,
+              UpgraderCopy: copySectionSchema
             },
-            required: ["Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"],
+            required: [],
             additionalProperties: false
           }
         }
@@ -118,14 +138,28 @@ Extract all available information. If a field is not present, use reasonable def
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
+    // Helper function to normalize a copy section with correct field order
+    const normalizeCopySection = (section: any) => ({
+      Headlines: Array.isArray(section?.Headlines) ? section.Headlines : [],
+      AdvertisingCopy: section?.AdvertisingCopy || "",
+      KeyFeatureBullets: Array.isArray(section?.KeyFeatureBullets) ? section.KeyFeatureBullets : [],
+      LegalReferences: Array.isArray(section?.LegalReferences) ? section.LegalReferences : [],
+    });
+    
     // CRITICAL: Explicitly reconstruct the object in the correct order
     // This ensures JSON.stringify outputs fields in this exact sequence
-    const normalized = {
-      Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
-      AdvertisingCopy: parsedData.AdvertisingCopy || "",
-      KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
-      LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
-    };
+    const normalized: any = {};
+    
+    // Add sections in order if they exist
+    if (parsedData.ProductCopy) {
+      normalized.ProductCopy = normalizeCopySection(parsedData.ProductCopy);
+    }
+    if (parsedData.BusinessCopy) {
+      normalized.BusinessCopy = normalizeCopySection(parsedData.BusinessCopy);
+    }
+    if (parsedData.UpgraderCopy) {
+      normalized.UpgraderCopy = normalizeCopySection(parsedData.UpgraderCopy);
+    }
     
     // Verify the order is correct by stringifying and re-parsing
     // This guarantees consistent field order in storage
