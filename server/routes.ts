@@ -54,16 +54,54 @@ async function processWithGPT5(extractedText: string): Promise<any> {
       messages: [
         {
           role: "system",
-          content: `You are a product documentation extraction specialist. Extract structured product information from the provided text and return it as a JSON object with this exact structure:
+          content: `You are a product documentation extraction specialist. Extract structured product information from the provided text and return it as a JSON object.
+
+CRITICAL: Handle superscripts in THREE distinct ways:
+
+A. FOOTNOTES / CLAIM REFERENCES (¹, ², ³, etc.)
+   - Replace with tokens: {{sup:1}}, {{sup:2}}, {{sup:3}}
+   - Add to sup_annotations array with metadata:
+   {
+     "key": "1",
+     "type": "footnote_ref",
+     "footnote_id": "descriptive_id"
+   }
+   Example: "battery for several days¹" → "battery for several days{{sup:1}}"
+
+B. LEGAL MARKS (™, ®, ℠)
+   - Extract product names as structured objects:
+   {
+     "base": "Vision Pro",
+     "marks": [{"mark_type": "TM", "render_pref": "superscript"}]
+   }
+   - Do NOT include marks in the base text strings
+   - Mark types: "TM" for ™, "R" for ®, "SM" for ℠
+
+C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
+   - Keep as literal Unicode characters
+   - These are semantic content, not formatting
+
+Return JSON with this structure:
 {
-  "officialProductName": "string",
-  "featureCopy": "string (main feature description)",
-  "featureBullets": ["string array with 1-20 feature bullet points"],
-  "legalBullets": ["string array with 1-20 legal disclaimers or regulatory notes"],
-  "advertisingCopy": "string (marketing copy)"
+  "officialProductName": {
+    "base": "string",
+    "marks": [{"mark_type": "TM|R|SM", "render_pref": "superscript"}] // optional
+  },
+  "featureCopy": "string (with {{sup:N}} tokens for footnotes)",
+  "featureBullets": ["array with {{sup:N}} tokens for footnotes"],
+  "legalBullets": ["array of legal disclaimers"],
+  "advertisingCopy": "string (with {{sup:N}} tokens for footnotes)",
+  "sup_annotations": [
+    {
+      "key": "1",
+      "type": "footnote_ref",
+      "footnote_id": "descriptive_identifier",
+      "original_text": "original footnote text if available"
+    }
+  ]
 }
 
-Extract all available information. If a field is not present in the text, use reasonable defaults or empty strings/arrays. Ensure the response is valid JSON.`,
+Extract all available information. If a field is not present, use reasonable defaults or empty strings/arrays.`,
         },
         {
           role: "user",
@@ -76,21 +114,21 @@ Extract all available information. If a field is not present in the text, use re
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
-    // Validate the structure
-    if (!parsedData.officialProductName || !parsedData.featureCopy || 
-        !Array.isArray(parsedData.featureBullets) || !Array.isArray(parsedData.legalBullets) ||
-        !parsedData.advertisingCopy) {
-      console.warn("AI response missing required fields, using defaults");
-      return {
-        officialProductName: parsedData.officialProductName || "Unknown Product",
-        featureCopy: parsedData.featureCopy || "",
-        featureBullets: Array.isArray(parsedData.featureBullets) ? parsedData.featureBullets : [],
-        legalBullets: Array.isArray(parsedData.legalBullets) ? parsedData.legalBullets : [],
-        advertisingCopy: parsedData.advertisingCopy || "",
-      };
+    // Validate and normalize the structure
+    const normalized: any = {
+      officialProductName: parsedData.officialProductName || "Unknown Product",
+      featureCopy: parsedData.featureCopy || "",
+      featureBullets: Array.isArray(parsedData.featureBullets) ? parsedData.featureBullets : [],
+      legalBullets: Array.isArray(parsedData.legalBullets) ? parsedData.legalBullets : [],
+      advertisingCopy: parsedData.advertisingCopy || "",
+    };
+
+    // Add optional fields if present
+    if (Array.isArray(parsedData.sup_annotations) && parsedData.sup_annotations.length > 0) {
+      normalized.sup_annotations = parsedData.sup_annotations;
     }
     
-    return parsedData;
+    return normalized;
   } catch (error) {
     console.error("GPT processing error:", error);
     throw new Error("Failed to process document with AI");
@@ -178,32 +216,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
-    console.log("=== UPLOAD REQUEST RECEIVED ===");
-    console.log("File:", req.file?.originalname);
     try {
       if (!req.file) {
-        console.log("ERROR: No file in request");
         return res.status(400).json({ error: "No file uploaded" });
       }
 
       const { folderId } = req.body;
       const file = req.file;
       const fileType = file.originalname.split(".").pop()?.toLowerCase() || "";
-      console.log("File type:", fileType, "Size:", file.size, "bytes");
 
       // Extract text from the uploaded file
-      console.log("Starting text extraction...");
       const extractedText = await extractTextFromFile(file.path, fileType);
-      console.log("Text extracted, length:", extractedText.length, "characters");
 
-      // Process with GPT-5
-      console.log("Sending to OpenAI for processing...");
+      // Process with GPT-4o
       const structuredData = await processWithGPT5(extractedText);
-      console.log("OpenAI processing complete");
 
       // Save document to database
-      console.log("Saving to database...");
-      const documentData = {
+      const document = await storage.createDocument({
         name: file.originalname,
         fileType,
         filePath: file.path,
@@ -212,37 +241,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isProcessed: true,
         extractedText,
         structuredData,
-      };
-      console.log("Document data:", {
-        name: file.originalname,
-        fileType,
-        size: `${(file.size / 1024).toFixed(2)} KB`,
-        folderId: folderId || null,
-        isProcessed: true,
-        extractedTextLength: extractedText.length,
-        structuredDataKeys: Object.keys(structuredData || {}),
       });
-      
-      let document;
-      try {
-        console.log("Calling storage.createDocument...");
-        document = await storage.createDocument(documentData);
-        console.log("Document created successfully:", document.id);
-      } catch (dbError: any) {
-        console.error("=== DATABASE SAVE ERROR ===");
-        console.error("Error name:", dbError.name);
-        console.error("Error message:", dbError.message);
-        console.error("Error stack:", dbError.stack);
-        console.error("Full error:", JSON.stringify(dbError, null, 2));
-        throw new Error(`Database error: ${dbError.message}`);
-      }
 
       // Remove filePath from response for security
       const { filePath: _, ...safeDocument } = document;
-      console.log("=== UPLOAD COMPLETE ===", "Document ID:", document.id);
       res.json(safeDocument);
     } catch (error) {
-      console.error("=== UPLOAD ERROR ===", error);
+      console.error("Upload error:", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to upload document" });
     }
   });
