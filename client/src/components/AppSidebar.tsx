@@ -17,7 +17,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library } from "lucide-react";
+import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,7 @@ export function AppSidebar({
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
     { id: "library", title: "Library", icon: Library },
+    { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];
 
   return (

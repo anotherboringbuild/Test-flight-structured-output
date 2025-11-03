@@ -10,6 +10,7 @@ import { DocumentUploadZone } from "@/components/DocumentUploadZone";
 import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
+import Analytics from "@/pages/Analytics";
 import { FolderDialog } from "@/components/FolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveToFolderDialog } from "@/components/MoveToFolderDialog";
@@ -585,6 +586,8 @@ function AppContent() {
                   onBulkMove={handleBulkMove}
                   onBulkExport={handleBulkExport}
                 />
+              ) : currentView === "analytics" ? (
+                <Analytics />
               ) : (
                 <div className="p-8">
                   <div className="mb-6">
