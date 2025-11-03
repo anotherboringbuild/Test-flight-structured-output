@@ -93,6 +93,8 @@ export function DocumentLibrary({
   const [filterFolder, setFilterFolder] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -131,6 +133,24 @@ export function DocumentLibrary({
       filtered = filtered.filter((doc) => doc.isProcessed === isProcessed);
     }
 
+    // Apply month filter
+    if (filterMonth !== "all") {
+      if (filterMonth === "none") {
+        filtered = filtered.filter((doc) => !doc.month);
+      } else {
+        filtered = filtered.filter((doc) => doc.month === filterMonth);
+      }
+    }
+
+    // Apply year filter
+    if (filterYear !== "all") {
+      if (filterYear === "none") {
+        filtered = filtered.filter((doc) => !doc.year);
+      } else {
+        filtered = filtered.filter((doc) => doc.year === filterYear);
+      }
+    }
+
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       let comparison = 0;
@@ -147,7 +167,7 @@ export function DocumentLibrary({
     });
 
     return sorted;
-  }, [documents, searchQuery, filterFolder, filterType, filterStatus, sortField, sortDirection]);
+  }, [documents, searchQuery, filterFolder, filterType, filterStatus, filterMonth, filterYear, sortField, sortDirection]);
 
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredAndSortedDocuments.length) {
@@ -203,6 +223,15 @@ export function DocumentLibrary({
 
   const allSelected = selectedIds.size === filteredAndSortedDocuments.length && filteredAndSortedDocuments.length > 0;
   const someSelected = selectedIds.size > 0 && selectedIds.size < filteredAndSortedDocuments.length;
+
+  // Get unique months and years from documents
+  const uniqueMonths = Array.from(new Set(documents.map((d) => d.month).filter(Boolean)));
+  const uniqueYears = Array.from(new Set(documents.map((d) => d.year).filter(Boolean))).sort();
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -260,6 +289,34 @@ export function DocumentLibrary({
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="processed">Processed</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger className="w-[150px]" data-testid="select-filter-month">
+              <SelectValue placeholder="All Months" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Months</SelectItem>
+              <SelectItem value="none">No Month</SelectItem>
+              {months.filter((month) => uniqueMonths.includes(month)).map((month) => (
+                <SelectItem key={month} value={month}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-[120px]" data-testid="select-filter-year">
+              <SelectValue placeholder="All Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              <SelectItem value="none">No Year</SelectItem>
+              {uniqueYears.map((year) => (
+                <SelectItem key={year} value={year}>
+                  {year}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
