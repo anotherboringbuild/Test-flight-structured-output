@@ -129,8 +129,8 @@ export function ComparisonView({
             </div>
           </div>
           <ScrollArea className="h-[calc(100vh-12rem)]">
-            <div className="p-6">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed" data-testid="text-extracted">
+            <div className="overflow-x-auto p-6">
+              <pre className="whitespace-pre font-sans text-sm leading-relaxed" data-testid="text-extracted">
                 {extractedText}
               </pre>
             </div>
@@ -162,9 +162,11 @@ export function ComparisonView({
               />
             ) : (
               <ScrollArea className="h-full">
-                <pre className="p-6 font-mono text-xs leading-relaxed" data-testid="text-structured">
-                  {editedData}
-                </pre>
+                <div className="overflow-x-auto p-6">
+                  <pre className="whitespace-pre font-mono text-xs leading-relaxed" data-testid="text-structured">
+                    {editedData}
+                  </pre>
+                </div>
               </ScrollArea>
             )}
           </div>
