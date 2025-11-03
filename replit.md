@@ -34,6 +34,21 @@ Preferred communication style: Simple, everyday language.
 - Responsive design with panels stacking on mobile
 - Monaco Editor integration for JSON editing
 - File upload via react-dropzone
+- Comprehensive document library with search, filtering, sorting, and bulk operations
+
+**Key Features**:
+1. **Document Upload** - Drag-and-drop interface for uploading DOCX/PDF files with folder selection
+2. **Comparison View** - Side-by-side view of extracted text and structured JSON with hover-to-highlight
+3. **Document Library** - Table-based document management with:
+   - Real-time search by document name
+   - Filtering by folder, file type (DOCX/PDF), and processing status
+   - Sorting by name, date, or size (ascending/descending)
+   - Bulk selection with checkboxes
+   - Bulk operations: export, move to folder, delete
+   - Individual document actions: rename, move, delete via context menu
+4. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
+5. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
+6. **Export Functionality** - Export individual or multiple documents as JSON files
 
 ## Backend Architecture
 
@@ -51,7 +66,8 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/documents/upload` - File upload and processing
 - `GET /api/documents` - List all documents
 - `GET /api/documents/:id` - Get specific document
-- `PUT /api/documents/:id` - Update document
+- `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, etc.)
+- `POST /api/documents/:id/reprocess` - Reprocess document with latest AI extraction
 - `DELETE /api/documents/:id` - Delete document
 - Folder management endpoints (CRUD operations)
 
