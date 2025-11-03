@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { DocumentUploadZone } from "@/components/DocumentUploadZone";
+import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
 import { FolderDialog } from "@/components/FolderDialog";
@@ -209,6 +210,49 @@ function AppContent() {
     },
   });
 
+  const renameDocumentMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      return await apiRequest("PATCH", `/api/documents/${id}`, { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Document renamed",
+        description: "Document has been renamed successfully.",
+      });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      return await Promise.all(ids.map((id) => apiRequest("DELETE", `/api/documents/${id}`)));
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      toast({
+        title: "Documents deleted",
+        description: `${ids.length} document(s) deleted successfully.`,
+      });
+    },
+  });
+
+  const bulkMoveMutation = useMutation({
+    mutationFn: async ({ ids, folderId }: { ids: string[]; folderId: string | null }) => {
+      return await Promise.all(
+        ids.map((id) => apiRequest("PATCH", `/api/documents/${id}`, { folderId }))
+      );
+    },
+    onSuccess: (_, { ids }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      toast({
+        title: "Documents moved",
+        description: `${ids.length} document(s) moved successfully.`,
+      });
+    },
+  });
+
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
@@ -344,6 +388,55 @@ function AppContent() {
     }
   };
 
+  const handleRenameDocument = (id: string, name: string) => {
+    renameDocumentMutation.mutate({ id, name });
+  };
+
+  const handleBulkDelete = (ids: string[]) => {
+    if (ids.length === 0) return;
+    bulkDeleteMutation.mutate(ids);
+  };
+
+  const handleBulkMove = (ids: string[], folderId: string | null) => {
+    if (ids.length === 0) return;
+    bulkMoveMutation.mutate({ ids, folderId });
+  };
+
+  const handleBulkExport = (ids: string[]) => {
+    if (ids.length === 0) return;
+    
+    const docsToExport = documents.filter((d) => ids.includes(d.id) && d.isProcessed);
+    
+    if (docsToExport.length === 0) {
+      toast({
+        title: "No documents to export",
+        description: "Selected documents are not yet processed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a combined export for multiple documents
+    const combinedData = docsToExport.map((doc) => ({
+      name: doc.name,
+      data: doc.structuredData,
+    }));
+
+    const dataStr = JSON.stringify(combinedData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `bulk-export-${new Date().getTime()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export successful",
+      description: `${docsToExport.length} document(s) exported successfully.`,
+    });
+  };
+
   const style = {
     "--sidebar-width": "18rem",
     "--sidebar-width-icon": "3rem",
@@ -409,7 +502,7 @@ function AppContent() {
                   isProcessing={reprocessDocumentMutation.isPending}
                   onBack={() => {
                     setSelectedDocumentId(null);
-                    setCurrentView("upload");
+                    setCurrentView("library");
                   }}
                   onExport={handleExportDocument}
                   onSave={(newData) => {
@@ -432,6 +525,18 @@ function AppContent() {
                       reprocessDocumentMutation.mutate(selectedDocument.id);
                     }
                   }}
+                />
+              ) : currentView === "library" ? (
+                <DocumentLibrary
+                  documents={documents}
+                  folders={folders}
+                  onDocumentClick={handleDocumentClick}
+                  onDeleteDocument={handleDeleteDocument}
+                  onMoveDocument={handleMoveDocument}
+                  onRenameDocument={handleRenameDocument}
+                  onBulkDelete={handleBulkDelete}
+                  onBulkMove={handleBulkMove}
+                  onBulkExport={handleBulkExport}
                 />
               ) : (
                 <div className="p-8">
