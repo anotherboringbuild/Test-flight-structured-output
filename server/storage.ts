@@ -36,7 +36,19 @@ export class DbStorage implements IStorage {
   }
 
   async createDocument(document: InsertDocument): Promise<Document> {
-    const result = await db.insert(documents).values(document).returning();
+    console.log("[DbStorage] createDocument called");
+    console.log("[DbStorage] Inserting document with name:", document.name);
+    console.log("[DbStorage] Structured data type:", typeof document.structuredData);
+    console.log("[DbStorage] Structured data:", JSON.stringify(document.structuredData).substring(0, 200));
+    
+    const result = await Promise.race([
+      db.insert(documents).values(document).returning(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database insert timeout after 10s')), 10000)
+      )
+    ]) as any[];
+    
+    console.log("[DbStorage] Insert completed, result:", result);
     return result[0];
   }
 
