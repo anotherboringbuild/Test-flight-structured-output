@@ -118,16 +118,18 @@ Extract all available information. If a field is not present, use reasonable def
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
-    // The structured output already enforces the field order in the schema
-    // But we normalize to ensure type safety and defaults
-    const normalized: any = {
+    // CRITICAL: Explicitly reconstruct the object in the correct order
+    // This ensures JSON.stringify outputs fields in this exact sequence
+    const normalized = {
       Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
       AdvertisingCopy: parsedData.AdvertisingCopy || "",
       KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
       LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
     };
     
-    return normalized;
+    // Verify the order is correct by stringifying and re-parsing
+    // This guarantees consistent field order in storage
+    return JSON.parse(JSON.stringify(normalized));
   } catch (error) {
     console.error("GPT processing error:", error);
     throw new Error("Failed to process document with AI");

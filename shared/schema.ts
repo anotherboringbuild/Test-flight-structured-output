@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -20,7 +20,7 @@ export const documents = pgTable("documents", {
   year: varchar("year", { length: 4 }),
   isProcessed: boolean("is_processed").notNull().default(false),
   extractedText: text("extracted_text"),
-  structuredData: jsonb("structured_data"),
+  structuredData: json("structured_data"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
