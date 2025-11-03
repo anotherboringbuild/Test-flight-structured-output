@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const { folderId } = req.body;
+      const { folderId, month, year } = req.body;
       const file = req.file;
       const fileType = file.originalname.split(".").pop()?.toLowerCase() || "";
 
@@ -217,6 +217,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filePath: file.path,
         size: `${(file.size / 1024).toFixed(2)} KB`,
         folderId: folderId || null,
+        month: month || null,
+        year: year || null,
         isProcessed: true,
         extractedText,
         structuredData,
