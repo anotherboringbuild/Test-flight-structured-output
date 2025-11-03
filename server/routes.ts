@@ -245,6 +245,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/documents/:id/reprocess", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Re-extract text from the file
+      const extractedText = await extractTextFromFile(document.filePath, document.fileType);
+
+      // Reprocess with GPT-4o using the new schema
+      const structuredData = await processWithGPT5(extractedText);
+
+      // Update the document with new structured data
+      const updatedDocument = await storage.updateDocument(id, {
+        extractedText,
+        structuredData,
+        isProcessed: true,
+      });
+
+      if (!updatedDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = updatedDocument;
+      res.json(safeDocument);
+    } catch (error) {
+      console.error("Reprocess error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to reprocess document" });
+    }
+  });
+
   app.delete("/api/documents/:id", async (req, res) => {
     try {
       const { id } = req.params;
