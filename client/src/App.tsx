@@ -11,6 +11,7 @@ import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
 import { FolderDialog } from "@/components/FolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
+import { MoveToFolderDialog } from "@/components/MoveToFolderDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
@@ -34,6 +35,9 @@ function AppContent() {
   const [editingFolder, setEditingFolder] = useState<FolderType | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletingFolder, setDeletingFolder] = useState<FolderType | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [movingDocument, setMovingDocument] = useState<DocumentType | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   // Fetch documents
   const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<DocumentType[]>({
@@ -47,10 +51,13 @@ function AppContent() {
 
   // Upload mutation
   const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      console.log("Starting upload for file:", file.name);
+    mutationFn: async ({ file, folderId }: { file: File; folderId?: string | null }) => {
+      console.log("Starting upload for file:", file.name, "to folder:", folderId);
       const formData = new FormData();
       formData.append("file", file);
+      if (folderId) {
+        formData.append("folderId", folderId);
+      }
       
       console.log("Sending POST to /api/documents/upload");
       const response = await fetch("/api/documents/upload", {
@@ -149,6 +156,20 @@ function AppContent() {
     },
   });
 
+  const moveDocumentMutation = useMutation({
+    mutationFn: async ({ id, folderId }: { id: string; folderId: string | null }) => {
+      return await apiRequest("PATCH", `/api/documents/${id}`, { folderId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      toast({
+        title: "Document moved",
+        description: "The document has been moved successfully.",
+      });
+    },
+  });
+
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId);
 
   const handleUpload = async (files: File[]) => {
@@ -171,7 +192,7 @@ function AppContent() {
     for (const file of files) {
       console.log("Uploading file:", file.name, file.type);
       try {
-        await uploadMutation.mutateAsync(file);
+        await uploadMutation.mutateAsync({ file, folderId: selectedFolderId });
       } catch (error) {
         console.error("Error in handleUpload:", error);
         // Error toast is already shown by onError callback
@@ -255,6 +276,22 @@ function AppContent() {
     setCurrentView(`folder-${id}`);
   };
 
+  const handleMoveDocument = (document: DocumentType) => {
+    setMovingDocument(document);
+    setShowMoveDialog(true);
+  };
+
+  const handleMoveSubmit = (folderId: string | null) => {
+    if (movingDocument) {
+      moveDocumentMutation.mutate({
+        id: movingDocument.id,
+        folderId,
+      });
+      setShowMoveDialog(false);
+      setMovingDocument(null);
+    }
+  };
+
   const style = {
     "--sidebar-width": "18rem",
     "--sidebar-width-icon": "3rem",
@@ -291,6 +328,7 @@ function AppContent() {
             onDocumentClick={handleDocumentClick}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
+            onMoveDocument={handleMoveDocument}
           />
           <div className="flex flex-1 flex-col">
             <div className="flex items-center gap-2 border-b px-4 py-2">
@@ -349,6 +387,9 @@ function AppContent() {
                   <DocumentUploadZone
                     onFilesSelected={handleUpload}
                     disabled={uploadMutation.isPending}
+                    folders={folders}
+                    selectedFolderId={selectedFolderId}
+                    onFolderChange={setSelectedFolderId}
                   />
                   {isLoadingDocuments && (
                     <p className="mt-4 text-center text-sm text-muted-foreground">
@@ -399,6 +440,18 @@ function AppContent() {
               ? documents.filter((d) => d.folderId === deletingFolder.id).length
               : 0
           }
+        />
+
+        <MoveToFolderDialog
+          open={showMoveDialog}
+          onClose={() => {
+            setShowMoveDialog(false);
+            setMovingDocument(null);
+          }}
+          onSubmit={handleMoveSubmit}
+          folders={folders}
+          currentFolderId={movingDocument?.folderId}
+          documentName={movingDocument?.name || ""}
         />
 
         <Toaster />

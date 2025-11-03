@@ -21,14 +21,15 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-import type { Folder as FolderType } from "@shared/schema";
+import type { Folder as FolderType, Document as DocumentType } from "@shared/schema";
 
-interface Document {
+interface Document extends Partial<DocumentType> {
   id: string;
   name: string;
   fileType: "docx" | "pdf" | "pages";
   isProcessed: boolean;
   date: string;
+  folderId?: string | null;
 }
 
 interface Folder extends FolderType {
@@ -46,6 +47,7 @@ interface AppSidebarProps {
   onDocumentClick: (documentId: string) => void;
   onEditFolder: (folder: Folder) => void;
   onDeleteFolder: (folder: Folder) => void;
+  onMoveDocument: (document: Document) => void;
 }
 
 export function AppSidebar({
@@ -59,6 +61,7 @@ export function AppSidebar({
   onDocumentClick,
   onEditFolder,
   onDeleteFolder,
+  onMoveDocument,
 }: AppSidebarProps) {
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
@@ -100,25 +103,38 @@ export function AppSidebar({
               <SidebarMenu>
                 {documents.map((doc) => (
                   <SidebarMenuItem key={doc.id}>
-                    <SidebarMenuButton
-                      isActive={selectedDocumentId === doc.id}
-                      onClick={() => onDocumentClick(doc.id)}
-                      data-testid={`button-document-${doc.id}`}
-                      className="flex-col items-start gap-1 h-auto py-2"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="truncate text-sm font-medium">{doc.name}</span>
-                        {doc.isProcessed && (
-                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground w-full">
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                          {doc.fileType.toUpperCase()}
-                        </Badge>
-                        <span className="truncate">{doc.date}</span>
-                      </div>
-                    </SidebarMenuButton>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={selectedDocumentId === doc.id}
+                          onClick={() => onDocumentClick(doc.id)}
+                          data-testid={`button-document-${doc.id}`}
+                          className="flex-col items-start gap-1 h-auto py-2"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="truncate text-sm font-medium">{doc.name}</span>
+                            {doc.isProcessed && (
+                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground w-full">
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                              {doc.fileType.toUpperCase()}
+                            </Badge>
+                            <span className="truncate">{doc.date}</span>
+                          </div>
+                        </SidebarMenuButton>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem
+                          onClick={() => onMoveDocument(doc)}
+                          data-testid={`button-move-document-${doc.id}`}
+                        >
+                          <FolderOpen className="mr-2 h-4 w-4" />
+                          Move to Folder
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
