@@ -202,7 +202,113 @@ Extract sections that exist in the document. If a section is not present, omit i
   }
 }
 
+// Helper function to analyze document structure
+function analyzeDocumentStructure(structuredData: any) {
+  if (!structuredData) {
+    return {
+      hasProductCopy: false,
+      hasBusinessCopy: false,
+      hasUpgraderCopy: false,
+      productCopyCompleteness: null,
+      businessCopyCompleteness: null,
+      upgraderCopyCompleteness: null,
+    };
+  }
+
+  const analyzeCopySection = (section: any) => {
+    if (!section) return null;
+    return {
+      hasProductName: !!section.ProductName && section.ProductName.length > 0,
+      hasHeadlines: Array.isArray(section.Headlines) && section.Headlines.length > 0,
+      hasAdvertisingCopy: !!section.AdvertisingCopy && section.AdvertisingCopy.length > 0,
+      hasKeyFeatureBullets: Array.isArray(section.KeyFeatureBullets) && section.KeyFeatureBullets.length > 0,
+      hasLegalReferences: Array.isArray(section.LegalReferences) && section.LegalReferences.length > 0,
+      headlinesCount: Array.isArray(section.Headlines) ? section.Headlines.length : 0,
+      keyFeatureBulletsCount: Array.isArray(section.KeyFeatureBullets) ? section.KeyFeatureBullets.length : 0,
+      legalReferencesCount: Array.isArray(section.LegalReferences) ? section.LegalReferences.length : 0,
+    };
+  };
+
+  return {
+    hasProductCopy: !!structuredData.ProductCopy,
+    hasBusinessCopy: !!structuredData.BusinessCopy,
+    hasUpgraderCopy: !!structuredData.UpgraderCopy,
+    productCopyCompleteness: analyzeCopySection(structuredData.ProductCopy),
+    businessCopyCompleteness: analyzeCopySection(structuredData.BusinessCopy),
+    upgraderCopyCompleteness: analyzeCopySection(structuredData.UpgraderCopy),
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Analytics
+  app.get("/api/analytics", async (req, res) => {
+    try {
+      const allDocuments = await storage.getAllDocuments();
+      const processedDocuments = allDocuments.filter(doc => doc.isProcessed);
+      
+      let productCopyCount = 0;
+      let businessCopyCount = 0;
+      let upgraderCopyCount = 0;
+      
+      let emptyKeyFeatureBulletsCount = 0;
+      let documentsWithMissingFields = 0;
+      
+      const documentAnalysis = processedDocuments.map(doc => {
+        const analysis = analyzeDocumentStructure(doc.structuredData);
+        
+        if (analysis.hasProductCopy) productCopyCount++;
+        if (analysis.hasBusinessCopy) businessCopyCount++;
+        if (analysis.hasUpgraderCopy) upgraderCopyCount++;
+        
+        // Check for empty KeyFeatureBullets in any section
+        const hasEmptyBullets = 
+          (analysis.productCopyCompleteness && !analysis.productCopyCompleteness.hasKeyFeatureBullets) ||
+          (analysis.businessCopyCompleteness && !analysis.businessCopyCompleteness.hasKeyFeatureBullets) ||
+          (analysis.upgraderCopyCompleteness && !analysis.upgraderCopyCompleteness.hasKeyFeatureBullets);
+        
+        if (hasEmptyBullets) emptyKeyFeatureBulletsCount++;
+        
+        // Check if any section has missing required fields (excluding KeyFeatureBullets which is optional)
+        const checkCompleteness = (section: any) => {
+          if (!section) return false;
+          return !section.hasProductName || !section.hasHeadlines || 
+                 !section.hasAdvertisingCopy || !section.hasLegalReferences;
+        };
+        
+        if (checkCompleteness(analysis.productCopyCompleteness) ||
+            checkCompleteness(analysis.businessCopyCompleteness) ||
+            checkCompleteness(analysis.upgraderCopyCompleteness)) {
+          documentsWithMissingFields++;
+        }
+        
+        return {
+          id: doc.id,
+          name: doc.name,
+          ...analysis,
+        };
+      });
+      
+      res.json({
+        totalDocuments: allDocuments.length,
+        processedDocuments: processedDocuments.length,
+        unprocessedDocuments: allDocuments.length - processedDocuments.length,
+        sectionCoverage: {
+          productCopy: productCopyCount,
+          businessCopy: businessCopyCount,
+          upgraderCopy: upgraderCopyCount,
+        },
+        qualityMetrics: {
+          documentsWithEmptyKeyFeatureBullets: emptyKeyFeatureBulletsCount,
+          documentsWithMissingFields: documentsWithMissingFields,
+        },
+        documentAnalysis,
+      });
+    } catch (error: any) {
+      console.error("Error generating analytics:", error);
+      res.status(500).json({ error: "Failed to generate analytics" });
+    }
+  });
+
   // Folders
   app.get("/api/folders", async (req, res) => {
     try {
