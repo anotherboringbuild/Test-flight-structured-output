@@ -47,14 +47,14 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
 
 async function processWithGPT5(extractedText: string): Promise<any> {
   try {
-    // Note: Using gpt-4o as GPT-5 is not publicly available yet
-    // This is the most advanced model for structured JSON extraction
+    // Note: Using gpt-4o-2024-08-06 or later for structured outputs
+    // This enforces strict JSON schema with guaranteed field order
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-2024-08-06",
       messages: [
         {
           role: "system",
-          content: `You are a product documentation extraction specialist. Extract structured product information from the provided text and return it as a JSON object.
+          content: `You are a product documentation extraction specialist. Extract structured product information from the provided text.
 
 CRITICAL: Handle superscripts in THREE distinct ways:
 
@@ -73,18 +73,6 @@ C. UNITS AND SCIENTIFIC NOTATION (cm², H₂O, 10⁶, CO₂e, etc.)
    - Keep as literal Unicode characters
    - These are semantic content, not formatting
 
-Return JSON with this structure (IMPORTANT: LegalReferences must always be the last field):
-{
-  "Headlines": ["array of headline strings from the document"],
-  "AdvertisingCopy": "string - main advertising copy/description (with {{sup:N}} tokens for footnotes)",
-  "KeyFeatureBullets": ["array of feature bullets with {{sup:N}} tokens for footnotes"],
-  "LegalReferences": [
-    "{{sup:1}} First legal disclaimer/footnote text",
-    "{{sup:2}} Second legal disclaimer/footnote text",
-    "Legal text without footnote marker (if no reference in content)"
-  ]
-}
-
 Extract all available information. If a field is not present, use reasonable defaults or empty strings/arrays.`,
         },
         {
@@ -92,18 +80,50 @@ Extract all available information. If a field is not present, use reasonable def
           content: extractedText,
         },
       ],
-      response_format: { type: "json_object" },
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "product_extraction",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              Headlines: {
+                type: "array",
+                description: "Array of headline strings from the document",
+                items: { type: "string" }
+              },
+              AdvertisingCopy: {
+                type: "string",
+                description: "Main advertising copy/description with {{sup:N}} tokens for footnotes"
+              },
+              KeyFeatureBullets: {
+                type: "array",
+                description: "Array of feature bullets with {{sup:N}} tokens for footnotes",
+                items: { type: "string" }
+              },
+              LegalReferences: {
+                type: "array",
+                description: "Legal disclaimers/footnotes, each prefixed with {{sup:N}} token or standalone legal text",
+                items: { type: "string" }
+              }
+            },
+            required: ["Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"],
+            additionalProperties: false
+          }
+        }
+      }
     });
 
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
-    // Validate and normalize the structure - LegalReferences must always be last
+    // The structured output already enforces the field order in the schema
+    // But we normalize to ensure type safety and defaults
     const normalized: any = {
       Headlines: Array.isArray(parsedData.Headlines) ? parsedData.Headlines : [],
       AdvertisingCopy: parsedData.AdvertisingCopy || "",
       KeyFeatureBullets: Array.isArray(parsedData.KeyFeatureBullets) ? parsedData.KeyFeatureBullets : [],
-      // Always add LegalReferences last (with {{sup:N}} tokens at the start of each)
       LegalReferences: Array.isArray(parsedData.LegalReferences) ? parsedData.LegalReferences : [],
     };
     
