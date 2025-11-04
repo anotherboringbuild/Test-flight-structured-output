@@ -94,10 +94,17 @@ Documents can contain different copy sections:
 - BusinessCopy: Copy targeted at business customers
 - UpgraderCopy: Copy for customers upgrading from previous versions
 
-IMPORTANT: A document may contain copy for MULTIPLE PRODUCTS in each section.
-- Extract each product separately with its own Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences
-- Each product should have its own entry in the array for that section
-- For example, if a document has copy for "iPhone 16" and "iPhone 13" in the ProductCopy section, create TWO separate entries
+CRITICAL MULTI-PRODUCT EXTRACTION RULES:
+1. **Scan the ENTIRE document** for every product mentioned in EACH section
+2. **Look for product headings** like "iPhone 16 Pro Max", "iPhone 16 Pro", "Apple Watch Ultra 2", etc.
+3. **Extract EVERY product separately** - do NOT stop after the first product
+4. **Each product gets its own entry** in the array for that section
+5. Documents often list multiple products in sequence - extract ALL of them
+6. If you see a table of contents listing multiple products (e.g., "iPhone 16 Pro Max...2, iPhone 16 Pro...3"), extract copy for EACH product listed
+
+EXAMPLE: If a document has:
+- "Product copy" section with iPhone 16 Pro Max, iPhone 16 Pro, iPhone 16 Plus, iPhone 16
+- Create FOUR separate entries in ProductCopy array, one for each iPhone model
 
 Each product entry contains: ProductName, Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (ALWAYS LAST).
 
