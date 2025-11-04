@@ -82,28 +82,54 @@ export function ComparisonView({
         }
       };
 
-      // Extract segments from JSON structure
-      if (Array.isArray(parsed.Headlines)) {
-        parsed.Headlines.forEach((headline: string, idx: number) => {
-          findInText(headline, `Headline-${idx}`);
-        });
-      }
+      // Helper to extract segments from a single product
+      const extractProductSegments = (product: any, sectionName: string, productIndex: number) => {
+        const prefix = `${sectionName}-${productIndex}`;
+        
+        if (product.ProductName) {
+          findInText(product.ProductName, `${prefix}-ProductName`);
+        }
 
-      if (parsed.AdvertisingCopy) {
-        findInText(parsed.AdvertisingCopy, 'AdvertisingCopy');
-      }
+        if (Array.isArray(product.Headlines)) {
+          product.Headlines.forEach((headline: string, idx: number) => {
+            findInText(headline, `${prefix}-Headline-${idx}`);
+          });
+        }
 
-      if (Array.isArray(parsed.KeyFeatureBullets)) {
-        parsed.KeyFeatureBullets.forEach((bullet: string, idx: number) => {
-          findInText(bullet, `KeyFeatureBullet-${idx}`);
-        });
-      }
+        if (product.AdvertisingCopy) {
+          findInText(product.AdvertisingCopy, `${prefix}-AdvertisingCopy`);
+        }
 
-      if (Array.isArray(parsed.LegalReferences)) {
-        parsed.LegalReferences.forEach((legal: string, idx: number) => {
-          findInText(legal, `LegalReference-${idx}`);
-        });
-      }
+        if (Array.isArray(product.KeyFeatureBullets)) {
+          product.KeyFeatureBullets.forEach((bullet: string, idx: number) => {
+            findInText(bullet, `${prefix}-KeyFeatureBullet-${idx}`);
+          });
+        }
+
+        if (Array.isArray(product.LegalReferences)) {
+          product.LegalReferences.forEach((legal: string, idx: number) => {
+            findInText(legal, `${prefix}-LegalReference-${idx}`);
+          });
+        }
+      };
+
+      // Extract segments from all sections
+      const sections = ['ProductCopy', 'BusinessCopy', 'UpgraderCopy'] as const;
+      sections.forEach(sectionName => {
+        const section = parsed[sectionName];
+        if (!section) return;
+
+        // Handle array of products (new format)
+        if (Array.isArray(section)) {
+          section.forEach((product, productIdx) => {
+            extractProductSegments(product, sectionName, productIdx);
+          });
+        } 
+        // Handle legacy single product format
+        else {
+          extractProductSegments(section, sectionName, 0);
+        }
+      });
 
       return { jsonSegments: jsonSegs, textSegments: textSegs };
     } catch (e) {
