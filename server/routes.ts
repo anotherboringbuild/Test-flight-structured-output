@@ -319,8 +319,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalProductsExtracted += analysis.productNames.UpgraderCopy.length;
         
         // Check for empty KeyFeatureBullets in any product across all sections
-        const checkEmptyBullets = (products: any[]) => {
-          if (!products) return false;
+        const checkEmptyBullets = (products: any[] | null) => {
+          if (!products || !Array.isArray(products)) return false;
           return products.some(p => !p.hasKeyFeatureBullets);
         };
         
@@ -332,8 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (hasEmptyBullets) emptyKeyFeatureBulletsCount++;
         
         // Check if any product has missing required fields
-        const checkCompleteness = (products: any[]) => {
-          if (!products) return false;
+        const checkCompleteness = (products: any[] | null) => {
+          if (!products || !Array.isArray(products)) return false;
           return products.some(p => 
             !p.hasProductName || !p.hasHeadlines || 
             !p.hasAdvertisingCopy || !p.hasLegalReferences

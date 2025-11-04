@@ -5,6 +5,7 @@ import { BarChart3, FileText, AlertCircle, CheckCircle, XCircle } from "lucide-r
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CopySectionCompleteness {
+  productName: string;
   hasProductName: boolean;
   hasHeadlines: boolean;
   hasAdvertisingCopy: boolean;
@@ -21,15 +22,21 @@ interface DocumentAnalysis {
   hasProductCopy: boolean;
   hasBusinessCopy: boolean;
   hasUpgraderCopy: boolean;
-  productCopyCompleteness: CopySectionCompleteness | null;
-  businessCopyCompleteness: CopySectionCompleteness | null;
-  upgraderCopyCompleteness: CopySectionCompleteness | null;
+  productCopyCompleteness: CopySectionCompleteness[] | null;
+  businessCopyCompleteness: CopySectionCompleteness[] | null;
+  upgraderCopyCompleteness: CopySectionCompleteness[] | null;
+  productNames: {
+    ProductCopy: string[];
+    BusinessCopy: string[];
+    UpgraderCopy: string[];
+  };
 }
 
 interface Analytics {
   totalDocuments: number;
   processedDocuments: number;
   unprocessedDocuments: number;
+  totalProductsExtracted: number;
   sectionCoverage: {
     productCopy: number;
     businessCopy: number;
@@ -66,10 +73,10 @@ function SectionValidation({
   section, 
   sectionName 
 }: { 
-  section: CopySectionCompleteness | null; 
+  section: CopySectionCompleteness[] | null; 
   sectionName: string;
 }) {
-  if (!section) {
+  if (!section || section.length === 0) {
     return (
       <div className="space-y-2">
         <h4 className="font-medium text-sm">{sectionName}</h4>
@@ -79,15 +86,19 @@ function SectionValidation({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <h4 className="font-medium text-sm">{sectionName}</h4>
-      <div className="flex flex-wrap gap-1">
-        <ValidationBadge isComplete={section.hasProductName} label="ProductName" />
-        <ValidationBadge isComplete={section.hasHeadlines} label={`Headlines (${section.headlinesCount})`} />
-        <ValidationBadge isComplete={section.hasAdvertisingCopy} label="AdvertisingCopy" />
-        <ValidationBadge isComplete={section.hasKeyFeatureBullets} label={`Bullets (${section.keyFeatureBulletsCount})`} />
-        <ValidationBadge isComplete={section.hasLegalReferences} label={`Legal (${section.legalReferencesCount})`} />
-      </div>
+      {section.map((product, idx) => (
+        <div key={idx} className="space-y-2 border-l-2 border-primary/20 pl-3">
+          <p className="text-xs font-medium text-muted-foreground">{product.productName}</p>
+          <div className="flex flex-wrap gap-1">
+            <ValidationBadge isComplete={product.hasHeadlines} label={`Headlines (${product.headlinesCount})`} />
+            <ValidationBadge isComplete={product.hasAdvertisingCopy} label="Copy" />
+            <ValidationBadge isComplete={product.hasKeyFeatureBullets} label={`Bullets (${product.keyFeatureBulletsCount})`} />
+            <ValidationBadge isComplete={product.hasLegalReferences} label={`Legal (${product.legalReferencesCount})`} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -133,7 +144,7 @@ export default function Analytics() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
@@ -143,6 +154,19 @@ export default function Analytics() {
               <div className="text-2xl font-bold" data-testid="text-total-documents">{analytics.totalDocuments}</div>
               <p className="text-xs text-muted-foreground">
                 {analytics.processedDocuments} processed, {analytics.unprocessedDocuments} pending
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Products Extracted</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="text-total-products">{analytics.totalProductsExtracted}</div>
+              <p className="text-xs text-muted-foreground">
+                Across all sections
               </p>
             </CardContent>
           </Card>
