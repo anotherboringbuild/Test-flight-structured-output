@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,6 +47,12 @@ export function ComparisonView({
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const { toast } = useToast();
+  
+  // Search state
+  const [textSearchQuery, setTextSearchQuery] = useState("");
+  const [jsonSearchQuery, setJsonSearchQuery] = useState("");
+  const [textSearchIndex, setTextSearchIndex] = useState(0);
+  const [jsonSearchIndex, setJsonSearchIndex] = useState(0);
 
   // Auto-enable translation toggle when translation becomes available
   useEffect(() => {
@@ -56,6 +63,67 @@ export function ComparisonView({
 
   // Determine which text to display
   const displayText = showTranslation && translatedText ? translatedText : extractedText;
+
+  // Find all matches in text
+  const textMatches = useMemo(() => {
+    if (!textSearchQuery) return [];
+    const query = textSearchQuery.toLowerCase();
+    const matches: number[] = [];
+    let index = displayText.toLowerCase().indexOf(query);
+    while (index !== -1) {
+      matches.push(index);
+      index = displayText.toLowerCase().indexOf(query, index + 1);
+    }
+    return matches;
+  }, [textSearchQuery, displayText]);
+
+  // Find all matches in JSON
+  const jsonMatches = useMemo(() => {
+    if (!jsonSearchQuery) return [];
+    const query = jsonSearchQuery.toLowerCase();
+    const formattedJson = JSON.stringify(JSON.parse(editedData), null, 2);
+    const matches: number[] = [];
+    let index = formattedJson.toLowerCase().indexOf(query);
+    while (index !== -1) {
+      matches.push(index);
+      index = formattedJson.toLowerCase().indexOf(query, index + 1);
+    }
+    return matches;
+  }, [jsonSearchQuery, editedData]);
+
+  // Reset search index when query changes
+  useEffect(() => {
+    setTextSearchIndex(0);
+  }, [textSearchQuery]);
+
+  useEffect(() => {
+    setJsonSearchIndex(0);
+  }, [jsonSearchQuery]);
+
+  // Search navigation handlers
+  const goToNextTextMatch = () => {
+    if (textMatches.length > 0) {
+      setTextSearchIndex((prev) => (prev + 1) % textMatches.length);
+    }
+  };
+
+  const goToPrevTextMatch = () => {
+    if (textMatches.length > 0) {
+      setTextSearchIndex((prev) => (prev - 1 + textMatches.length) % textMatches.length);
+    }
+  };
+
+  const goToNextJsonMatch = () => {
+    if (jsonMatches.length > 0) {
+      setJsonSearchIndex((prev) => (prev + 1) % jsonMatches.length);
+    }
+  };
+
+  const goToPrevJsonMatch = () => {
+    if (jsonMatches.length > 0) {
+      setJsonSearchIndex((prev) => (prev - 1 + jsonMatches.length) % jsonMatches.length);
+    }
+  };
 
   // Parse JSON and create text segments with field mappings
   const { jsonSegments, textSegments } = useMemo(() => {
@@ -137,10 +205,63 @@ export function ComparisonView({
     }
   }, [editedData, displayText]);
 
-  // Create highlighted text with hover regions
+  // Helper to render text with search highlights
+  const renderTextWithSearch = (text: string, startOffset: number = 0) => {
+    if (!textSearchQuery || textMatches.length === 0) {
+      return text;
+    }
+
+    const elements: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    const query = textSearchQuery.toLowerCase();
+    const lowerText = text.toLowerCase();
+
+    // Find matches within this text segment
+    let searchIndex = lowerText.indexOf(query);
+    while (searchIndex !== -1) {
+      const globalIndex = startOffset + searchIndex;
+      const matchIndex = textMatches.indexOf(globalIndex);
+      const isCurrentMatch = matchIndex === textSearchIndex;
+
+      // Add text before match
+      if (searchIndex > lastIndex) {
+        elements.push(text.slice(lastIndex, searchIndex));
+      }
+
+      // Add highlighted match
+      elements.push(
+        <mark
+          key={`search-${globalIndex}`}
+          className={`${
+            isCurrentMatch
+              ? 'bg-amber-400 font-semibold ring-2 ring-amber-500'
+              : 'bg-amber-200'
+          }`}
+        >
+          {text.slice(searchIndex, searchIndex + textSearchQuery.length)}
+        </mark>
+      );
+
+      lastIndex = searchIndex + textSearchQuery.length;
+      searchIndex = lowerText.indexOf(query, lastIndex);
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      elements.push(text.slice(lastIndex));
+    }
+
+    return <>{elements}</>;
+  };
+
+  // Create highlighted text with hover regions and search highlights
   const renderHighlightedText = () => {
     if (textSegments.length === 0) {
-      return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{displayText}</pre>;
+      return (
+        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+          {renderTextWithSearch(displayText, 0)}
+        </pre>
+      );
     }
 
     // Sort segments by start position
@@ -149,16 +270,16 @@ export function ComparisonView({
     let lastIndex = 0;
 
     sorted.forEach((segment, idx) => {
-      // Add text before this segment
+      // Add text before this segment with search highlighting
       if (segment.start > lastIndex) {
         elements.push(
           <span key={`text-${idx}`}>
-            {displayText.slice(lastIndex, segment.start)}
+            {renderTextWithSearch(displayText.slice(lastIndex, segment.start), lastIndex)}
           </span>
         );
       }
 
-      // Add highlighted segment
+      // Add highlighted segment with search highlighting
       const isHovered = hoveredField === segment.field;
       elements.push(
         <mark
@@ -172,30 +293,86 @@ export function ComparisonView({
               : 'bg-primary/10 hover:bg-primary/20'
           }`}
         >
-          {displayText.slice(segment.start, segment.end)}
+          {renderTextWithSearch(displayText.slice(segment.start, segment.end), segment.start)}
         </mark>
       );
 
       lastIndex = segment.end;
     });
 
-    // Add remaining text
+    // Add remaining text with search highlighting
     if (lastIndex < displayText.length) {
       elements.push(
-        <span key="text-end">{displayText.slice(lastIndex)}</span>
+        <span key="text-end">
+          {renderTextWithSearch(displayText.slice(lastIndex), lastIndex)}
+        </span>
       );
     }
 
     return <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{elements}</pre>;
   };
 
-  // Render JSON with hover regions
+  // Helper to render JSON line with search highlights
+  const renderJsonLineWithSearch = (line: string, lineStartIndex: number) => {
+    if (!jsonSearchQuery || jsonMatches.length === 0) {
+      return line;
+    }
+
+    const elements: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    const query = jsonSearchQuery.toLowerCase();
+    const lowerLine = line.toLowerCase();
+
+    // Find matches within this line
+    let searchIndex = lowerLine.indexOf(query);
+    while (searchIndex !== -1) {
+      const globalIndex = lineStartIndex + searchIndex;
+      const matchIndex = jsonMatches.indexOf(globalIndex);
+      const isCurrentMatch = matchIndex === jsonSearchIndex;
+
+      // Add text before match
+      if (searchIndex > lastIndex) {
+        elements.push(line.slice(lastIndex, searchIndex));
+      }
+
+      // Add highlighted match
+      elements.push(
+        <mark
+          key={`json-search-${globalIndex}`}
+          className={`${
+            isCurrentMatch
+              ? 'bg-amber-400 font-semibold ring-2 ring-amber-500'
+              : 'bg-amber-200'
+          }`}
+        >
+          {line.slice(searchIndex, searchIndex + jsonSearchQuery.length)}
+        </mark>
+      );
+
+      lastIndex = searchIndex + jsonSearchQuery.length;
+      searchIndex = lowerLine.indexOf(query, lastIndex);
+    }
+
+    // Add remaining text
+    if (lastIndex < line.length) {
+      elements.push(line.slice(lastIndex));
+    }
+
+    return <>{elements}</>;
+  };
+
+  // Render JSON with hover regions and search highlights
   const renderHighlightedJson = () => {
     try {
       const parsed = JSON.parse(editedData);
-      const lines = JSON.stringify(parsed, null, 2).split('\n');
+      const formattedJson = JSON.stringify(parsed, null, 2);
+      const lines = formattedJson.split('\n');
+      let charIndex = 0;
       
       return lines.map((line, idx) => {
+        const lineStartIndex = charIndex;
+        charIndex += line.length + 1; // +1 for newline
+        
         let field: string | null = null;
         
         // Detect which field this line belongs to
@@ -235,7 +412,7 @@ export function ComparisonView({
                 : ''
             }`}
           >
-            {line}
+            {renderJsonLineWithSearch(line, lineStartIndex)}
           </div>
         );
       });
@@ -348,7 +525,7 @@ export function ComparisonView({
       <div className="grid flex-1 min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-2">
         <div className="flex flex-col border-r min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 mb-3">
               <h3 className="font-medium">Original Document</h3>
               <div className="flex items-center gap-3">
                 {onTranslate && (
@@ -376,6 +553,54 @@ export function ComparisonView({
                 </Badge>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={textSearchQuery}
+                  onChange={(e) => setTextSearchQuery(e.target.value)}
+                  placeholder="Search in document..."
+                  className="pl-8 pr-8 h-8"
+                  data-testid="input-search-text"
+                />
+                {textSearchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setTextSearchQuery("")}
+                    data-testid="button-clear-text-search"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              {textMatches.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="text-xs px-2">
+                    {textSearchIndex + 1} / {textMatches.length}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={goToPrevTextMatch}
+                    data-testid="button-prev-text-match"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={goToNextTextMatch}
+                    data-testid="button-next-text-match"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex-1 min-h-0 overflow-auto p-6" data-testid="text-extracted">
             {renderHighlightedText()}
@@ -384,10 +609,60 @@ export function ComparisonView({
 
         <div className="flex flex-col min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium">Product JSON Output</h3>
               <Badge variant="default">Structured</Badge>
             </div>
+            {!isEditing && (
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={jsonSearchQuery}
+                    onChange={(e) => setJsonSearchQuery(e.target.value)}
+                    placeholder="Search in JSON..."
+                    className="pl-8 pr-8 h-8"
+                    data-testid="input-search-json"
+                  />
+                  {jsonSearchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                      onClick={() => setJsonSearchQuery("")}
+                      data-testid="button-clear-json-search"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {jsonMatches.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-xs px-2">
+                      {jsonSearchIndex + 1} / {jsonMatches.length}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={goToPrevJsonMatch}
+                      data-testid="button-prev-json-match"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={goToNextJsonMatch}
+                      data-testid="button-next-json-match"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
             {isEditing ? (
