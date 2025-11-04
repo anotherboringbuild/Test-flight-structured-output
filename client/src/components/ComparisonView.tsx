@@ -80,15 +80,20 @@ export function ComparisonView({
   // Find all matches in JSON
   const jsonMatches = useMemo(() => {
     if (!jsonSearchQuery) return [];
-    const query = jsonSearchQuery.toLowerCase();
-    const formattedJson = JSON.stringify(JSON.parse(editedData), null, 2);
-    const matches: number[] = [];
-    let index = formattedJson.toLowerCase().indexOf(query);
-    while (index !== -1) {
-      matches.push(index);
-      index = formattedJson.toLowerCase().indexOf(query, index + 1);
+    try {
+      const query = jsonSearchQuery.toLowerCase();
+      const formattedJson = JSON.stringify(JSON.parse(editedData), null, 2);
+      const matches: number[] = [];
+      let index = formattedJson.toLowerCase().indexOf(query);
+      while (index !== -1) {
+        matches.push(index);
+        index = formattedJson.toLowerCase().indexOf(query, index + 1);
+      }
+      return matches;
+    } catch (e) {
+      // Return empty array if JSON is invalid (e.g., during editing)
+      return [];
     }
-    return matches;
   }, [jsonSearchQuery, editedData]);
 
   // Reset search index when query changes
