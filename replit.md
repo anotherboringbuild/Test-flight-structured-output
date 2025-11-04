@@ -122,39 +122,58 @@ Preferred communication style: Simple, everyday language.
 - Schema-based structured output extraction
 
 **Structured JSON Output Format**:
-The AI extracts product information into this JSON structure with support for multiple copy types:
+The AI extracts product information into this JSON structure with support for multiple products per section:
 ```json
 {
-  "ProductCopy": {
-    "ProductName": "Product name identifier",
-    "Headlines": ["array of headline strings"],
-    "AdvertisingCopy": "string - main advertising copy/description",
-    "KeyFeatureBullets": ["array of feature bullets"],
-    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
-  },
-  "BusinessCopy": {
-    "ProductName": "Product name identifier",
-    "Headlines": ["array of headline strings"],
-    "AdvertisingCopy": "string - business-focused copy",
-    "KeyFeatureBullets": ["array of feature bullets"],
-    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
-  },
-  "UpgraderCopy": {
-    "ProductName": "Product name identifier",
-    "Headlines": ["array of headline strings"],
-    "AdvertisingCopy": "string - upgrade-focused copy",
-    "KeyFeatureBullets": ["array of feature bullets"],
-    "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
-  }
+  "ProductCopy": [
+    {
+      "ProductName": "Product name identifier",
+      "Headlines": ["array of headline strings"],
+      "AdvertisingCopy": "string - main advertising copy/description",
+      "KeyFeatureBullets": ["array of feature bullets"],
+      "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+    },
+    {
+      "ProductName": "Another product name",
+      "Headlines": ["array of headline strings"],
+      "AdvertisingCopy": "string - advertising copy for second product",
+      "KeyFeatureBullets": ["array of feature bullets"],
+      "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+    }
+  ],
+  "BusinessCopy": [
+    {
+      "ProductName": "Product name identifier",
+      "Headlines": ["array of headline strings"],
+      "AdvertisingCopy": "string - business-focused copy",
+      "KeyFeatureBullets": ["array of feature bullets"],
+      "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+    }
+  ],
+  "UpgraderCopy": [
+    {
+      "ProductName": "Product name identifier",
+      "Headlines": ["array of headline strings"],
+      "AdvertisingCopy": "string - upgrade-focused copy",
+      "KeyFeatureBullets": ["array of feature bullets"],
+      "LegalReferences": ["array of legal disclaimers with {{sup:N}} tokens"]
+    }
+  ]
 }
 ```
+
+**Multi-Product Support**:
+- **Each section is an array of product objects**, allowing documents to reference multiple products
+- The AI scans the entire document and extracts ALL products found in each section
+- Example: A document with iPhone 16 Pro Max, iPhone 16 Pro, and iPhone 16 will create three separate entries in the ProductCopy array
+- Analytics tracks total products across all documents and sections
 
 **Copy Types**:
 - **ProductCopy**: General product marketing copy (most common)
 - **BusinessCopy**: Copy targeted at business customers
 - **UpgraderCopy**: Copy for customers upgrading from previous versions
 
-Each copy type is optional - only sections found in the document are included. Within each section, fields appear in this order: ProductName (first), Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (always last).
+Each copy type is optional - only sections found in the document are included. Within each product object, fields appear in this order: ProductName (first), Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (always last).
 
 **Superscript Handling**:
 The system handles superscripts in three distinct ways:
