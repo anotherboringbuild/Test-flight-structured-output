@@ -39,17 +39,25 @@ Preferred communication style: Simple, everyday language.
 **Key Features**:
 1. **Document Upload** - Drag-and-drop interface for uploading DOCX/PDF files with folder selection
 2. **Comparison View** - Side-by-side view of extracted text and structured JSON with hover-to-highlight
-3. **Translation Toggle** - View non-English documents translated to English with a toggle switch (uses OpenAI for translation, automatically enables when translation completes)
-4. **Document Library** - Table-based document management with:
+3. **Product Selector** - For multi-product documents, dropdown to focus on specific product or view all products (filters JSON display and updates hover-to-highlight accordingly)
+4. **Dual Independent Search** - Real-time search in both extracted text and JSON panels with:
+   - Case-insensitive search as you type
+   - Match highlighting (current match in bright amber, other matches in lighter amber)
+   - Match counter showing "current / total"
+   - Previous/Next navigation buttons to cycle through matches
+   - Independent search states for each panel
+   - Search works on filtered product view when product selector is active
+5. **Translation Toggle** - View non-English documents translated to English with a toggle switch (uses OpenAI for translation, automatically enables when translation completes)
+6. **Document Library** - Table-based document management with:
    - Real-time search by document name
    - Filtering by folder, file type (DOCX/PDF), processing status, month, and year
    - Sorting by name, date, or size (ascending/descending)
    - Bulk selection with checkboxes
    - Bulk operations: export, move to folder, delete
    - Individual document actions: rename, move, delete via context menu
-5. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
-6. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
-7. **Export Functionality** - Export individual or multiple documents as JSON files
+7. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
+8. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
+9. **Export Functionality** - Export individual or multiple documents as JSON files
 
 ## Backend Architecture
 
