@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +47,7 @@ export function ComparisonView({
   const [editedData, setEditedData] = useState(structuredData);
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [showTranslation, setShowTranslation] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string>("all");
   const { toast } = useToast();
   
   // Search state
@@ -63,6 +65,74 @@ export function ComparisonView({
 
   // Determine which text to display
   const displayText = showTranslation && translatedText ? translatedText : extractedText;
+
+  // Extract all products from JSON for product selector
+  const allProducts = useMemo(() => {
+    try {
+      const parsed = JSON.parse(editedData);
+      const products: Array<{ id: string; name: string; section: string }> = [];
+      
+      // Extract products from each section
+      if (Array.isArray(parsed.ProductCopy)) {
+        parsed.ProductCopy.forEach((product: any, index: number) => {
+          products.push({
+            id: `ProductCopy-${index}`,
+            name: product.ProductName || `Product ${index + 1}`,
+            section: "ProductCopy"
+          });
+        });
+      }
+      
+      if (Array.isArray(parsed.BusinessCopy)) {
+        parsed.BusinessCopy.forEach((product: any, index: number) => {
+          products.push({
+            id: `BusinessCopy-${index}`,
+            name: product.ProductName || `Business Product ${index + 1}`,
+            section: "BusinessCopy"
+          });
+        });
+      }
+      
+      if (Array.isArray(parsed.UpgraderCopy)) {
+        parsed.UpgraderCopy.forEach((product: any, index: number) => {
+          products.push({
+            id: `UpgraderCopy-${index}`,
+            name: product.ProductName || `Upgrader Product ${index + 1}`,
+            section: "UpgraderCopy"
+          });
+        });
+      }
+      
+      return products;
+    } catch (e) {
+      return [];
+    }
+  }, [editedData]);
+
+  // Get filtered JSON based on selected product
+  const displayedJson = useMemo(() => {
+    if (selectedProduct === "all" || isEditing) {
+      return editedData;
+    }
+    
+    try {
+      const parsed = JSON.parse(editedData);
+      const [section, indexStr] = selectedProduct.split("-");
+      const index = parseInt(indexStr, 10);
+      
+      if (section === "ProductCopy" && Array.isArray(parsed.ProductCopy) && parsed.ProductCopy[index]) {
+        return JSON.stringify({ ProductCopy: [parsed.ProductCopy[index]] }, null, 2);
+      } else if (section === "BusinessCopy" && Array.isArray(parsed.BusinessCopy) && parsed.BusinessCopy[index]) {
+        return JSON.stringify({ BusinessCopy: [parsed.BusinessCopy[index]] }, null, 2);
+      } else if (section === "UpgraderCopy" && Array.isArray(parsed.UpgraderCopy) && parsed.UpgraderCopy[index]) {
+        return JSON.stringify({ UpgraderCopy: [parsed.UpgraderCopy[index]] }, null, 2);
+      }
+      
+      return editedData;
+    } catch (e) {
+      return editedData;
+    }
+  }, [editedData, selectedProduct, isEditing]);
 
   // Find all matches in text
   const textMatches = useMemo(() => {
@@ -82,7 +152,7 @@ export function ComparisonView({
     if (!jsonSearchQuery) return [];
     try {
       const query = jsonSearchQuery.toLowerCase();
-      const formattedJson = JSON.stringify(JSON.parse(editedData), null, 2);
+      const formattedJson = JSON.stringify(JSON.parse(displayedJson), null, 2);
       const matches: number[] = [];
       let index = formattedJson.toLowerCase().indexOf(query);
       while (index !== -1) {
@@ -94,7 +164,7 @@ export function ComparisonView({
       // Return empty array if JSON is invalid (e.g., during editing)
       return [];
     }
-  }, [jsonSearchQuery, editedData]);
+  }, [jsonSearchQuery, displayedJson]);
 
   // Reset search index when query changes
   useEffect(() => {
@@ -133,7 +203,7 @@ export function ComparisonView({
   // Parse JSON and create text segments with field mappings
   const { jsonSegments, textSegments } = useMemo(() => {
     try {
-      const parsed = JSON.parse(editedData);
+      const parsed = JSON.parse(displayedJson);
       const jsonSegs: TextSegment[] = [];
       const textSegs: TextSegment[] = [];
 
@@ -208,7 +278,7 @@ export function ComparisonView({
     } catch (e) {
       return { jsonSegments: [], textSegments: [] };
     }
-  }, [editedData, displayText]);
+  }, [displayedJson, displayText]);
 
   // Helper to render text with search highlights
   const renderTextWithSearch = (text: string, startOffset: number = 0) => {
@@ -369,7 +439,7 @@ export function ComparisonView({
   // Render JSON with hover regions and search highlights
   const renderHighlightedJson = () => {
     try {
-      const parsed = JSON.parse(editedData);
+      const parsed = JSON.parse(displayedJson);
       const formattedJson = JSON.stringify(parsed, null, 2);
       const lines = formattedJson.split('\n');
       let charIndex = 0;
@@ -422,7 +492,7 @@ export function ComparisonView({
         );
       });
     } catch (e) {
-      return <pre>{editedData}</pre>;
+      return <pre>{displayedJson}</pre>;
     }
   };
 
@@ -465,6 +535,24 @@ export function ComparisonView({
               <p className="text-sm text-muted-foreground">
                 Document to JSON extraction • Hover to highlight matching sections
               </p>
+              {allProducts.length > 1 && !isEditing && (
+                <div className="mt-3 flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">View Product:</Label>
+                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                    <SelectTrigger className="w-[280px] h-8 text-xs" data-testid="select-product-filter">
+                      <SelectValue placeholder="Select a product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Products ({allProducts.length})</SelectItem>
+                      {allProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} ({product.section})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
