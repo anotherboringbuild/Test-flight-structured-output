@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -175,6 +175,26 @@ export function ComparisonView({
     setJsonSearchIndex(0);
   }, [jsonSearchQuery]);
 
+  // Auto-scroll to current text match
+  useEffect(() => {
+    if (textMatches.length > 0 && textSearchQuery) {
+      const element = document.querySelector(`[data-search-match="${textMatches[textSearchIndex]}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [textSearchIndex, textMatches, textSearchQuery]);
+
+  // Auto-scroll to current JSON match
+  useEffect(() => {
+    if (jsonMatches.length > 0 && jsonSearchQuery) {
+      const element = document.querySelector(`[data-json-search-match="${jsonMatches[jsonSearchIndex]}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [jsonSearchIndex, jsonMatches, jsonSearchQuery]);
+
   // Search navigation handlers
   const goToNextTextMatch = () => {
     if (textMatches.length > 0) {
@@ -307,6 +327,7 @@ export function ComparisonView({
       elements.push(
         <mark
           key={`search-${globalIndex}`}
+          data-search-match={globalIndex}
           className={`${
             isCurrentMatch
               ? 'bg-amber-400 font-semibold ring-2 ring-amber-500'
@@ -414,6 +435,7 @@ export function ComparisonView({
       elements.push(
         <mark
           key={`json-search-${globalIndex}`}
+          data-json-search-match={globalIndex}
           className={`${
             isCurrentMatch
               ? 'bg-amber-400 font-semibold ring-2 ring-amber-500'
