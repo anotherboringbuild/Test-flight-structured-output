@@ -94,7 +94,12 @@ Documents can contain different copy sections:
 - BusinessCopy: Copy targeted at business customers
 - UpgraderCopy: Copy for customers upgrading from previous versions
 
-Each section (if present) contains: Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (ALWAYS LAST).
+IMPORTANT: A document may contain copy for MULTIPLE PRODUCTS in each section.
+- Extract each product separately with its own Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences
+- Each product should have its own entry in the array for that section
+- For example, if a document has copy for "iPhone 16" and "iPhone 13" in the ProductCopy section, create TWO separate entries
+
+Each product entry contains: ProductName, Headlines, AdvertisingCopy, KeyFeatureBullets, and LegalReferences (ALWAYS LAST).
 
 CRITICAL: Handle superscripts in THREE distinct ways:
 
@@ -129,24 +134,36 @@ Extract sections that exist in the document. If a section is not present, omit i
             properties: {
               ProductCopy: {
                 anyOf: [
-                  copySectionSchema,
+                  {
+                    type: "array",
+                    items: copySectionSchema,
+                    description: "Array of products with general marketing copy"
+                  },
                   { type: "null" }
                 ],
-                description: "General product marketing copy section (optional)"
+                description: "General product marketing copy section (optional, can contain multiple products)"
               },
               BusinessCopy: {
                 anyOf: [
-                  copySectionSchema,
+                  {
+                    type: "array",
+                    items: copySectionSchema,
+                    description: "Array of products with business-focused copy"
+                  },
                   { type: "null" }
                 ],
-                description: "Business-focused copy section (optional)"
+                description: "Business-focused copy section (optional, can contain multiple products)"
               },
               UpgraderCopy: {
                 anyOf: [
-                  copySectionSchema,
+                  {
+                    type: "array",
+                    items: copySectionSchema,
+                    description: "Array of products with upgrade-focused copy"
+                  },
                   { type: "null" }
                 ],
-                description: "Upgrade-focused copy section (optional)"
+                description: "Upgrade-focused copy section (optional, can contain multiple products)"
               }
             },
             required: ["ProductCopy", "BusinessCopy", "UpgraderCopy"],
@@ -159,18 +176,29 @@ Extract sections that exist in the document. If a section is not present, omit i
     const content = response.choices[0].message.content;
     const parsedData = JSON.parse(content || "{}");
     
-    // Helper function to normalize a copy section with correct field order
+    // Helper function to normalize a single product with correct field order
+    const normalizeProduct = (product: any) => {
+      return {
+        ProductName: product.ProductName || "",
+        Headlines: Array.isArray(product.Headlines) ? product.Headlines : [],
+        AdvertisingCopy: product.AdvertisingCopy || "",
+        KeyFeatureBullets: Array.isArray(product.KeyFeatureBullets) ? product.KeyFeatureBullets : [],
+        LegalReferences: Array.isArray(product.LegalReferences) ? product.LegalReferences : [],
+      };
+    };
+    
+    // Helper function to normalize a copy section (array of products) with correct field order
     const normalizeCopySection = (section: any) => {
       // Return null if section is null or undefined
       if (!section || section === null) return null;
       
-      return {
-        ProductName: section.ProductName || "",
-        Headlines: Array.isArray(section.Headlines) ? section.Headlines : [],
-        AdvertisingCopy: section.AdvertisingCopy || "",
-        KeyFeatureBullets: Array.isArray(section.KeyFeatureBullets) ? section.KeyFeatureBullets : [],
-        LegalReferences: Array.isArray(section.LegalReferences) ? section.LegalReferences : [],
-      };
+      // Handle array of products
+      if (Array.isArray(section)) {
+        return section.map(normalizeProduct);
+      }
+      
+      // Handle legacy single product format (for backward compatibility)
+      return [normalizeProduct(section)];
     };
     
     // CRITICAL: Explicitly reconstruct the object in the correct order
@@ -212,30 +240,54 @@ function analyzeDocumentStructure(structuredData: any) {
       productCopyCompleteness: null,
       businessCopyCompleteness: null,
       upgraderCopyCompleteness: null,
+      productNames: { ProductCopy: [], BusinessCopy: [], UpgraderCopy: [] },
     };
   }
 
-  const analyzeCopySection = (section: any) => {
-    if (!section) return null;
+  // Analyze a single product
+  const analyzeProduct = (product: any) => {
     return {
-      hasProductName: !!section.ProductName && section.ProductName.length > 0,
-      hasHeadlines: Array.isArray(section.Headlines) && section.Headlines.length > 0,
-      hasAdvertisingCopy: !!section.AdvertisingCopy && section.AdvertisingCopy.length > 0,
-      hasKeyFeatureBullets: Array.isArray(section.KeyFeatureBullets) && section.KeyFeatureBullets.length > 0,
-      hasLegalReferences: Array.isArray(section.LegalReferences) && section.LegalReferences.length > 0,
-      headlinesCount: Array.isArray(section.Headlines) ? section.Headlines.length : 0,
-      keyFeatureBulletsCount: Array.isArray(section.KeyFeatureBullets) ? section.KeyFeatureBullets.length : 0,
-      legalReferencesCount: Array.isArray(section.LegalReferences) ? section.LegalReferences.length : 0,
+      productName: product.ProductName || "",
+      hasProductName: !!product.ProductName && product.ProductName.length > 0,
+      hasHeadlines: Array.isArray(product.Headlines) && product.Headlines.length > 0,
+      hasAdvertisingCopy: !!product.AdvertisingCopy && product.AdvertisingCopy.length > 0,
+      hasKeyFeatureBullets: Array.isArray(product.KeyFeatureBullets) && product.KeyFeatureBullets.length > 0,
+      hasLegalReferences: Array.isArray(product.LegalReferences) && product.LegalReferences.length > 0,
+      headlinesCount: Array.isArray(product.Headlines) ? product.Headlines.length : 0,
+      keyFeatureBulletsCount: Array.isArray(product.KeyFeatureBullets) ? product.KeyFeatureBullets.length : 0,
+      legalReferencesCount: Array.isArray(product.LegalReferences) ? product.LegalReferences.length : 0,
     };
   };
 
+  // Analyze a copy section (array of products)
+  const analyzeCopySection = (section: any) => {
+    if (!section) return null;
+    
+    // Handle array of products (new format)
+    if (Array.isArray(section)) {
+      return section.map(analyzeProduct);
+    }
+    
+    // Handle legacy single product format
+    return [analyzeProduct(section)];
+  };
+
+  const productCopyAnalysis = analyzeCopySection(structuredData.ProductCopy);
+  const businessCopyAnalysis = analyzeCopySection(structuredData.BusinessCopy);
+  const upgraderCopyAnalysis = analyzeCopySection(structuredData.UpgraderCopy);
+
   return {
-    hasProductCopy: !!structuredData.ProductCopy,
-    hasBusinessCopy: !!structuredData.BusinessCopy,
-    hasUpgraderCopy: !!structuredData.UpgraderCopy,
-    productCopyCompleteness: analyzeCopySection(structuredData.ProductCopy),
-    businessCopyCompleteness: analyzeCopySection(structuredData.BusinessCopy),
-    upgraderCopyCompleteness: analyzeCopySection(structuredData.UpgraderCopy),
+    hasProductCopy: !!structuredData.ProductCopy && (!Array.isArray(structuredData.ProductCopy) || structuredData.ProductCopy.length > 0),
+    hasBusinessCopy: !!structuredData.BusinessCopy && (!Array.isArray(structuredData.BusinessCopy) || structuredData.BusinessCopy.length > 0),
+    hasUpgraderCopy: !!structuredData.UpgraderCopy && (!Array.isArray(structuredData.UpgraderCopy) || structuredData.UpgraderCopy.length > 0),
+    productCopyCompleteness: productCopyAnalysis,
+    businessCopyCompleteness: businessCopyAnalysis,
+    upgraderCopyCompleteness: upgraderCopyAnalysis,
+    productNames: {
+      ProductCopy: productCopyAnalysis ? productCopyAnalysis.map(p => p.productName) : [],
+      BusinessCopy: businessCopyAnalysis ? businessCopyAnalysis.map(p => p.productName) : [],
+      UpgraderCopy: upgraderCopyAnalysis ? upgraderCopyAnalysis.map(p => p.productName) : [],
+    },
   };
 }
 
@@ -249,6 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let productCopyCount = 0;
       let businessCopyCount = 0;
       let upgraderCopyCount = 0;
+      let totalProductsExtracted = 0;
       
       let emptyKeyFeatureBulletsCount = 0;
       let documentsWithMissingFields = 0;
@@ -260,19 +313,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (analysis.hasBusinessCopy) businessCopyCount++;
         if (analysis.hasUpgraderCopy) upgraderCopyCount++;
         
-        // Check for empty KeyFeatureBullets in any section
+        // Count total products across all sections
+        totalProductsExtracted += analysis.productNames.ProductCopy.length;
+        totalProductsExtracted += analysis.productNames.BusinessCopy.length;
+        totalProductsExtracted += analysis.productNames.UpgraderCopy.length;
+        
+        // Check for empty KeyFeatureBullets in any product across all sections
+        const checkEmptyBullets = (products: any[]) => {
+          if (!products) return false;
+          return products.some(p => !p.hasKeyFeatureBullets);
+        };
+        
         const hasEmptyBullets = 
-          (analysis.productCopyCompleteness && !analysis.productCopyCompleteness.hasKeyFeatureBullets) ||
-          (analysis.businessCopyCompleteness && !analysis.businessCopyCompleteness.hasKeyFeatureBullets) ||
-          (analysis.upgraderCopyCompleteness && !analysis.upgraderCopyCompleteness.hasKeyFeatureBullets);
+          checkEmptyBullets(analysis.productCopyCompleteness) ||
+          checkEmptyBullets(analysis.businessCopyCompleteness) ||
+          checkEmptyBullets(analysis.upgraderCopyCompleteness);
         
         if (hasEmptyBullets) emptyKeyFeatureBulletsCount++;
         
-        // Check if any section has missing required fields (excluding KeyFeatureBullets which is optional)
-        const checkCompleteness = (section: any) => {
-          if (!section) return false;
-          return !section.hasProductName || !section.hasHeadlines || 
-                 !section.hasAdvertisingCopy || !section.hasLegalReferences;
+        // Check if any product has missing required fields
+        const checkCompleteness = (products: any[]) => {
+          if (!products) return false;
+          return products.some(p => 
+            !p.hasProductName || !p.hasHeadlines || 
+            !p.hasAdvertisingCopy || !p.hasLegalReferences
+          );
         };
         
         if (checkCompleteness(analysis.productCopyCompleteness) ||
@@ -292,6 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalDocuments: allDocuments.length,
         processedDocuments: processedDocuments.length,
         unprocessedDocuments: allDocuments.length - processedDocuments.length,
+        totalProductsExtracted,
         sectionCoverage: {
           productCopy: productCopyCount,
           businessCopy: businessCopyCount,
