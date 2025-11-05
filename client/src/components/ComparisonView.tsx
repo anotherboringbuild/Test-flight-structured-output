@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +28,35 @@ interface TextSegment {
   start: number;
   end: number;
   field?: string;
+}
+
+// Helper: Find all match positions in a string
+function findMatches(text: string, query: string): number[] {
+  if (!query) return [];
+  const matches: number[] = [];
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  let index = lowerText.indexOf(lowerQuery);
+  while (index !== -1) {
+    matches.push(index);
+    index = lowerText.indexOf(lowerQuery, index + 1);
+  }
+  return matches;
+}
+
+// Helper: Extract products from a section array
+function extractProductsFromSection(
+  section: any[] | undefined,
+  sectionName: string,
+  defaultPrefix: string
+): Array<{ id: string; name: string; section: string }> {
+  if (!Array.isArray(section)) return [];
+  
+  return section.map((product: any, index: number) => ({
+    id: `${sectionName}-${index}`,
+    name: product.ProductName || `${defaultPrefix} ${index + 1}`,
+    section: sectionName
+  }));
 }
 
 export function ComparisonView({
@@ -70,40 +99,11 @@ export function ComparisonView({
   const allProducts = useMemo(() => {
     try {
       const parsed = JSON.parse(editedData);
-      const products: Array<{ id: string; name: string; section: string }> = [];
-      
-      // Extract products from each section
-      if (Array.isArray(parsed.ProductCopy)) {
-        parsed.ProductCopy.forEach((product: any, index: number) => {
-          products.push({
-            id: `ProductCopy-${index}`,
-            name: product.ProductName || `Product ${index + 1}`,
-            section: "ProductCopy"
-          });
-        });
-      }
-      
-      if (Array.isArray(parsed.BusinessCopy)) {
-        parsed.BusinessCopy.forEach((product: any, index: number) => {
-          products.push({
-            id: `BusinessCopy-${index}`,
-            name: product.ProductName || `Business Product ${index + 1}`,
-            section: "BusinessCopy"
-          });
-        });
-      }
-      
-      if (Array.isArray(parsed.UpgraderCopy)) {
-        parsed.UpgraderCopy.forEach((product: any, index: number) => {
-          products.push({
-            id: `UpgraderCopy-${index}`,
-            name: product.ProductName || `Upgrader Product ${index + 1}`,
-            section: "UpgraderCopy"
-          });
-        });
-      }
-      
-      return products;
+      return [
+        ...extractProductsFromSection(parsed.ProductCopy, "ProductCopy", "Product"),
+        ...extractProductsFromSection(parsed.BusinessCopy, "BusinessCopy", "Business Product"),
+        ...extractProductsFromSection(parsed.UpgraderCopy, "UpgraderCopy", "Upgrader Product")
+      ];
     } catch (e) {
       return [];
     }
@@ -135,33 +135,17 @@ export function ComparisonView({
   }, [editedData, selectedProduct, isEditing]);
 
   // Find all matches in text
-  const textMatches = useMemo(() => {
-    if (!textSearchQuery) return [];
-    const query = textSearchQuery.toLowerCase();
-    const matches: number[] = [];
-    let index = displayText.toLowerCase().indexOf(query);
-    while (index !== -1) {
-      matches.push(index);
-      index = displayText.toLowerCase().indexOf(query, index + 1);
-    }
-    return matches;
-  }, [textSearchQuery, displayText]);
+  const textMatches = useMemo(() => 
+    findMatches(displayText, textSearchQuery),
+    [textSearchQuery, displayText]
+  );
 
   // Find all matches in JSON
   const jsonMatches = useMemo(() => {
-    if (!jsonSearchQuery) return [];
     try {
-      const query = jsonSearchQuery.toLowerCase();
       const formattedJson = JSON.stringify(JSON.parse(displayedJson), null, 2);
-      const matches: number[] = [];
-      let index = formattedJson.toLowerCase().indexOf(query);
-      while (index !== -1) {
-        matches.push(index);
-        index = formattedJson.toLowerCase().indexOf(query, index + 1);
-      }
-      return matches;
+      return findMatches(formattedJson, jsonSearchQuery);
     } catch (e) {
-      // Return empty array if JSON is invalid (e.g., during editing)
       return [];
     }
   }, [jsonSearchQuery, displayedJson]);
@@ -785,7 +769,7 @@ export function ComparisonView({
                 height="100%"
                 defaultLanguage="json"
                 value={editedData}
-                onChange={(value) => setEditedData(value || "")}
+                onChange={(value: string | undefined) => setEditedData(value || "")}
                 theme="vs-light"
                 options={{
                   minimap: { enabled: false },
