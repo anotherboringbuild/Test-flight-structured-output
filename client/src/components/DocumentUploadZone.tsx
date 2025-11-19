@@ -1,10 +1,12 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, FolderOpen } from "lucide-react";
+import { Upload, FileText, FolderOpen, X, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,8 +20,32 @@ interface Folder {
   name: string;
 }
 
+export type UploadMode = "single" | "set";
+
+export interface DocumentSetUpload {
+  mode: "set";
+  files: File[];
+  setName: string;
+  setDescription?: string;
+  originalFileIndex: number;
+  folderId?: string | null;
+  month?: string | null;
+  year?: string | null;
+}
+
+export interface SingleDocumentUpload {
+  mode: "single";
+  files: File[];
+  folderId?: string | null;
+  month?: string | null;
+  year?: string | null;
+}
+
+export type UploadData = DocumentSetUpload | SingleDocumentUpload;
+
 interface DocumentUploadZoneProps {
   onFilesSelected: (files: File[]) => void;
+  onUploadReady?: (data: UploadData) => void;
   disabled?: boolean;
   folders?: Folder[];
   selectedFolderId?: string | null;
@@ -32,6 +58,7 @@ interface DocumentUploadZoneProps {
 
 export function DocumentUploadZone({
   onFilesSelected,
+  onUploadReady,
   disabled = false,
   folders = [],
   selectedFolderId = null,
@@ -41,15 +68,33 @@ export function DocumentUploadZone({
   selectedYear = null,
   onYearChange,
 }: DocumentUploadZoneProps) {
+  const [uploadMode, setUploadMode] = useState<UploadMode>("single");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [setName, setSetName] = useState("");
+  const [setDescription, setSetDescription] = useState("");
+  const [originalFileIndex, setOriginalFileIndex] = useState(0);
+
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: any[]) => {
       console.log("onDrop called - accepted:", acceptedFiles.length, "rejected:", rejectedFiles.length);
       if (rejectedFiles.length > 0) {
         console.log("Rejected files:", rejectedFiles);
       }
-      onFilesSelected(acceptedFiles);
+      
+      if (uploadMode === "single") {
+        // For single mode, use existing behavior
+        onFilesSelected(acceptedFiles);
+      } else {
+        // For document set mode, store files for later processing
+        setSelectedFiles(acceptedFiles);
+        if (acceptedFiles.length > 0 && !setName) {
+          // Auto-suggest set name from first file
+          const fileName = acceptedFiles[0].name.replace(/\.(docx|pdf|pages)$/i, '');
+          setSetName(fileName);
+        }
+      }
     },
-    [onFilesSelected]
+    [onFilesSelected, uploadMode, setName]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -60,6 +105,7 @@ export function DocumentUploadZone({
       "application/vnd.apple.pages": [".pages"],
     },
     disabled,
+    multiple: uploadMode === "set",
   });
 
   const months = [
@@ -67,8 +113,77 @@ export function DocumentUploadZone({
     "July", "August", "September", "October", "November", "December"
   ];
 
+  const handleRemoveFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    if (originalFileIndex >= newFiles.length && newFiles.length > 0) {
+      setOriginalFileIndex(newFiles.length - 1);
+    }
+  };
+
+  const handleUploadSet = () => {
+    if (!onUploadReady) return;
+    
+    if (uploadMode === "set") {
+      if (!setName.trim()) {
+        return;
+      }
+      if (selectedFiles.length === 0) {
+        return;
+      }
+      
+      const uploadData: DocumentSetUpload = {
+        mode: "set",
+        files: selectedFiles,
+        setName: setName.trim(),
+        setDescription: setDescription.trim() || undefined,
+        originalFileIndex,
+        folderId: selectedFolderId,
+        month: selectedMonth,
+        year: selectedYear,
+      };
+      onUploadReady(uploadData);
+      
+      // Reset form
+      setSelectedFiles([]);
+      setSetName("");
+      setSetDescription("");
+      setOriginalFileIndex(0);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Upload Mode Selection */}
+      <div className="space-y-2">
+        <Label>Upload Type</Label>
+        <RadioGroup
+          value={uploadMode}
+          onValueChange={(value) => {
+            setUploadMode(value as UploadMode);
+            setSelectedFiles([]);
+            setSetName("");
+            setSetDescription("");
+          }}
+          className="flex gap-4"
+          data-testid="radio-upload-mode"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="single" id="mode-single" data-testid="radio-mode-single" />
+            <Label htmlFor="mode-single" className="font-normal cursor-pointer">
+              Single Document
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="set" id="mode-set" data-testid="radio-mode-set" />
+            <Label htmlFor="mode-set" className="font-normal cursor-pointer">
+              Document Set (Multiple Languages)
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {/* Metadata Fields */}
       <div className="grid gap-4 sm:grid-cols-3">
         {folders.length > 0 && onFolderChange && (
           <div>
@@ -161,6 +276,38 @@ export function DocumentUploadZone({
           </div>
         )}
       </div>
+
+      {/* Document Set Name and Description */}
+      {uploadMode === "set" && (
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="set-name">Document Set Name *</Label>
+            <Input
+              id="set-name"
+              type="text"
+              placeholder="e.g. iPhone 17 Pro Marketing Copy"
+              value={setName}
+              onChange={(e) => setSetName(e.target.value)}
+              data-testid="input-set-name"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="set-description">Description (Optional)</Label>
+            <Textarea
+              id="set-description"
+              placeholder="Describe this document set..."
+              value={setDescription}
+              onChange={(e) => setSetDescription(e.target.value)}
+              data-testid="textarea-set-description"
+              className="mt-2"
+              rows={2}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* File Upload Zone */}
       <div
         {...getRootProps()}
         className={cn(
@@ -178,10 +325,12 @@ export function DocumentUploadZone({
           </div>
           <div className="space-y-2">
             <h3 className="text-xl font-semibold">
-              {isDragActive ? "Drop files here" : "Upload Documents"}
+              {isDragActive ? "Drop files here" : uploadMode === "set" ? "Upload Document Set" : "Upload Documents"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Drag and drop your files or click to browse
+              {uploadMode === "set" 
+                ? "Upload multiple language variants of the same document"
+                : "Drag and drop your files or click to browse"}
             </p>
           </div>
           <Button
@@ -197,6 +346,61 @@ export function DocumentUploadZone({
           </p>
         </div>
       </div>
+
+      {/* Selected Files for Document Set */}
+      {uploadMode === "set" && selectedFiles.length > 0 && (
+        <div className="space-y-2">
+          <Label>Selected Files ({selectedFiles.length})</Label>
+          <div className="space-y-2">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex items-center justify-between gap-2 rounded-md border p-3",
+                  index === originalFileIndex && "border-primary bg-primary/5"
+                )}
+                data-testid={`file-item-${index}`}
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {index === originalFileIndex && (
+                    <Star className="h-4 w-4 text-primary flex-shrink-0" data-testid={`star-${index}`} />
+                  )}
+                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm truncate">{file.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {index !== originalFileIndex && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setOriginalFileIndex(index)}
+                      data-testid={`button-mark-original-${index}`}
+                    >
+                      Mark as Original
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleRemoveFile(index)}
+                    data-testid={`button-remove-file-${index}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            onClick={handleUploadSet}
+            disabled={!setName.trim() || selectedFiles.length === 0 || disabled}
+            className="w-full"
+            data-testid="button-upload-set"
+          >
+            Upload Document Set
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
