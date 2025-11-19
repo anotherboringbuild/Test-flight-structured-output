@@ -40,6 +40,9 @@ import {
   Edit,
   CheckSquare,
   Square,
+  AlertTriangle,
+  CheckCircle,
+  HelpCircle,
 } from "lucide-react";
 import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
@@ -409,6 +412,7 @@ export function DocumentLibrary({
           <div className="w-24">Size</div>
           <div className="w-32">Date</div>
           <div className="w-20">Status</div>
+          <div className="w-24">Validation</div>
           <div className="w-10"></div>
         </div>
 
@@ -467,6 +471,36 @@ export function DocumentLibrary({
                   <Badge variant="default">Ready</Badge>
                 ) : (
                   <Badge variant="secondary">Pending</Badge>
+                )}
+              </div>
+              <div className="w-24">
+                {doc.validationConfidence !== null && doc.validationConfidence !== undefined ? (
+                  <div className="flex items-center gap-1">
+                    {doc.needsReview ? (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-amber-500" data-testid={`icon-validation-warning-${doc.id}`} />
+                        <span className="text-xs text-amber-500 font-medium">
+                          {Math.round(doc.validationConfidence * 100)}%
+                        </span>
+                      </>
+                    ) : doc.validationConfidence >= 0.8 ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-emerald-500" data-testid={`icon-validation-pass-${doc.id}`} />
+                        <span className="text-xs text-emerald-500 font-medium">
+                          {Math.round(doc.validationConfidence * 100)}%
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" data-testid={`icon-validation-pending-${doc.id}`} />
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {Math.round(doc.validationConfidence * 100)}%
+                        </span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
                 )}
               </div>
               <DropdownMenu>
