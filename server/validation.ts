@@ -187,17 +187,17 @@ export async function validateExtraction(
       })
     ]);
 
-    // If both judges failed, return error result
+    // If both judges failed, return error result with all criteria marked as failed
     if (!gpt4oResult && !geminiResult) {
       return {
-        confidence: 0.5,
-        issues: ["Both validation judges failed - manual review recommended"],
+        confidence: 0,
+        issues: ["Both validation judges failed - manual review required"],
         scores: {
-          field_names_english: true,
-          content_language_preserved: true,
-          superscripts_correct: true,
-          completeness: true,
-          legal_refs_match: true
+          field_names_english: false,
+          content_language_preserved: false,
+          superscripts_correct: false,
+          completeness: false,
+          legal_refs_match: false
         },
         reasoning: "Validation failed due to system error",
         passedValidation: false
@@ -262,16 +262,16 @@ export async function validateExtraction(
     };
   } catch (error) {
     console.error("Validation error:", error);
-    // Return neutral result on error - don't block the upload
+    // Return error result with all criteria marked as failed - don't block the upload
     return {
-      confidence: 0.5,
-      issues: ["Validation system error - manual review recommended"],
+      confidence: 0,
+      issues: ["Validation system error - manual review required"],
       scores: {
-        field_names_english: true,
-        content_language_preserved: true,
-        superscripts_correct: true,
-        completeness: true,
-        legal_refs_match: true
+        field_names_english: false,
+        content_language_preserved: false,
+        superscripts_correct: false,
+        completeness: false,
+        legal_refs_match: false
       },
       reasoning: "Validation failed due to system error",
       passedValidation: false
