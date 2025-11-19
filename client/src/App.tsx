@@ -318,6 +318,26 @@ function AppContent() {
     },
   });
 
+  const validateDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/documents/${id}/validate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Validation complete",
+        description: "Document has been validated by AI-as-a-Judge.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Validation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const renameDocumentMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       return await apiRequest("PATCH", `/api/documents/${id}`, { name });
@@ -630,8 +650,12 @@ function AppContent() {
                       : ""
                   }
                   language={selectedDocument.language}
+                  validationConfidence={selectedDocument.validationConfidence}
+                  validationIssues={selectedDocument.validationIssues}
+                  needsReview={selectedDocument.needsReview}
                   isProcessing={reprocessDocumentMutation.isPending}
                   isTranslating={translateDocumentMutation.isPending}
+                  isValidating={validateDocumentMutation.isPending}
                   onBack={() => {
                     setSelectedDocumentId(null);
                     setCurrentView("library");
@@ -660,6 +684,11 @@ function AppContent() {
                   onTranslate={() => {
                     if (selectedDocument.id) {
                       translateDocumentMutation.mutate(selectedDocument.id);
+                    }
+                  }}
+                  onValidate={() => {
+                    if (selectedDocument.id) {
+                      validateDocumentMutation.mutate(selectedDocument.id);
                     }
                   }}
                 />

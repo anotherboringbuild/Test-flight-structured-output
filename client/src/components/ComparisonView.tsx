@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,13 +15,18 @@ interface ComparisonViewProps {
   translatedText?: string | null;
   structuredData: string;
   language?: string | null;
+  validationConfidence?: number | null;
+  validationIssues?: string[] | null;
+  needsReview?: boolean;
   isProcessing?: boolean;
   isTranslating?: boolean;
+  isValidating?: boolean;
   onBack: () => void;
   onExport: () => void;
   onSave?: (newData: string) => void;
   onReprocess?: () => void;
   onTranslate?: () => void;
+  onValidate?: () => void;
 }
 
 interface TextSegment {
@@ -66,13 +71,18 @@ export function ComparisonView({
   translatedText,
   structuredData,
   language,
+  validationConfidence,
+  validationIssues,
+  needsReview,
   isProcessing = false,
   isTranslating = false,
+  isValidating = false,
   onBack,
   onExport,
   onSave,
   onReprocess,
   onTranslate,
+  onValidate,
 }: ComparisonViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(structuredData);
@@ -559,6 +569,65 @@ export function ComparisonView({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+              {validationConfidence !== null && validationConfidence !== undefined && !isEditing && (
+                <div className="mt-3 flex items-center gap-3 rounded-md border bg-muted/30 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-xs font-medium">AI Validation:</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {needsReview ? (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm font-medium text-amber-500">
+                          {Math.round(validationConfidence * 100)}% - Needs Review
+                        </span>
+                      </>
+                    ) : validationConfidence >= 0.8 ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        <span className="text-sm font-medium text-emerald-500">
+                          {Math.round(validationConfidence * 100)}% - Validated
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {Math.round(validationConfidence * 100)}%
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {validationIssues && validationIssues.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {validationIssues.length} {validationIssues.length === 1 ? 'issue' : 'issues'}
+                    </Badge>
+                  )}
+                  {onValidate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onValidate}
+                      disabled={isValidating}
+                      data-testid="button-revalidate"
+                      className="h-7 text-xs"
+                    >
+                      {isValidating ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Validating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-1 h-3 w-3" />
+                          Re-validate
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
