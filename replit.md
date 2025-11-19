@@ -37,7 +37,11 @@ Preferred communication style: Simple, everyday language.
 - Comprehensive document library with search, filtering, sorting, and bulk operations
 
 **Key Features**:
-1. **Document Upload** - Drag-and-drop interface for uploading DOCX/PDF files with folder selection
+1. **Document Upload** - Dual-mode upload system supporting:
+   - **Single Document Mode**: Upload individual documents with AI processing
+   - **Document Set Mode**: Upload multiple language variants of the same document (e.g., English original + Japanese/Spanish translations) as a grouped set
+   - Both modes support folder assignment, month/year metadata tagging
+   - Document sets automatically mark one file as the original for reference tracking
 2. **Comparison View** - Side-by-side view of extracted text and structured JSON with hover-to-highlight
 3. **Product Selector** - For multi-product documents, dropdown to focus on specific product or view all products (filters JSON display and updates hover-to-highlight accordingly)
 4. **Dual Independent Search** - Real-time search in both extracted text and JSON panels with:
@@ -72,7 +76,8 @@ Preferred communication style: Simple, everyday language.
 4. Storage of both raw extracted text and structured JSON data
 
 **Key Routes**:
-- `POST /api/documents/upload` - File upload and processing
+- `POST /api/documents/upload` - Single file upload and processing
+- `POST /api/documents/upload-set` - Document set upload (multiple files with metadata)
 - `GET /api/documents` - List all documents
 - `GET /api/documents/:id` - Get specific document
 - `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, etc.)
