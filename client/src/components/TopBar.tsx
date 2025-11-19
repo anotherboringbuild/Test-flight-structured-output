@@ -12,9 +12,14 @@ export function TopBar({ onSettingsClick, hasApiKey }: TopBarProps) {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold tracking-tight" data-testid="text-app-title">
-          DocExtract
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-semibold tracking-tight leading-tight" data-testid="text-app-title">
+            Structured Data
+          </h1>
+          <h4 className="text-xs text-muted-foreground" data-testid="text-app-subtitle">
+            Powered by Authoring Kit
+          </h4>
+        </div>
         {!hasApiKey && (
           <Badge variant="secondary" className="text-xs" data-testid="badge-api-status">
             API Key Required
