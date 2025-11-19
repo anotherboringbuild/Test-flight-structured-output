@@ -651,57 +651,59 @@ export function ComparisonView({
                     )}
                   </div>
                   {showValidationDetails && (
-                    <div className="border-t px-3 py-3 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Validation Criteria:</p>
-                      <div className="space-y-1.5">
-                        <div className="flex items-start gap-2 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Field Names in English:</span>
-                            <span className="text-muted-foreground ml-1">
-                              JSON keys (ProductCopy, Headlines, etc.) must be in English
-                            </span>
+                    <div className="border-t px-3 py-3 space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Validation Criteria:</p>
+                        <div className="space-y-1.5">
+                          <div className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">Field Names in English:</span>
+                              <span className="text-muted-foreground ml-1">
+                                JSON keys (ProductCopy, Headlines, etc.) must be in English
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Content Language Preserved:</span>
-                            <span className="text-muted-foreground ml-1">
-                              Product names, headlines, and copy remain in source language
-                            </span>
+                          <div className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">Content Language Preserved:</span>
+                              <span className="text-muted-foreground ml-1">
+                                Product names, headlines, and copy remain in source language
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Superscript Handling:</span>
-                            <span className="text-muted-foreground ml-1">
-                              Footnotes use {`{{sup:N}}`} tokens, legal marks removed, units preserved
-                            </span>
+                          <div className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">Superscript Handling:</span>
+                              <span className="text-muted-foreground ml-1">
+                                Footnotes use {`{{sup:N}}`} tokens, legal marks removed, units preserved
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Completeness:</span>
-                            <span className="text-muted-foreground ml-1">
-                              All expected fields present (ProductName, Headlines, etc.)
-                            </span>
+                          <div className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">Completeness:</span>
+                              <span className="text-muted-foreground ml-1">
+                                All expected fields present (ProductName, Headlines, etc.)
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-start gap-2 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Legal Reference Matching:</span>
-                            <span className="text-muted-foreground ml-1">
-                              Superscript tokens in content match corresponding legal references
-                            </span>
+                          <div className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">Legal Reference Matching:</span>
+                              <span className="text-muted-foreground ml-1">
+                                Superscript tokens in content match corresponding legal references
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                       {validationIssues && validationIssues.length > 0 && (
-                        <div className="mt-3 pt-2 border-t">
+                        <div className="pt-2 border-t">
                           <p className="text-xs font-medium text-amber-600 mb-1.5">Issues Found:</p>
                           <ul className="space-y-1">
                             {validationIssues.map((issue, index) => (
