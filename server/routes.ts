@@ -45,6 +45,32 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
   }
 }
 
+async function detectLanguage(text: string): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a language detection specialist. Identify the primary language of the provided text. Respond with only the language name in English (e.g., 'English', 'Japanese', 'Spanish', 'French', 'German', 'Chinese', 'Korean', etc.)."
+        },
+        {
+          role: "user",
+          content: text.slice(0, 2000) // Use first 2000 chars for language detection
+        }
+      ],
+      max_tokens: 10,
+      temperature: 0
+    });
+
+    const language = response.choices[0].message.content?.trim() || "Unknown";
+    return language;
+  } catch (error) {
+    console.error("Language detection error:", error);
+    return "Unknown";
+  }
+}
+
 async function processWithGPT5(extractedText: string): Promise<any> {
   try {
     // Note: Using gpt-4o-2024-08-06 or later for structured outputs
@@ -474,8 +500,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract text from the uploaded file
       const extractedText = await extractTextFromFile(file.path, fileType);
 
-      // Process with GPT-4o
-      const structuredData = await processWithGPT5(extractedText);
+      // Detect language and process with GPT-4o in parallel
+      const [language, structuredData] = await Promise.all([
+        detectLanguage(extractedText),
+        processWithGPT5(extractedText)
+      ]);
 
       // Save document to database
       const document = await storage.createDocument({
@@ -484,6 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filePath: file.path,
         size: `${(file.size / 1024).toFixed(2)} KB`,
         folderId: folderId || null,
+        language,
         month: month || null,
         year: year || null,
         isProcessed: true,
@@ -526,12 +556,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Re-extract text from the file
       const extractedText = await extractTextFromFile(document.filePath, document.fileType);
 
-      // Reprocess with GPT-4o using the new schema
-      const structuredData = await processWithGPT5(extractedText);
+      // Re-detect language and reprocess with GPT-4o in parallel
+      const [language, structuredData] = await Promise.all([
+        detectLanguage(extractedText),
+        processWithGPT5(extractedText)
+      ]);
 
       // Update the document with new structured data
       const updatedDocument = await storage.updateDocument(id, {
         extractedText,
+        language,
         structuredData,
         isProcessed: true,
       });
