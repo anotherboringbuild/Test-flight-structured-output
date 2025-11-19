@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { DocumentUploadZone, type UploadData } from "@/components/DocumentUploadZone";
+import { DocumentUploadZoneOld } from "@/components/DocumentUploadZoneOld";
+import { DocumentUploadChat } from "@/components/DocumentUploadChat";
 import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
@@ -420,7 +422,7 @@ function AppContent() {
     if (uploadData.mode === "set") {
       toast({
         title: "Processing",
-        description: `Uploading and processing document set "${uploadData.setName}" with ${uploadData.files.length} file(s)...`,
+        description: `Uploading and processing document set "${uploadData.folderName}" with ${uploadData.files.length} file(s)...`,
       });
 
       try {
@@ -428,6 +430,26 @@ function AppContent() {
       } catch (error) {
         console.error("Error in handleUploadReady:", error);
         // Error toast is already shown by onError callback
+      }
+    } else if (uploadData.mode === "single") {
+      // Handle single file uploads with metadata
+      toast({
+        title: "Processing",
+        description: `Uploading and processing ${uploadData.files.length} file(s) with AI...`,
+      });
+
+      for (const file of uploadData.files) {
+        try {
+          await uploadMutation.mutateAsync({ 
+            file, 
+            folderId: uploadData.folderId,
+            month: uploadData.month,
+            year: uploadData.year
+          });
+        } catch (error) {
+          console.error("Error in handleUploadReady:", error);
+          // Error toast is already shown by onError callback
+        }
       }
     }
   };
@@ -710,17 +732,17 @@ function AppContent() {
                 />
               ) : currentView === "analytics" ? (
                 <Analytics />
-              ) : (
+              ) : currentView === "upload-old" ? (
                 <div className="p-8">
                   <div className="mb-6">
                     <h2 className="text-2xl font-semibold tracking-tight">
-                      Upload Document
+                      Upload Document - Old Version
                     </h2>
                     <p className="text-sm text-muted-foreground">
                       Upload a product document to extract structured JSON data using AI
                     </p>
                   </div>
-                  <DocumentUploadZone
+                  <DocumentUploadZoneOld
                     onFilesSelected={handleUpload}
                     onUploadReady={handleUploadReady}
                     disabled={uploadMutation.isPending || uploadSetMutation.isPending}
@@ -738,6 +760,19 @@ function AppContent() {
                     </p>
                   )}
                 </div>
+              ) : (
+                <DocumentUploadChat
+                  onFilesSelected={handleUpload}
+                  onUploadReady={handleUploadReady}
+                  disabled={uploadMutation.isPending || uploadSetMutation.isPending}
+                  folders={folders}
+                  selectedFolderId={selectedFolderId}
+                  onFolderChange={setSelectedFolderId}
+                  selectedMonth={selectedMonth}
+                  onMonthChange={setSelectedMonth}
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                />
               )}
             </main>
           </div>
