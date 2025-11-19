@@ -27,13 +27,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { Folder as FolderType, Document as DocumentType, DocumentSet as DocumentSetType } from "@shared/schema";
 
-interface Document extends Partial<DocumentType> {
-  id: string;
-  name: string;
-  fileType: "docx" | "pdf" | "pages";
-  isProcessed: boolean;
+interface Document extends DocumentType {
   date: string;
-  folderId?: string | null;
 }
 
 interface Folder extends FolderType {
@@ -51,8 +46,8 @@ interface AppSidebarProps {
   onDocumentClick: (documentId: string) => void;
   onEditFolder: (folder: Folder) => void;
   onDeleteFolder: (folder: Folder) => void;
-  onMoveDocument: (document: Document) => void;
-  onDeleteDocument: (document: Document) => void;
+  onMoveDocument: (document: DocumentType) => void;
+  onDeleteDocument: (document: DocumentType) => void;
 }
 
 export function AppSidebar({

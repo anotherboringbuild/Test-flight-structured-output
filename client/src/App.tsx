@@ -663,9 +663,13 @@ function AppContent() {
                     }
                   }}
                 />
-              ) : currentView === "library" ? (
+              ) : currentView === "library" || currentView.startsWith("folder-") ? (
                 <DocumentLibrary
-                  documents={documents}
+                  documents={
+                    currentView.startsWith("folder-")
+                      ? documents.filter((d) => d.folderId === currentView.replace("folder-", ""))
+                      : documents
+                  }
                   folders={folders}
                   onDocumentClick={handleDocumentClick}
                   onDeleteDocument={handleDeleteDocument}
