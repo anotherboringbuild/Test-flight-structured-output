@@ -7,6 +7,7 @@ import * as pdfParse from "pdf-parse";
 import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
+import { validateExtraction, quickValidationChecks } from "./validation";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -512,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
 
       // Save document to database
-      const document = await storage.createDocument({
+      let document = await storage.createDocument({
         name: file.originalname,
         fileType,
         filePath: file.path,
@@ -525,6 +526,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         extractedText,
         structuredData,
       });
+
+      // Automatically validate the extraction
+      try {
+        const quickCheck = quickValidationChecks(structuredData);
+        const validationResult = await validateExtraction(extractedText, structuredData);
+        const allIssues = [...quickCheck.issues, ...validationResult.issues];
+        const needsReview = !validationResult.passedValidation || !quickCheck.passed;
+
+        // Update document with validation results
+        document = await storage.updateDocument(document.id, {
+          validationConfidence: validationResult.confidence,
+          validationIssues: allIssues,
+          needsReview,
+        }) || document;
+      } catch (validationError) {
+        console.error("Validation error during upload:", validationError);
+        // Continue with upload even if validation fails
+      }
 
       // Remove filePath from response for security
       const { filePath: _, ...safeDocument } = document;
@@ -586,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]);
 
           // Save document to database
-          const document = await storage.createDocument({
+          let document = await storage.createDocument({
             name: file.originalname,
             fileType,
             filePath: file.path,
@@ -600,6 +619,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             extractedText,
             structuredData,
           });
+
+          // Automatically validate the extraction
+          try {
+            const quickCheck = quickValidationChecks(structuredData);
+            const validationResult = await validateExtraction(extractedText, structuredData);
+            const allIssues = [...quickCheck.issues, ...validationResult.issues];
+            const needsReview = !validationResult.passedValidation || !quickCheck.passed;
+
+            // Update document with validation results
+            document = await storage.updateDocument(document.id, {
+              validationConfidence: validationResult.confidence,
+              validationIssues: allIssues,
+              needsReview,
+            }) || document;
+          } catch (validationError) {
+            console.error("Validation error during upload:", validationError);
+            // Continue with upload even if validation fails
+          }
 
           // Remove filePath from response for security
           const { filePath: _, ...safeDocument } = document;
@@ -745,6 +782,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Translation error:", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to translate document" });
+    }
+  });
+
+  app.post("/api/documents/:id/validate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      if (!document.extractedText || !document.structuredData) {
+        return res.status(400).json({ error: "Document must be processed before validation" });
+      }
+
+      // Run quick validation checks first
+      const quickCheck = quickValidationChecks(document.structuredData);
+      
+      // Run full AI validation
+      const validationResult = await validateExtraction(
+        document.extractedText,
+        document.structuredData
+      );
+
+      // Combine quick check issues with AI validation issues
+      const allIssues = [...quickCheck.issues, ...validationResult.issues];
+      const needsReview = !validationResult.passedValidation || !quickCheck.passed;
+
+      // Update document with validation results
+      const updatedDocument = await storage.updateDocument(id, {
+        validationConfidence: validationResult.confidence,
+        validationIssues: allIssues,
+        needsReview,
+      });
+
+      if (!updatedDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Return validation results
+      res.json({
+        confidence: validationResult.confidence,
+        issues: allIssues,
+        scores: validationResult.scores,
+        reasoning: validationResult.reasoning,
+        passedValidation: validationResult.passedValidation && quickCheck.passed,
+        needsReview,
+      });
+    } catch (error) {
+      console.error("Validation error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to validate document" });
     }
   });
 
