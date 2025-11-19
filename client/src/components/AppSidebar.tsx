@@ -222,63 +222,6 @@ export function AppSidebar({
 
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between px-2">
-            <span>Recent Documents</span>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <ScrollArea className="h-[400px]">
-              <SidebarMenu>
-                {documents.map((doc) => (
-                  <SidebarMenuItem key={doc.id}>
-                    <ContextMenu>
-                      <ContextMenuTrigger asChild>
-                        <SidebarMenuButton
-                          isActive={selectedDocumentId === doc.id}
-                          onClick={() => onDocumentClick(doc.id)}
-                          data-testid={`button-document-${doc.id}`}
-                          className="flex-col items-start gap-1 h-auto py-2"
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span className="truncate text-sm font-medium">{doc.name}</span>
-                            {doc.isProcessed && (
-                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground w-full">
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                              {doc.fileType.toUpperCase()}
-                            </Badge>
-                            <span className="truncate">{doc.date}</span>
-                          </div>
-                        </SidebarMenuButton>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem
-                          onClick={() => onMoveDocument(doc as any)}
-                          data-testid={`button-move-document-${doc.id}`}
-                        >
-                          <FolderOpen className="mr-2 h-4 w-4" />
-                          Move to Folder
-                        </ContextMenuItem>
-                        <ContextMenuSeparator />
-                        <ContextMenuItem
-                          onClick={() => onDeleteDocument(doc as any)}
-                          data-testid={`button-delete-document-${doc.id}`}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </ScrollArea>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center justify-between px-2">
             <span>Folders</span>
             <Button
               variant="ghost"
