@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
-import { DocumentUploadZone } from "@/components/DocumentUploadZone";
+import { DocumentUploadZone, type UploadData } from "@/components/DocumentUploadZone";
 import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
@@ -56,7 +56,7 @@ function AppContent() {
     queryKey: ["/api/folders"],
   });
 
-  // Upload mutation
+  // Upload mutation for single documents
   const uploadMutation = useMutation({
     mutationFn: async ({ file, folderId, month, year }: { file: File; folderId?: string | null; month?: string | null; year?: string | null }) => {
       console.log("Starting upload for file:", file.name, "to folder:", folderId, "month:", month, "year:", year);
@@ -106,6 +106,78 @@ function AppContent() {
     },
     onError: (error: Error) => {
       console.error("Upload mutation onError called:", error);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Upload mutation for document sets
+  const uploadSetMutation = useMutation({
+    mutationFn: async (uploadData: UploadData) => {
+      if (uploadData.mode !== "set") {
+        throw new Error("Invalid upload mode");
+      }
+
+      console.log("Starting document set upload:", uploadData.setName);
+      const formData = new FormData();
+      
+      // Append all files
+      uploadData.files.forEach((file) => {
+        formData.append("files", file);
+      });
+      
+      // Append metadata
+      formData.append("setName", uploadData.setName);
+      if (uploadData.setDescription) {
+        formData.append("setDescription", uploadData.setDescription);
+      }
+      formData.append("originalFileIndex", uploadData.originalFileIndex.toString());
+      if (uploadData.folderId) {
+        formData.append("folderId", uploadData.folderId);
+      }
+      if (uploadData.month) {
+        formData.append("month", uploadData.month);
+      }
+      if (uploadData.year) {
+        formData.append("year", uploadData.year);
+      }
+
+      const response = await fetch("/api/documents/upload-set", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Document set upload failed:", errorText);
+        let errorMessage = "Document set upload failed";
+        try {
+          const error = JSON.parse(errorText);
+          errorMessage = error.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log("Document set upload successful:", result);
+      return result;
+    },
+    onSuccess: (data) => {
+      console.log("Document set upload mutation onSuccess called");
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/document-sets"] });
+      toast({
+        title: "Success",
+        description: `Document set "${data.documentSet.name}" with ${data.documents.length} file(s) processed successfully`,
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Document set upload mutation onError called:", error);
       toast({
         title: "Upload failed",
         description: error.message,
@@ -319,6 +391,22 @@ function AppContent() {
         });
       } catch (error) {
         console.error("Error in handleUpload:", error);
+        // Error toast is already shown by onError callback
+      }
+    }
+  };
+
+  const handleUploadReady = async (uploadData: UploadData) => {
+    if (uploadData.mode === "set") {
+      toast({
+        title: "Processing",
+        description: `Uploading and processing document set "${uploadData.setName}" with ${uploadData.files.length} file(s)...`,
+      });
+
+      try {
+        await uploadSetMutation.mutateAsync(uploadData);
+      } catch (error) {
+        console.error("Error in handleUploadReady:", error);
         // Error toast is already shown by onError callback
       }
     }
@@ -601,7 +689,8 @@ function AppContent() {
                   </div>
                   <DocumentUploadZone
                     onFilesSelected={handleUpload}
-                    disabled={uploadMutation.isPending}
+                    onUploadReady={handleUploadReady}
+                    disabled={uploadMutation.isPending || uploadSetMutation.isPending}
                     folders={folders}
                     selectedFolderId={selectedFolderId}
                     onFolderChange={setSelectedFolderId}

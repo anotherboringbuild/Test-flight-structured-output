@@ -612,6 +612,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/documents/upload-set", upload.array("files", 10), async (req, res) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ error: "No files uploaded" });
+      }
+
+      const { setName, setDescription, originalFileIndex, folderId, month, year } = req.body;
+      
+      if (!setName) {
+        return res.status(400).json({ error: "Document set name is required" });
+      }
+
+      const originalIndex = parseInt(originalFileIndex) || 0;
+      if (originalIndex < 0 || originalIndex >= req.files.length) {
+        return res.status(400).json({ error: "Invalid original file index" });
+      }
+
+      // Create the document set
+      const documentSet = await storage.createDocumentSet({
+        name: setName,
+        description: setDescription || null,
+      });
+
+      const uploadedDocuments = [];
+
+      // Process all files
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const fileType = file.originalname.split(".").pop()?.toLowerCase() || "";
+        const isOriginal = i === originalIndex;
+
+        try {
+          // Extract text from the uploaded file
+          const extractedText = await extractTextFromFile(file.path, fileType);
+
+          // Detect language and process with GPT-4o in parallel
+          const [language, structuredData] = await Promise.all([
+            detectLanguage(extractedText),
+            processWithGPT5(extractedText)
+          ]);
+
+          // Save document to database
+          const document = await storage.createDocument({
+            name: file.originalname,
+            fileType,
+            filePath: file.path,
+            size: `${(file.size / 1024).toFixed(2)} KB`,
+            folderId: folderId || null,
+            documentSetId: documentSet.id,
+            isOriginal,
+            language,
+            month: month || null,
+            year: year || null,
+            isProcessed: true,
+            extractedText,
+            structuredData,
+          });
+
+          // Remove filePath from response for security
+          const { filePath: _, ...safeDocument } = document;
+          uploadedDocuments.push(safeDocument);
+        } catch (error) {
+          console.error(`Error processing file ${file.originalname}:`, error);
+          // Continue with other files even if one fails
+          uploadedDocuments.push({
+            name: file.originalname,
+            error: error instanceof Error ? error.message : "Failed to process file",
+          });
+        }
+      }
+
+      res.json({
+        documentSet,
+        documents: uploadedDocuments,
+      });
+    } catch (error) {
+      console.error("Document set upload error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to upload document set" });
+    }
+  });
+
   app.patch("/api/documents/:id", async (req, res) => {
     try {
       const { id } = req.params;
