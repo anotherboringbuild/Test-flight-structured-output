@@ -41,9 +41,12 @@ export class DbStorage implements IStorage {
   }
 
   async updateDocument(id: string, updates: Partial<InsertDocument>): Promise<Document | undefined> {
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== undefined)
+    );
     const result = await db
       .update(documents)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...filteredUpdates, updatedAt: new Date() })
       .where(eq(documents.id, id))
       .returning();
     return result[0];
