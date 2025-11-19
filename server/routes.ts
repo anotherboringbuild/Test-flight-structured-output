@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import mammoth from "mammoth";
 import * as pdfParse from "pdf-parse";
-import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
+import { insertDocumentSchema, insertFolderSchema, insertDocumentSetSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
 
@@ -452,6 +452,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting folder:", error);
       res.status(400).json({ error: "Failed to delete folder" });
+    }
+  });
+
+  // Document Sets
+  app.get("/api/document-sets", async (req, res) => {
+    try {
+      const documentSets = await storage.getAllDocumentSets();
+      res.json(documentSets);
+    } catch (error) {
+      console.error("Error fetching document sets:", error);
+      res.status(500).json({ error: "Failed to fetch document sets" });
+    }
+  });
+
+  app.get("/api/document-sets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const documentSet = await storage.getDocumentSet(id);
+      if (!documentSet) {
+        return res.status(404).json({ error: "Document set not found" });
+      }
+      res.json(documentSet);
+    } catch (error) {
+      console.error("Error fetching document set:", error);
+      res.status(500).json({ error: "Failed to fetch document set" });
+    }
+  });
+
+  app.get("/api/document-sets/:id/documents", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const documents = await storage.getDocumentsBySet(id);
+      // Remove filePath from all documents for security
+      const safeDocuments = documents.map(({ filePath: _, ...doc }) => doc);
+      res.json(safeDocuments);
+    } catch (error) {
+      console.error("Error fetching documents for set:", error);
+      res.status(500).json({ error: "Failed to fetch documents" });
+    }
+  });
+
+  app.post("/api/document-sets", async (req, res) => {
+    try {
+      const validatedData = insertDocumentSetSchema.parse(req.body);
+      const documentSet = await storage.createDocumentSet(validatedData);
+      res.json(documentSet);
+    } catch (error) {
+      console.error("Error creating document set:", error);
+      res.status(400).json({ error: "Failed to create document set" });
+    }
+  });
+
+  app.patch("/api/document-sets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const documentSet = await storage.updateDocumentSet(id, req.body);
+      if (!documentSet) {
+        return res.status(404).json({ error: "Document set not found" });
+      }
+      res.json(documentSet);
+    } catch (error) {
+      console.error("Error updating document set:", error);
+      res.status(400).json({ error: "Failed to update document set" });
+    }
+  });
+
+  app.delete("/api/document-sets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDocumentSet(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting document set:", error);
+      res.status(400).json({ error: "Failed to delete document set" });
     }
   });
 

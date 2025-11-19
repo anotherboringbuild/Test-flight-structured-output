@@ -9,6 +9,14 @@ export const folders = pgTable("folders", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const documentSets = pgTable("document_sets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const documents = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -16,6 +24,8 @@ export const documents = pgTable("documents", {
   filePath: text("file_path").notNull(),
   size: text("size").notNull(),
   folderId: varchar("folder_id").references(() => folders.id, { onDelete: "set null" }),
+  documentSetId: varchar("document_set_id").references(() => documentSets.id, { onDelete: "set null" }),
+  isOriginal: boolean("is_original").notNull().default(false),
   language: varchar("language", { length: 50 }),
   month: varchar("month", { length: 20 }),
   year: varchar("year", { length: 4 }),
@@ -32,6 +42,12 @@ export const insertFolderSchema = createInsertSchema(folders).omit({
   createdAt: true,
 });
 
+export const insertDocumentSetSchema = createInsertSchema(documentSets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
   createdAt: true,
@@ -40,5 +56,7 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
 
 export type InsertFolder = z.infer<typeof insertFolderSchema>;
 export type Folder = typeof folders.$inferSelect;
+export type InsertDocumentSet = z.infer<typeof insertDocumentSetSchema>;
+export type DocumentSet = typeof documentSets.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documents.$inferSelect;
