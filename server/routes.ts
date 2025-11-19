@@ -521,6 +521,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/document-sets/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // First, unlink all documents from this set
+      const documents = await storage.getDocumentsBySet(id);
+      for (const doc of documents) {
+        await storage.updateDocument(doc.id, { documentSetId: null, isOriginal: false });
+      }
+      
+      // Then delete the set
       await storage.deleteDocumentSet(id);
       res.json({ success: true });
     } catch (error) {
@@ -607,6 +615,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/documents/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // If marking a document as original, unmark all other documents in the same set
+      if (req.body.isOriginal === true) {
+        // Fetch current document to get its documentSetId if not provided in payload
+        const currentDoc = await storage.getDocument(id);
+        if (!currentDoc) {
+          return res.status(404).json({ error: "Document not found" });
+        }
+        
+        // Use documentSetId from payload or current document
+        const documentSetId = req.body.documentSetId || currentDoc.documentSetId;
+        
+        if (documentSetId) {
+          const documentsInSet = await storage.getDocumentsBySet(documentSetId);
+          for (const doc of documentsInSet) {
+            if (doc.id !== id && doc.isOriginal) {
+              await storage.updateDocument(doc.id, { isOriginal: false });
+            }
+          }
+        }
+      }
+      
       const document = await storage.updateDocument(id, req.body);
       if (!document) {
         return res.status(404).json({ error: "Document not found" });

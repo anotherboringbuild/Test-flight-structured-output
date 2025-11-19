@@ -101,6 +101,13 @@ Preferred communication style: Simple, everyday language.
 - name (text)
 - createdAt (timestamp)
 
+*Document Sets Table*:
+- id (UUID, primary key)
+- name (text)
+- description (text, nullable)
+- createdAt (timestamp)
+- updatedAt (timestamp)
+
 *Documents Table*:
 - id (UUID, primary key)
 - name (text)
@@ -108,6 +115,8 @@ Preferred communication style: Simple, everyday language.
 - filePath (text - local file system path)
 - size (text)
 - folderId (foreign key to folders, nullable, cascades to null on delete)
+- documentSetId (foreign key to document_sets, nullable, cascades to null on delete)
+- isOriginal (boolean, default false - marks the original document in a set)
 - language (varchar, nullable - detected document language: English, Japanese, Spanish, etc.)
 - month (varchar, nullable - for filtering/tagging)
 - year (varchar, nullable - for filtering/tagging)
