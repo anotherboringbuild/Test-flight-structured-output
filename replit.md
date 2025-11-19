@@ -145,7 +145,12 @@ Preferred communication style: Simple, everyday language.
 - Schema-based structured output extraction
 
 **Structured JSON Output Format**:
-The AI extracts product information into this JSON structure with support for multiple products per section:
+The AI extracts product information into this JSON structure with support for multiple products per section.
+
+**Language Handling**:
+- JSON field names (ProductCopy, BusinessCopy, UpgraderCopy, ProductName, Headlines, AdvertisingCopy, KeyFeatureBullets, LegalReferences) are ALWAYS in English for consistent parsing
+- Content values (product names, headlines, advertising copy, feature bullets, legal references) remain in the source document's original language
+- No translation is performed on the content
 ```json
 {
   "ProductCopy": [

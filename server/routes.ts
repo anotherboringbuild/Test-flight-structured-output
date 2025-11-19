@@ -115,6 +115,11 @@ async function processWithGPT5(extractedText: string): Promise<any> {
           role: "system",
           content: `You are a product documentation extraction specialist. Extract structured product information from the provided text.
 
+LANGUAGE HANDLING:
+- **JSON field names** (ProductCopy, BusinessCopy, UpgraderCopy, ProductName, Headlines, AdvertisingCopy, KeyFeatureBullets, LegalReferences) MUST ALWAYS be in English
+- **Content values** (product names, headlines, advertising copy, feature bullets, legal references) MUST remain in the source document's original language
+- Do NOT translate the content - preserve the exact language from the source document
+
 Documents can contain different copy sections:
 - ProductCopy: General product marketing copy
 - BusinessCopy: Copy targeted at business customers
