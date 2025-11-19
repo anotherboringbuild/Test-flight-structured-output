@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, json, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,6 +25,9 @@ export const documents = pgTable("documents", {
   extractedText: text("extracted_text"),
   translatedText: text("translated_text"),
   structuredData: json("structured_data"),
+  validationConfidence: real("validation_confidence"),
+  validationIssues: json("validation_issues").$type<string[]>(),
+  needsReview: boolean("needs_review").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
