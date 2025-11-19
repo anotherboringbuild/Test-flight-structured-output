@@ -624,9 +624,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Document set name is required" });
       }
 
-      const originalIndex = parseInt(originalFileIndex) || 0;
+      const originalIndex = Number(originalFileIndex ?? 0);
+      
+      // Validate that originalIndex is a valid integer
+      if (!Number.isInteger(originalIndex)) {
+        return res.status(400).json({ error: "Original file index must be a valid integer" });
+      }
+      
       if (originalIndex < 0 || originalIndex >= req.files.length) {
-        return res.status(400).json({ error: "Invalid original file index" });
+        return res.status(400).json({ error: "Invalid original file index: out of range" });
       }
 
       // Create the document set
