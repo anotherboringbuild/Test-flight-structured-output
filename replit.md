@@ -108,6 +108,7 @@ Preferred communication style: Simple, everyday language.
 - filePath (text - local file system path)
 - size (text)
 - folderId (foreign key to folders, nullable, cascades to null on delete)
+- language (varchar, nullable - detected document language: English, Japanese, Spanish, etc.)
 - month (varchar, nullable - for filtering/tagging)
 - year (varchar, nullable - for filtering/tagging)
 - isProcessed (boolean, default false)

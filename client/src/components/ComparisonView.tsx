@@ -14,6 +14,7 @@ interface ComparisonViewProps {
   extractedText: string;
   translatedText?: string | null;
   structuredData: string;
+  language?: string | null;
   isProcessing?: boolean;
   isTranslating?: boolean;
   onBack: () => void;
@@ -64,6 +65,7 @@ export function ComparisonView({
   extractedText,
   translatedText,
   structuredData,
+  language,
   isProcessing = false,
   isTranslating = false,
   onBack,
@@ -625,7 +627,14 @@ export function ComparisonView({
         <div className="flex flex-col border-r min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center justify-between gap-4 mb-3">
-              <h3 className="font-medium">Original Document</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium">Original Document</h3>
+                {language && (
+                  <Badge variant="outline" className="text-xs">
+                    {language}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 {onTranslate && (
                   <div className="flex items-center gap-2">

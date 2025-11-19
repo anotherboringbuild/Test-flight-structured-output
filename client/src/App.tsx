@@ -541,6 +541,7 @@ function AppContent() {
                       ? JSON.stringify(selectedDocument.structuredData, null, 2)
                       : ""
                   }
+                  language={selectedDocument.language}
                   isProcessing={reprocessDocumentMutation.isPending}
                   isTranslating={translateDocumentMutation.isPending}
                   onBack={() => {

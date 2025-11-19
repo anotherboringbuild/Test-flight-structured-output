@@ -405,6 +405,7 @@ export function DocumentLibrary({
           <div className="flex-1">Name</div>
           <div className="w-32">Folder</div>
           <div className="w-24">Type</div>
+          <div className="w-20">Language</div>
           <div className="w-24">Size</div>
           <div className="w-32">Date</div>
           <div className="w-20">Status</div>
@@ -442,6 +443,20 @@ export function DocumentLibrary({
               </div>
               <div className="w-24">
                 <Badge variant="outline">{doc.fileType.toUpperCase()}</Badge>
+              </div>
+              <div className="w-20">
+                {doc.language && (
+                  <Badge variant="secondary" className="text-xs">
+                    {doc.language === "English" ? "EN" : 
+                     doc.language === "Japanese" ? "JA" :
+                     doc.language === "Spanish" ? "ES" :
+                     doc.language === "French" ? "FR" :
+                     doc.language === "German" ? "DE" :
+                     doc.language === "Chinese" ? "ZH" :
+                     doc.language === "Korean" ? "KO" :
+                     doc.language.slice(0, 2).toUpperCase()}
+                  </Badge>
+                )}
               </div>
               <div className="w-24 text-muted-foreground">{doc.size}</div>
               <div className="w-32 text-muted-foreground">
