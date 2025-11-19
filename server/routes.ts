@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import mammoth from "mammoth";
 import * as pdfParse from "pdf-parse";
-import { insertDocumentSchema, insertFolderSchema, insertDocumentSetSchema } from "@shared/schema";
+import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
 
@@ -460,88 +460,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Document Sets
-  app.get("/api/document-sets", async (req, res) => {
-    try {
-      const documentSets = await storage.getAllDocumentSets();
-      res.json(documentSets);
-    } catch (error) {
-      console.error("Error fetching document sets:", error);
-      res.status(500).json({ error: "Failed to fetch document sets" });
-    }
-  });
-
-  app.get("/api/document-sets/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const documentSet = await storage.getDocumentSet(id);
-      if (!documentSet) {
-        return res.status(404).json({ error: "Document set not found" });
-      }
-      res.json(documentSet);
-    } catch (error) {
-      console.error("Error fetching document set:", error);
-      res.status(500).json({ error: "Failed to fetch document set" });
-    }
-  });
-
-  app.get("/api/document-sets/:id/documents", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const documents = await storage.getDocumentsBySet(id);
-      // Remove filePath from all documents for security
-      const safeDocuments = documents.map(({ filePath: _, ...doc }) => doc);
-      res.json(safeDocuments);
-    } catch (error) {
-      console.error("Error fetching documents for set:", error);
-      res.status(500).json({ error: "Failed to fetch documents" });
-    }
-  });
-
-  app.post("/api/document-sets", async (req, res) => {
-    try {
-      const validatedData = insertDocumentSetSchema.parse(req.body);
-      const documentSet = await storage.createDocumentSet(validatedData);
-      res.json(documentSet);
-    } catch (error) {
-      console.error("Error creating document set:", error);
-      res.status(400).json({ error: "Failed to create document set" });
-    }
-  });
-
-  app.patch("/api/document-sets/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const documentSet = await storage.updateDocumentSet(id, req.body);
-      if (!documentSet) {
-        return res.status(404).json({ error: "Document set not found" });
-      }
-      res.json(documentSet);
-    } catch (error) {
-      console.error("Error updating document set:", error);
-      res.status(400).json({ error: "Failed to update document set" });
-    }
-  });
-
-  app.delete("/api/document-sets/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      // First, unlink all documents from this set
-      const documents = await storage.getDocumentsBySet(id);
-      for (const doc of documents) {
-        await storage.updateDocument(doc.id, { documentSetId: null, isOriginal: false });
-      }
-      
-      // Then delete the set
-      await storage.deleteDocumentSet(id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting document set:", error);
-      res.status(400).json({ error: "Failed to delete document set" });
-    }
-  });
-
   // Documents
   app.get("/api/documents", async (req, res) => {
     try {
@@ -623,13 +541,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No files uploaded" });
       }
 
-      const { setName, setDescription, originalFileIndex, folderId, month, year } = req.body;
+      const { folderName, folderDescription, originalIndex: originalIndexStr, folderId, month, year } = req.body;
       
-      if (!setName) {
-        return res.status(400).json({ error: "Document set name is required" });
-      }
-
-      const originalIndex = Number(originalFileIndex ?? 0);
+      const originalIndex = Number(originalIndexStr ?? 0);
       
       // Validate that originalIndex is a valid integer
       if (!Number.isInteger(originalIndex)) {
@@ -640,11 +554,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid original file index: out of range" });
       }
 
-      // Create the document set
-      const documentSet = await storage.createDocumentSet({
-        name: setName,
-        description: setDescription || null,
-      });
+      // Create folder if folderName provided and no folderId, otherwise use existing folder
+      let targetFolderId = folderId || null;
+      let createdFolder = null;
+      
+      if (folderName && !folderId) {
+        // Create a new folder for this multi-document upload
+        createdFolder = await storage.createFolder({
+          name: folderName,
+          description: folderDescription || null,
+        });
+        targetFolderId = createdFolder.id;
+      }
 
       const uploadedDocuments = [];
 
@@ -670,8 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileType,
             filePath: file.path,
             size: `${(file.size / 1024).toFixed(2)} KB`,
-            folderId: folderId || null,
-            documentSetId: documentSet.id,
+            folderId: targetFolderId,
             isOriginal,
             language,
             month: month || null,
@@ -695,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        documentSet,
+        folder: createdFolder,
         documents: uploadedDocuments,
       });
     } catch (error) {
@@ -708,20 +628,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // If marking a document as original, unmark all other documents in the same set
+      // If marking a document as original, unmark all other documents in the same folder
       if (req.body.isOriginal === true) {
-        // Fetch current document to get its documentSetId if not provided in payload
+        // Fetch current document to get its folderId if not provided in payload
         const currentDoc = await storage.getDocument(id);
         if (!currentDoc) {
           return res.status(404).json({ error: "Document not found" });
         }
         
-        // Use documentSetId from payload or current document
-        const documentSetId = req.body.documentSetId || currentDoc.documentSetId;
+        // Use folderId from payload or current document
+        const targetFolderId = req.body.folderId !== undefined ? req.body.folderId : currentDoc.folderId;
         
-        if (documentSetId) {
-          const documentsInSet = await storage.getDocumentsBySet(documentSetId);
-          for (const doc of documentsInSet) {
+        if (targetFolderId) {
+          const documentsInFolder = await storage.getDocumentsByFolder(targetFolderId);
+          for (const doc of documentsInFolder) {
             if (doc.id !== id && doc.isOriginal) {
               await storage.updateDocument(doc.id, { isOriginal: false });
             }

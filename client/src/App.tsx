@@ -121,7 +121,7 @@ function AppContent() {
         throw new Error("Invalid upload mode");
       }
 
-      console.log("Starting document set upload:", uploadData.setName);
+      console.log("Starting folder upload:", uploadData.folderName);
       const formData = new FormData();
       
       // Append all files
@@ -130,11 +130,11 @@ function AppContent() {
       });
       
       // Append metadata
-      formData.append("setName", uploadData.setName);
-      if (uploadData.setDescription) {
-        formData.append("setDescription", uploadData.setDescription);
+      formData.append("folderName", uploadData.folderName);
+      if (uploadData.folderDescription) {
+        formData.append("folderDescription", uploadData.folderDescription);
       }
-      formData.append("originalFileIndex", uploadData.originalFileIndex.toString());
+      formData.append("originalIndex", uploadData.originalIndex.toString());
       if (uploadData.folderId) {
         formData.append("folderId", uploadData.folderId);
       }
@@ -170,10 +170,10 @@ function AppContent() {
     onSuccess: (data) => {
       console.log("Document set upload mutation onSuccess called");
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/document-sets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
       toast({
         title: "Success",
-        description: `Document set "${data.documentSet.name}" with ${data.documents.length} file(s) processed successfully`,
+        description: `Folder "${data.folder?.name || 'documents'}" with ${data.documents.length} file(s) processed successfully`,
       });
     },
     onError: (error: Error) => {
@@ -202,8 +202,8 @@ function AppContent() {
 
   // Folder mutations
   const createFolderMutation = useMutation({
-    mutationFn: async (name: string) => {
-      return await apiRequest("POST", "/api/folders", { name });
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      return await apiRequest("POST", "/api/folders", { name, description });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
@@ -215,8 +215,8 @@ function AppContent() {
   });
 
   const updateFolderMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      return await apiRequest("PATCH", `/api/folders/${id}`, { name });
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
+      return await apiRequest("PATCH", `/api/folders/${id}`, { name, description });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
@@ -468,11 +468,11 @@ function AppContent() {
     setShowDeleteDialog(true);
   };
 
-  const handleFolderSubmit = (name: string) => {
+  const handleFolderSubmit = (name: string, description?: string) => {
     if (folderDialogMode === "create") {
-      createFolderMutation.mutate(name);
+      createFolderMutation.mutate({ name, description });
     } else if (editingFolder) {
-      updateFolderMutation.mutate({ id: editingFolder.id, name });
+      updateFolderMutation.mutate({ id: editingFolder.id, name, description });
     }
   };
 
@@ -736,6 +736,7 @@ function AppContent() {
           onClose={() => setShowFolderDialog(false)}
           onSubmit={handleFolderSubmit}
           initialName={editingFolder?.name || ""}
+          initialDescription={editingFolder?.description || ""}
           mode={folderDialogMode}
         />
 

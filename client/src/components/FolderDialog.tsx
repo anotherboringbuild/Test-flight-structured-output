@@ -10,12 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FolderDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, description?: string) => void;
   initialName?: string;
+  initialDescription?: string;
   mode: "create" | "edit";
 }
 
@@ -24,19 +26,23 @@ export function FolderDialog({
   onClose,
   onSubmit,
   initialName = "",
+  initialDescription = "",
   mode,
 }: FolderDialogProps) {
   const [name, setName] = useState(initialName);
+  const [description, setDescription] = useState(initialDescription);
 
   useEffect(() => {
     setName(initialName);
-  }, [initialName, open]);
+    setDescription(initialDescription);
+  }, [initialName, initialDescription, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit(name.trim());
+      onSubmit(name.trim(), description.trim() || undefined);
       setName("");
+      setDescription("");
       onClose();
     }
   };
@@ -65,6 +71,17 @@ export function FolderDialog({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter folder name..."
                 autoFocus
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="folder-description">Description (Optional)</Label>
+              <Textarea
+                id="folder-description"
+                data-testid="textarea-folder-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Optional description for document variant sets..."
+                rows={2}
               />
             </div>
           </div>

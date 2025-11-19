@@ -39,9 +39,9 @@ Preferred communication style: Simple, everyday language.
 **Key Features**:
 1. **Document Upload** - Dual-mode upload system supporting:
    - **Single Document Mode**: Upload individual documents with AI processing
-   - **Document Set Mode**: Upload multiple language variants of the same document (e.g., English original + Japanese/Spanish translations) as a grouped set
+   - **Folder-Based Multi-Document Mode**: Upload multiple language variants of the same document (e.g., English original + Japanese/Spanish translations) into a folder as a grouped set
    - Both modes support folder assignment, month/year metadata tagging
-   - Document sets automatically mark one file as the original for reference tracking
+   - Multi-document uploads automatically mark one file as the original for reference tracking
 2. **Comparison View** - Side-by-side view of extracted text and structured JSON with hover-to-highlight
 3. **Product Selector** - For multi-product documents, dropdown to focus on specific product or view all products (filters JSON display and updates hover-to-highlight accordingly)
 4. **Dual Independent Search** - Real-time search in both extracted text and JSON panels with:
@@ -59,7 +59,10 @@ Preferred communication style: Simple, everyday language.
    - Bulk selection with checkboxes
    - Bulk operations: export, move to folder, delete
    - Individual document actions: rename, move, delete via context menu
-7. **Folder Organization** - Create, edit, delete folders with automatic document count tracking
+7. **Folder Organization** - Create, edit, delete folders with:
+   - Automatic document count tracking
+   - Expandable folder view in sidebar showing originals (star icon) and language variants (language badges)
+   - Folders serve dual purpose: organizational containers AND grouping for document variant sets
 8. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
 9. **Export Functionality** - Export individual or multiple documents as JSON files
 
@@ -77,14 +80,14 @@ Preferred communication style: Simple, everyday language.
 
 **Key Routes**:
 - `POST /api/documents/upload` - Single file upload and processing
-- `POST /api/documents/upload-set` - Document set upload (multiple files with metadata)
+- `POST /api/documents/upload-set` - Multi-document upload into folder (creates folder if needed, marks original, processes all files)
 - `GET /api/documents` - List all documents
 - `GET /api/documents/:id` - Get specific document
-- `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, etc.)
+- `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, isOriginal toggle)
 - `POST /api/documents/:id/reprocess` - Reprocess document with latest AI extraction
 - `POST /api/documents/:id/translate` - Translate document text to English using OpenAI
 - `DELETE /api/documents/:id` - Delete document
-- Folder management endpoints (CRUD operations)
+- Folder management endpoints (GET /api/folders, POST /api/folders, PATCH /api/folders/:id, DELETE /api/folders/:id)
 
 **Error Handling**: Custom error responses with appropriate HTTP status codes
 
@@ -104,14 +107,8 @@ Preferred communication style: Simple, everyday language.
 *Folders Table*:
 - id (UUID, primary key)
 - name (text)
+- description (text, nullable - optional description for folders containing document variant sets)
 - createdAt (timestamp)
-
-*Document Sets Table*:
-- id (UUID, primary key)
-- name (text)
-- description (text, nullable)
-- createdAt (timestamp)
-- updatedAt (timestamp)
 
 *Documents Table*:
 - id (UUID, primary key)
@@ -120,8 +117,7 @@ Preferred communication style: Simple, everyday language.
 - filePath (text - local file system path)
 - size (text)
 - folderId (foreign key to folders, nullable, cascades to null on delete)
-- documentSetId (foreign key to document_sets, nullable, cascades to null on delete)
-- isOriginal (boolean, default false - marks the original document in a set)
+- isOriginal (boolean, default false - marks the original document in a folder containing language variants)
 - language (varchar, nullable - detected document language: English, Japanese, Spanish, etc.)
 - month (varchar, nullable - for filtering/tagging)
 - year (varchar, nullable - for filtering/tagging)

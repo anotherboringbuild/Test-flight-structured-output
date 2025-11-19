@@ -25,9 +25,9 @@ export type UploadMode = "single" | "set";
 export interface DocumentSetUpload {
   mode: "set";
   files: File[];
-  setName: string;
-  setDescription?: string;
-  originalFileIndex: number;
+  folderName: string;
+  folderDescription?: string;
+  originalIndex: number;
   folderId?: string | null;
   month?: string | null;
   year?: string | null;
@@ -70,9 +70,9 @@ export function DocumentUploadZone({
 }: DocumentUploadZoneProps) {
   const [uploadMode, setUploadMode] = useState<UploadMode>("single");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [setName, setSetName] = useState("");
-  const [setDescription, setSetDescription] = useState("");
-  const [originalFileIndex, setOriginalFileIndex] = useState(0);
+  const [folderName, setFolderName] = useState("");
+  const [folderDescription, setFolderDescription] = useState("");
+  const [originalIndex, setOriginalIndex] = useState(0);
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: any[]) => {
@@ -87,14 +87,14 @@ export function DocumentUploadZone({
       } else {
         // For document set mode, store files for later processing
         setSelectedFiles(acceptedFiles);
-        if (acceptedFiles.length > 0 && !setName) {
-          // Auto-suggest set name from first file
+        if (acceptedFiles.length > 0 && !folderName) {
+          // Auto-suggest folder name from first file
           const fileName = acceptedFiles[0].name.replace(/\.(docx|pdf|pages)$/i, '');
-          setSetName(fileName);
+          setFolderName(fileName);
         }
       }
     },
-    [onFilesSelected, uploadMode, setName]
+    [onFilesSelected, uploadMode, folderName]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -116,8 +116,8 @@ export function DocumentUploadZone({
   const handleRemoveFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newFiles);
-    if (originalFileIndex >= newFiles.length && newFiles.length > 0) {
-      setOriginalFileIndex(newFiles.length - 1);
+    if (originalIndex >= newFiles.length && newFiles.length > 0) {
+      setOriginalIndex(newFiles.length - 1);
     }
   };
 
@@ -125,7 +125,7 @@ export function DocumentUploadZone({
     if (!onUploadReady) return;
     
     if (uploadMode === "set") {
-      if (!setName.trim()) {
+      if (!folderName.trim()) {
         return;
       }
       if (selectedFiles.length === 0) {
@@ -135,9 +135,9 @@ export function DocumentUploadZone({
       const uploadData: DocumentSetUpload = {
         mode: "set",
         files: selectedFiles,
-        setName: setName.trim(),
-        setDescription: setDescription.trim() || undefined,
-        originalFileIndex,
+        folderName: folderName.trim(),
+        folderDescription: folderDescription.trim() || undefined,
+        originalIndex,
         folderId: selectedFolderId,
         month: selectedMonth,
         year: selectedYear,
@@ -146,9 +146,9 @@ export function DocumentUploadZone({
       
       // Reset form
       setSelectedFiles([]);
-      setSetName("");
-      setSetDescription("");
-      setOriginalFileIndex(0);
+      setFolderName("");
+      setFolderDescription("");
+      setOriginalIndex(0);
     }
   };
 
@@ -162,8 +162,8 @@ export function DocumentUploadZone({
           onValueChange={(value) => {
             setUploadMode(value as UploadMode);
             setSelectedFiles([]);
-            setSetName("");
-            setSetDescription("");
+            setFolderName("");
+            setFolderDescription("");
           }}
           className="flex gap-4"
           data-testid="radio-upload-mode"
@@ -277,29 +277,29 @@ export function DocumentUploadZone({
         )}
       </div>
 
-      {/* Document Set Name and Description */}
+      {/* Folder Name and Description */}
       {uploadMode === "set" && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor="set-name">Document Set Name *</Label>
+            <Label htmlFor="folder-name">Folder Name *</Label>
             <Input
-              id="set-name"
+              id="folder-name"
               type="text"
               placeholder="e.g. iPhone 17 Pro Marketing Copy"
-              value={setName}
-              onChange={(e) => setSetName(e.target.value)}
-              data-testid="input-set-name"
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              data-testid="input-folder-name"
               className="mt-2"
             />
           </div>
           <div>
-            <Label htmlFor="set-description">Description (Optional)</Label>
+            <Label htmlFor="folder-description">Description (Optional)</Label>
             <Textarea
-              id="set-description"
-              placeholder="Describe this document set..."
-              value={setDescription}
-              onChange={(e) => setSetDescription(e.target.value)}
-              data-testid="textarea-set-description"
+              id="folder-description"
+              placeholder="Describe this folder..."
+              value={folderDescription}
+              onChange={(e) => setFolderDescription(e.target.value)}
+              data-testid="textarea-folder-description"
               className="mt-2"
               rows={2}
             />
@@ -357,23 +357,23 @@ export function DocumentUploadZone({
                 key={index}
                 className={cn(
                   "flex items-center justify-between gap-2 rounded-md border p-3",
-                  index === originalFileIndex && "border-primary bg-primary/5"
+                  index === originalIndex && "border-primary bg-primary/5"
                 )}
                 data-testid={`file-item-${index}`}
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {index === originalFileIndex && (
+                  {index === originalIndex && (
                     <Star className="h-4 w-4 text-primary flex-shrink-0" data-testid={`star-${index}`} />
                   )}
                   <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm truncate">{file.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {index !== originalFileIndex && (
+                  {index !== originalIndex && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setOriginalFileIndex(index)}
+                      onClick={() => setOriginalIndex(index)}
                       data-testid={`button-mark-original-${index}`}
                     >
                       Mark as Original
@@ -393,11 +393,11 @@ export function DocumentUploadZone({
           </div>
           <Button
             onClick={handleUploadSet}
-            disabled={!setName.trim() || selectedFiles.length === 0 || disabled}
+            disabled={!folderName.trim() || selectedFiles.length === 0 || disabled}
             className="w-full"
             data-testid="button-upload-set"
           >
-            Upload Document Set
+            Upload to Folder
           </Button>
         </div>
       )}

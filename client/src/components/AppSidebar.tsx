@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
-import type { Folder as FolderType, Document as DocumentType, DocumentSet as DocumentSetType } from "@shared/schema";
+import type { Folder as FolderType, Document as DocumentType } from "@shared/schema";
 
 interface Document extends DocumentType {
   date: string;
@@ -64,7 +64,7 @@ export function AppSidebar({
   onMoveDocument,
   onDeleteDocument,
 }: AppSidebarProps) {
-  const [expandedSets, setExpandedSets] = useState<Set<string>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
@@ -72,23 +72,18 @@ export function AppSidebar({
     { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];
 
-  // Fetch document sets
-  const { data: documentSets = [] } = useQuery<DocumentSetType[]>({
-    queryKey: ["/api/document-sets"],
-  });
-
-  // Get all documents and group them by documentSetId
-  const getDocumentsForSet = (setId: string) => {
-    return documents.filter(doc => doc.documentSetId === setId);
+  // Get all documents in a folder
+  const getDocumentsForFolder = (folderId: string) => {
+    return documents.filter(doc => doc.folderId === folderId);
   };
 
-  const toggleSetExpanded = (setId: string) => {
-    setExpandedSets(prev => {
+  const toggleFolderExpanded = (folderId: string) => {
+    setExpandedFolders(prev => {
       const next = new Set(prev);
-      if (next.has(setId)) {
-        next.delete(setId);
+      if (next.has(folderId)) {
+        next.delete(folderId);
       } else {
-        next.add(setId);
+        next.add(folderId);
       }
       return next;
     });
@@ -135,36 +130,68 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {documentSets.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center justify-between px-2">
-              <span>Document Sets</span>
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <ScrollArea className="h-[300px]">
-                <SidebarMenu>
-                  {documentSets.map((set) => {
-                    const setDocs = getDocumentsForSet(set.id);
-                    const originalDoc = setDocs.find(d => d.isOriginal);
-                    const variantDocs = setDocs.filter(d => !d.isOriginal);
-                    const isExpanded = expandedSets.has(set.id);
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center justify-between px-2">
+            <span>Folders</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={onCreateFolder}
+              data-testid="button-create-folder"
+              aria-label="Create folder"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <ScrollArea className="h-[400px]">
+              <SidebarMenu>
+                {folders.map((folder) => {
+                  const folderDocs = getDocumentsForFolder(folder.id);
+                  const originalDoc = folderDocs.find(d => d.isOriginal);
+                  const variantDocs = folderDocs.filter(d => !d.isOriginal);
+                  const isExpanded = expandedFolders.has(folder.id);
+                  const hasMultipleDocs = folderDocs.length > 1;
 
-                    return (
-                      <SidebarMenuItem key={set.id}>
-                        <Collapsible open={isExpanded} onOpenChange={() => toggleSetExpanded(set.id)}>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton
-                              data-testid={`button-document-set-${set.id}`}
-                              className="w-full"
-                            >
-                              <ChevronRight className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                              <FileText className="h-4 w-4" />
-                              <span className="flex-1 truncate text-left">{set.name}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {setDocs.length}
-                              </Badge>
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
+                  return (
+                    <SidebarMenuItem key={folder.id}>
+                      {hasMultipleDocs ? (
+                        <Collapsible open={isExpanded} onOpenChange={() => toggleFolderExpanded(folder.id)}>
+                          <ContextMenu>
+                            <ContextMenuTrigger asChild>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton
+                                  data-testid={`button-folder-${folder.id}`}
+                                  className="w-full"
+                                >
+                                  <ChevronRight className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                  <FolderOpen className="h-4 w-4" />
+                                  <span className="flex-1 truncate text-left">{folder.name}</span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {folderDocs.length}
+                                  </Badge>
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent>
+                              <ContextMenuItem
+                                onClick={() => onEditFolder(folder)}
+                                data-testid={`button-edit-folder-${folder.id}`}
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Rename
+                              </ContextMenuItem>
+                              <ContextMenuItem
+                                onClick={() => onDeleteFolder(folder)}
+                                data-testid={`button-delete-folder-${folder.id}`}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
                           <CollapsibleContent>
                             <div className="ml-6 mt-1 space-y-1">
                               {originalDoc && (
@@ -206,68 +233,43 @@ export function AppSidebar({
                             </div>
                           </CollapsibleContent>
                         </Collapsible>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </ScrollArea>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center justify-between px-2">
-            <span>Folders</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={onCreateFolder}
-              data-testid="button-create-folder"
-              aria-label="Create folder"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <ScrollArea className="h-[200px]">
-              <SidebarMenu>
-                {folders.map((folder) => (
-                  <SidebarMenuItem key={folder.id}>
-                    <ContextMenu>
-                      <ContextMenuTrigger asChild>
-                        <SidebarMenuButton
-                          isActive={currentView === `folder-${folder.id}`}
-                          onClick={() => onFolderClick(folder.id)}
-                          data-testid={`button-folder-${folder.id}`}
-                        >
-                          <FolderOpen className="h-5 w-5" />
-                          <span className="flex-1 truncate">{folder.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {folder.count}
-                          </span>
-                        </SidebarMenuButton>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem
-                          onClick={() => onEditFolder(folder)}
-                          data-testid={`button-edit-folder-${folder.id}`}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Rename
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => onDeleteFolder(folder)}
-                          data-testid={`button-delete-folder-${folder.id}`}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  </SidebarMenuItem>
-                ))}
+                      ) : (
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <SidebarMenuButton
+                              isActive={currentView === `folder-${folder.id}`}
+                              onClick={() => onFolderClick(folder.id)}
+                              data-testid={`button-folder-${folder.id}`}
+                            >
+                              <FolderOpen className="h-5 w-5" />
+                              <span className="flex-1 truncate">{folder.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {folder.count}
+                              </span>
+                            </SidebarMenuButton>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent>
+                            <ContextMenuItem
+                              onClick={() => onEditFolder(folder)}
+                              data-testid={`button-edit-folder-${folder.id}`}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Rename
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() => onDeleteFolder(folder)}
+                              data-testid={`button-delete-folder-${folder.id}`}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </ScrollArea>
           </SidebarGroupContent>
