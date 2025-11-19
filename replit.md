@@ -1,8 +1,8 @@
 # Overview
 
-DocExtract is a document extraction and review application that processes Word (DOCX), PDF, and Pages files to extract and structure their content using AI-powered processing. The application provides a macOS-inspired interface for uploading documents, viewing extracted text, and exporting structured data in various formats.
+DocExtract is a document extraction and review application that processes Word (DOCX), PDF, and Pages files to extract and structure their content using AI-powered processing. The application features **AI-as-a-Judge validation** to enforce extraction accuracy using GPT-4o as a quality assurance layer.
 
-The system is built as a full-stack TypeScript application with React on the frontend and Express on the backend, using PostgreSQL for data persistence and OpenAI's GPT API for intelligent text extraction and structuring.
+The system is built as a full-stack TypeScript application with React on the frontend and Express on the backend, using PostgreSQL for data persistence and OpenAI's GPT API for intelligent text extraction, structuring, and validation.
 
 # User Preferences
 
@@ -63,8 +63,15 @@ Preferred communication style: Simple, everyday language.
    - Automatic document count tracking
    - Expandable folder view in sidebar showing originals (star icon) and language variants (language badges)
    - Folders serve dual purpose: organizational containers AND grouping for document variant sets
-8. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
-9. **Export Functionality** - Export individual or multiple documents as JSON files
+8. **AI-as-a-Judge Validation** - Automatic quality assurance using GPT-4o to validate extraction accuracy:
+   - Validates field names are in English, content language preserved, superscript handling, completeness, and legal reference matching
+   - Displays confidence score (0-100%) and validation status (✓ Validated, ⚠ Needs Review)
+   - Automatic validation during upload (both single and multi-document modes)
+   - Manual re-validation available via "Re-validate" button in ComparisonView
+   - Visual indicators in DocumentLibrary showing validation confidence and review flags
+   - Chain-of-Thought prompting with GPT-4o at temperature 0.1 for deterministic results
+9. **Document Reprocessing** - Re-extract and re-process documents with latest AI extraction logic
+10. **Export Functionality** - Export individual or multiple documents as JSON files
 
 ## Backend Architecture
 
@@ -79,13 +86,14 @@ Preferred communication style: Simple, everyday language.
 4. Storage of both raw extracted text and structured JSON data
 
 **Key Routes**:
-- `POST /api/documents/upload` - Single file upload and processing
-- `POST /api/documents/upload-set` - Multi-document upload into folder (creates folder if needed, marks original, processes all files)
+- `POST /api/documents/upload` - Single file upload and processing (includes automatic validation)
+- `POST /api/documents/upload-set` - Multi-document upload into folder (creates folder if needed, marks original, processes all files, includes automatic validation)
 - `GET /api/documents` - List all documents
 - `GET /api/documents/:id` - Get specific document
 - `PATCH /api/documents/:id` - Update document (supports updating name, structuredData, folderId, isOriginal toggle)
 - `POST /api/documents/:id/reprocess` - Reprocess document with latest AI extraction
 - `POST /api/documents/:id/translate` - Translate document text to English using OpenAI
+- `POST /api/documents/:id/validate` - Validate document extraction using AI-as-a-Judge (GPT-4o)
 - `DELETE /api/documents/:id` - Delete document
 - Folder management endpoints (GET /api/folders, POST /api/folders, PATCH /api/folders/:id, DELETE /api/folders/:id)
 
@@ -125,6 +133,9 @@ Preferred communication style: Simple, everyday language.
 - extractedText (text, nullable)
 - translatedText (text, nullable - English translation of extractedText)
 - structuredData (json, nullable - using json type to preserve field order)
+- validationConfidence (real, nullable - AI validation confidence score 0-1)
+- validationIssues (json array, nullable - list of issues found during validation)
+- needsReview (boolean, default false - flags documents requiring manual review)
 - createdAt (timestamp)
 - updatedAt (timestamp)
 

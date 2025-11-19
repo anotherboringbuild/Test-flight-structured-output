@@ -690,7 +690,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!document) {
         return res.status(404).json({ error: "Document not found" });
       }
-      res.json(document);
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = document;
+      res.json(safeDocument);
     } catch (error) {
       console.error("Error updating document:", error);
       res.status(400).json({ error: "Failed to update document" });
@@ -822,14 +824,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
-      // Return validation results
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = updatedDocument;
+      
+      // Return updated document with validation metadata
       res.json({
-        confidence: validationResult.confidence,
-        issues: allIssues,
-        scores: validationResult.scores,
-        reasoning: validationResult.reasoning,
-        passedValidation: validationResult.passedValidation && quickCheck.passed,
-        needsReview,
+        document: safeDocument,
+        validation: {
+          confidence: validationResult.confidence,
+          issues: allIssues,
+          scores: validationResult.scores,
+          reasoning: validationResult.reasoning,
+          passedValidation: validationResult.passedValidation && quickCheck.passed,
+          needsReview,
+        }
       });
     } catch (error) {
       console.error("Validation error:", error);
