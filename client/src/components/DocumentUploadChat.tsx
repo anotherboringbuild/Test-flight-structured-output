@@ -1,12 +1,14 @@
 import { useCallback, useState, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, Star, Send, FolderOpen, Calendar, Database } from "lucide-react";
+import { Upload, FileText, X, Star, Send, FolderOpen, Calendar, Database, Check, ChevronsUpDown, FolderPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Select,
   SelectContent,
@@ -51,7 +53,17 @@ export function DocumentUploadChat({
   const [folderName, setFolderName] = useState("");
   const [originalIndex, setOriginalIndex] = useState(0);
   const [addToAVA, setAddToAVA] = useState(true);
+  const [openFolderCombo, setOpenFolderCombo] = useState(false);
+  const [folderSearchValue, setFolderSearchValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle closing the folder combobox - clear search value
+  const handleCloseFolderCombo = (open: boolean) => {
+    if (!open) {
+      setFolderSearchValue("");
+    }
+    setOpenFolderCombo(open);
+  };
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -189,36 +201,107 @@ export function DocumentUploadChat({
           )}
         </div>
 
-        {uploadMode === "set" && (
-          <div className="flex flex-wrap items-center gap-3 text-base">
-            <span className="text-muted-foreground">Create folder named</span>
-            <Input
-              type="text"
-              placeholder="Folder name"
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-              className="w-64 h-9"
-              data-testid="input-folder-name-chat"
-            />
-          </div>
-        )}
-
         <div className="flex flex-wrap items-center gap-3 text-base">
-          <span className="text-muted-foreground">Organize with</span>
+          <span className="text-muted-foreground">{uploadMode === "set" ? "Create or select folder" : "Organize with"}</span>
           
-          {folders.length > 0 && onFolderChange && (
-            <Select value={selectedFolderId || "none"} onValueChange={(value) => onFolderChange(value === "none" ? null : value)}>
-              <SelectTrigger className="w-auto h-9" data-testid="select-folder-chat">
-                <FolderOpen className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="No Folder" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Folder</SelectItem>
-                {folders.map((folder) => (
-                  <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {onFolderChange && (
+            <Popover open={openFolderCombo} onOpenChange={handleCloseFolderCombo}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openFolderCombo}
+                  className="w-64 h-9 justify-between"
+                  data-testid="button-folder-combobox"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <FolderOpen className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">
+                      {uploadMode === "set" && folderName 
+                        ? folderName
+                        : selectedFolderId
+                        ? folders.find((f) => f.id === selectedFolderId)?.name
+                        : "No Folder"}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder={uploadMode === "set" ? "Type to create or search..." : "Search folders..."} 
+                    value={folderSearchValue}
+                    onValueChange={setFolderSearchValue}
+                    data-testid="input-folder-search"
+                  />
+                  <CommandList>
+                    <CommandEmpty>No folders found.</CommandEmpty>
+                    <CommandGroup>
+                      {uploadMode === "set" && folderSearchValue && !folders.some(f => f.name.toLowerCase() === folderSearchValue.toLowerCase()) && (
+                        <CommandItem
+                          value={`__create__${folderSearchValue}`}
+                          onSelect={() => {
+                            setFolderName(folderSearchValue.trim());
+                            onFolderChange(null); // Clear selected folder ID since creating new
+                            setFolderSearchValue("");
+                            setOpenFolderCombo(false);
+                          }}
+                          data-testid="option-create-folder"
+                        >
+                          <FolderPlus className="mr-2 h-4 w-4 text-primary" />
+                          <span>Create folder <span className="font-semibold">"{folderSearchValue}"</span></span>
+                        </CommandItem>
+                      )}
+                      <CommandItem
+                        value="none"
+                        onSelect={() => {
+                          setFolderName("");
+                          onFolderChange(null);
+                          setFolderSearchValue("");
+                          setOpenFolderCombo(false);
+                        }}
+                        data-testid="option-no-folder"
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            (!selectedFolderId && !folderName) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        No Folder
+                      </CommandItem>
+                      {folders.map((folder) => (
+                        <CommandItem
+                          key={folder.id}
+                          value={folder.name}
+                          onSelect={() => {
+                            if (uploadMode === "set") {
+                              setFolderName(folder.name);
+                              onFolderChange(folder.id);
+                            } else {
+                              onFolderChange(folder.id);
+                            }
+                            setFolderSearchValue("");
+                            setOpenFolderCombo(false);
+                          }}
+                          data-testid={`option-folder-${folder.id}`}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              (uploadMode === "set" ? folderName === folder.name : selectedFolderId === folder.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <FolderOpen className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {folder.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           )}
 
           {onMonthChange && (
