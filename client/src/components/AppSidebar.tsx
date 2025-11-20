@@ -68,7 +68,6 @@ export function AppSidebar({
 
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
-    { id: "upload-old", title: "Upload New - Old Version", icon: FileText },
     { id: "library", title: "Library", icon: Library },
     { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];

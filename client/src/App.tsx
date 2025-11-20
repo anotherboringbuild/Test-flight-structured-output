@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { DocumentUploadZone, type UploadData } from "@/components/DocumentUploadZone";
-import { DocumentUploadZoneOld } from "@/components/DocumentUploadZoneOld";
 import { DocumentUploadChat } from "@/components/DocumentUploadChat";
 import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
@@ -794,34 +793,6 @@ function AppContent() {
                 />
               ) : currentView === "analytics" ? (
                 <Analytics />
-              ) : currentView === "upload-old" ? (
-                <div className="p-8">
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      Upload Document - Old Version
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Upload a product document to extract structured JSON data using AI
-                    </p>
-                  </div>
-                  <DocumentUploadZoneOld
-                    onFilesSelected={handleUpload}
-                    onUploadReady={handleUploadReady}
-                    disabled={uploadMutation.isPending || uploadSetMutation.isPending}
-                    folders={folders}
-                    selectedFolderId={selectedFolderId}
-                    onFolderChange={setSelectedFolderId}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
-                    selectedYear={selectedYear}
-                    onYearChange={setSelectedYear}
-                  />
-                  {isLoadingDocuments && (
-                    <p className="mt-4 text-center text-sm text-muted-foreground">
-                      Loading documents...
-                    </p>
-                  )}
-                </div>
               ) : (
                 <DocumentUploadChat
                   onFilesSelected={handleUpload}
