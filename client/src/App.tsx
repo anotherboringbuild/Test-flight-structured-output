@@ -634,6 +634,42 @@ function AppContent() {
     });
   };
 
+  const handleCreateFolderFromUpload = async (folderName: string): Promise<string | null> => {
+    try {
+      const response = await fetch("/api/folders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: folderName }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create folder");
+      }
+
+      const newFolder = await response.json();
+      
+      // Invalidate folders query to refresh the list
+      await queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      
+      toast({
+        title: "Folder created",
+        description: `Folder "${folderName}" has been created.`,
+      });
+
+      return newFolder.id;
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create folder. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const style = {
     "--sidebar-width": "18rem",
     "--sidebar-width-icon": "3rem",
@@ -798,6 +834,7 @@ function AppContent() {
                   onMonthChange={setSelectedMonth}
                   selectedYear={selectedYear}
                   onYearChange={setSelectedYear}
+                  onCreateFolder={handleCreateFolderFromUpload}
                 />
               )}
             </main>

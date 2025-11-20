@@ -34,6 +34,7 @@ interface DocumentUploadChatProps {
   onMonthChange?: (month: string | null) => void;
   selectedYear?: string | null;
   onYearChange?: (year: string | null) => void;
+  onCreateFolder?: (folderName: string) => Promise<string | null>;
 }
 
 export function DocumentUploadChat({
@@ -47,6 +48,7 @@ export function DocumentUploadChat({
   onMonthChange,
   selectedYear = null,
   onYearChange,
+  onCreateFolder,
 }: DocumentUploadChatProps) {
   const [uploadMode, setUploadMode] = useState<UploadMode>("single");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -246,12 +248,22 @@ export function DocumentUploadChat({
                   <CommandList>
                     <CommandEmpty>No folders found.</CommandEmpty>
                     <CommandGroup>
-                      {uploadMode === "set" && folderSearchValue && !folders.some(f => f.name.toLowerCase() === folderSearchValue.toLowerCase()) && (
+                      {folderSearchValue && !folders.some(f => f.name.toLowerCase() === folderSearchValue.toLowerCase()) && (
                         <CommandItem
                           value={`__create__${folderSearchValue}`}
-                          onSelect={() => {
-                            setFolderName(folderSearchValue.trim());
-                            onFolderChange(null); // Clear selected folder ID since creating new
+                          onSelect={async () => {
+                            const newFolderName = folderSearchValue.trim();
+                            if (uploadMode === "set") {
+                              // For document set, just set the folder name
+                              setFolderName(newFolderName);
+                              onFolderChange(null);
+                            } else if (onCreateFolder) {
+                              // For single document, create the folder via API
+                              const newFolderId = await onCreateFolder(newFolderName);
+                              if (newFolderId) {
+                                onFolderChange(newFolderId);
+                              }
+                            }
                             setFolderSearchValue("");
                             setOpenFolderCombo(false);
                           }}
