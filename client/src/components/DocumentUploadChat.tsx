@@ -50,7 +50,7 @@ export function DocumentUploadChat({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [folderName, setFolderName] = useState("");
   const [originalIndex, setOriginalIndex] = useState(0);
-  const [addToAVA, setAddToAVA] = useState(false);
+  const [addToAVA, setAddToAVA] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback(
