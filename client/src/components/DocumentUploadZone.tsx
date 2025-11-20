@@ -31,6 +31,7 @@ export interface DocumentSetUpload {
   folderId?: string | null;
   month?: string | null;
   year?: string | null;
+  addToAVA?: boolean;
 }
 
 export interface SingleDocumentUpload {
@@ -39,6 +40,7 @@ export interface SingleDocumentUpload {
   folderId?: string | null;
   month?: string | null;
   year?: string | null;
+  addToAVA?: boolean;
 }
 
 export type UploadData = DocumentSetUpload | SingleDocumentUpload;

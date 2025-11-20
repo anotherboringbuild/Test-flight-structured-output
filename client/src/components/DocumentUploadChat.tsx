@@ -1,11 +1,12 @@
 import { useCallback, useState, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, Star, Send, FolderOpen, Calendar } from "lucide-react";
+import { Upload, FileText, X, Star, Send, FolderOpen, Calendar, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ export function DocumentUploadChat({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [folderName, setFolderName] = useState("");
   const [originalIndex, setOriginalIndex] = useState(0);
+  const [addToAVA, setAddToAVA] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback(
@@ -62,6 +64,7 @@ export function DocumentUploadChat({
             folderId: selectedFolderId,
             month: selectedMonth,
             year: selectedYear,
+            addToAVA,
           });
         } else {
           // Fallback to old behavior if onUploadReady not provided
@@ -76,7 +79,7 @@ export function DocumentUploadChat({
         }
       }
     },
-    [onFilesSelected, onUploadReady, uploadMode, folderName, selectedFolderId, selectedMonth, selectedYear]
+    [onFilesSelected, onUploadReady, uploadMode, folderName, selectedFolderId, selectedMonth, selectedYear, addToAVA]
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -124,6 +127,7 @@ export function DocumentUploadChat({
         folderId: selectedFolderId,
         month: selectedMonth,
         year: selectedYear,
+        addToAVA,
       };
       onUploadReady(uploadData);
       
@@ -248,6 +252,22 @@ export function DocumentUploadChat({
           )}
         </div>
 
+        <div className="flex flex-wrap items-center gap-3 text-base">
+          <span className="text-muted-foreground">&</span>
+          <div className="flex items-center gap-2 h-9 px-3 rounded-md border bg-background">
+            <Switch
+              id="ava-toggle"
+              checked={addToAVA}
+              onCheckedChange={setAddToAVA}
+              data-testid="switch-ava-knowledge"
+            />
+            <Label htmlFor="ava-toggle" className="cursor-pointer flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              <span>Add to AVA knowledge base</span>
+            </Label>
+          </div>
+        </div>
+
         {isDragActive && (
           <div className="py-8 text-center border-2 border-dashed border-primary rounded-lg bg-primary/5">
             <Upload className="h-12 w-12 text-primary mx-auto mb-2" />
@@ -322,10 +342,23 @@ export function DocumentUploadChat({
         </Button>
       )}
 
-      {/* File Format Hint */}
-      <p className="text-sm text-muted-foreground mt-6">
-        Supports: Word (.docx), PDF (.pdf), Pages (.pages) • Drag and drop or click "Upload Document" to begin
-      </p>
+      {/* File Format Hint and Submission Info */}
+      <div className="text-center mt-6 space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Supports: Word (.docx), PDF (.pdf), Pages (.pages) • Drag and drop or click "Upload Document" to begin
+        </p>
+        {uploadMode === "single" ? (
+          <p className="text-xs text-muted-foreground">
+            Files will be uploaded immediately when selected
+          </p>
+        ) : (
+          selectedFiles.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Click the upload button below to submit all files
+            </p>
+          )
+        )}
+      </div>
     </div>
   );
 }
