@@ -159,14 +159,22 @@ export function DocumentUploadChat({
           Hello,
         </h1>
         <div className="flex items-center justify-center gap-3 text-3xl font-semibold">
-          <span>Help me extract</span>
+          <span>Help me extract a</span>
           <Select value={uploadMode} onValueChange={(value) => setUploadMode(value as UploadMode)}>
-            <SelectTrigger className="w-auto text-3xl font-semibold border-0 shadow-none h-auto p-0 gap-2 focus:ring-0" data-testid="select-upload-type">
+            <SelectTrigger className="w-auto text-3xl font-semibold border-0 shadow-none h-auto p-0 gap-2 focus:ring-0 [&_span]:bg-gradient-to-r [&_span]:from-blue-600 [&_span]:to-purple-600 [&_span]:bg-clip-text [&_span]:text-transparent" data-testid="select-upload-type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single" data-testid="option-single">Single Document</SelectItem>
-              <SelectItem value="set" data-testid="option-set">Document Set</SelectItem>
+              <SelectItem value="single" data-testid="option-single">
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold">
+                  Single document
+                </span>
+              </SelectItem>
+              <SelectItem value="set" data-testid="option-set">
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold">
+                  Document set
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
