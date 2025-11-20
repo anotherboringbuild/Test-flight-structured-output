@@ -17,7 +17,7 @@ export function TopBar({ onSettingsClick, hasApiKey }: TopBarProps) {
             Structured Data
           </h1>
           <h4 className="text-xs text-muted-foreground" data-testid="text-app-subtitle">
-            Powered by Authoring Kit
+            powered by knowledge kit
           </h4>
         </div>
         {!hasApiKey && (
