@@ -12,6 +12,7 @@ import { DocumentLibrary } from "@/components/DocumentLibrary";
 import { ComparisonView } from "@/components/ComparisonView";
 import { ExportModal } from "@/components/ExportModal";
 import Analytics from "@/pages/Analytics";
+import ProductBrowser from "@/pages/ProductBrowser";
 import { FolderDialog } from "@/components/FolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveToFolderDialog } from "@/components/MoveToFolderDialog";
@@ -793,6 +794,8 @@ function AppContent() {
                 />
               ) : currentView === "analytics" ? (
                 <Analytics />
+              ) : currentView === "products" ? (
+                <ProductBrowser />
               ) : (
                 <DocumentUploadChat
                   onFilesSelected={handleUpload}

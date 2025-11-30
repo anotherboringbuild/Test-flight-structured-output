@@ -19,7 +19,7 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library, BarChart3, ChevronRight, Languages, Star } from "lucide-react";
+import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library, BarChart3, ChevronRight, Languages, Star, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,7 @@ export function AppSidebar({
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
     { id: "library", title: "Library", icon: Library },
+    { id: "products", title: "Products", icon: Package },
     { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];
 
