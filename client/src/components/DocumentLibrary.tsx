@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -389,160 +390,163 @@ export function DocumentLibrary({
       </div>
 
       {/* Document List */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-4 rounded-md border bg-muted/30 px-4 py-2 text-sm font-medium">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={toggleSelectAll}
-              data-testid="checkbox-select-all"
-            />
-            {someSelected && !allSelected ? (
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-            ) : allSelected ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-          </div>
-          <div className="flex-1">Name</div>
-          <div className="w-32">Folder</div>
-          <div className="w-24">Type</div>
-          <div className="w-20">Language</div>
-          <div className="w-24">Size</div>
-          <div className="w-32">Date</div>
-          <div className="w-20">Status</div>
-          <div className="w-24">Validation</div>
-          <div className="w-10"></div>
-        </div>
-
-        {filteredAndSortedDocuments.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No documents found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredAndSortedDocuments.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex items-center gap-4 rounded-md border bg-card px-4 py-3 text-sm hover-elevate active-elevate-2"
-              data-testid={`document-row-${doc.id}`}
-            >
-              <Checkbox
-                checked={selectedIds.has(doc.id)}
-                onCheckedChange={() => toggleSelect(doc.id)}
-                data-testid={`checkbox-document-${doc.id}`}
-              />
-              <div
-                className="flex-1 cursor-pointer font-medium"
-                onClick={() => doc.isProcessed && onDocumentClick(doc.id)}
-                data-testid={`text-document-name-${doc.id}`}
-              >
-                {doc.name}
-              </div>
-              <div className="w-32 truncate text-muted-foreground">
-                {getFolderName(doc.folderId)}
-              </div>
-              <div className="w-24">
-                <Badge variant="outline">{doc.fileType.toUpperCase()}</Badge>
-              </div>
-              <div className="w-20">
-                {doc.language && (
-                  <Badge variant="secondary" className="text-xs">
-                    {doc.language === "English" ? "EN" : 
-                     doc.language === "Japanese" ? "JA" :
-                     doc.language === "Spanish" ? "ES" :
-                     doc.language === "French" ? "FR" :
-                     doc.language === "German" ? "DE" :
-                     doc.language === "Chinese" ? "ZH" :
-                     doc.language === "Korean" ? "KO" :
-                     doc.language.slice(0, 2).toUpperCase()}
-                  </Badge>
-                )}
-              </div>
-              <div className="w-24 text-muted-foreground">{doc.size}</div>
-              <div className="w-32 text-muted-foreground">
-                {formatDate(doc.createdAt.toString())}
-              </div>
-              <div className="w-20">
-                {doc.isProcessed ? (
-                  <Badge variant="default">Ready</Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div className="w-24">
-                {doc.validationConfidence !== null && doc.validationConfidence !== undefined ? (
-                  <div className="flex items-center gap-1">
-                    {doc.needsReview ? (
-                      <>
-                        <AlertTriangle className="h-4 w-4 text-amber-500" data-testid={`icon-validation-warning-${doc.id}`} />
-                        <span className="text-xs text-amber-500 font-medium">
-                          {Math.round(doc.validationConfidence * 100)}%
-                        </span>
-                      </>
-                    ) : doc.validationConfidence >= 0.8 ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 text-emerald-500" data-testid={`icon-validation-pass-${doc.id}`} />
-                        <span className="text-xs text-emerald-500 font-medium">
-                          {Math.round(doc.validationConfidence * 100)}%
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" data-testid={`icon-validation-pending-${doc.id}`} />
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {Math.round(doc.validationConfidence * 100)}%
-                        </span>
-                      </>
+      {filteredAndSortedDocuments.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No documents found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={toggleSelectAll}
+                    data-testid="checkbox-select-all"
+                  />
+                </TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="w-32">Folder</TableHead>
+                <TableHead className="w-24">Type</TableHead>
+                <TableHead className="w-20">Language</TableHead>
+                <TableHead className="w-24">Size</TableHead>
+                <TableHead className="w-32">Date</TableHead>
+                <TableHead className="w-20">Status</TableHead>
+                <TableHead className="w-24">Validation</TableHead>
+                <TableHead className="w-10" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedDocuments.map((doc) => (
+                <TableRow
+                  key={doc.id}
+                  data-testid={`document-row-${doc.id}`}
+                  className="cursor-pointer"
+                >
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(doc.id)}
+                      onCheckedChange={() => toggleSelect(doc.id)}
+                      data-testid={`checkbox-document-${doc.id}`}
+                    />
+                  </TableCell>
+                  <TableCell
+                    className="font-medium"
+                    onClick={() => doc.isProcessed && onDocumentClick(doc.id)}
+                    data-testid={`text-document-name-${doc.id}`}
+                  >
+                    {doc.name}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground truncate">
+                    {getFolderName(doc.folderId)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{doc.fileType.toUpperCase()}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {doc.language && (
+                      <Badge variant="secondary" className="text-xs">
+                        {doc.language === "English" ? "EN" : 
+                         doc.language === "Japanese" ? "JA" :
+                         doc.language === "Spanish" ? "ES" :
+                         doc.language === "French" ? "FR" :
+                         doc.language === "German" ? "DE" :
+                         doc.language === "Chinese" ? "ZH" :
+                         doc.language === "Korean" ? "KO" :
+                         doc.language.slice(0, 2).toUpperCase()}
+                      </Badge>
                     )}
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    data-testid={`button-document-menu-${doc.id}`}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => handleRename(doc)}
-                    data-testid={`menu-item-rename-${doc.id}`}
-                  >
-                    <Edit className="mr-2 h-4 w-4" />
-                    Rename
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onMoveDocument(doc)}
-                    data-testid={`menu-item-move-${doc.id}`}
-                  >
-                    <FolderInput className="mr-2 h-4 w-4" />
-                    Move to Folder
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => onDeleteDocument(doc)}
-                    data-testid={`menu-item-delete-${doc.id}`}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))
-        )}
-      </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{doc.size}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(doc.createdAt.toString())}
+                  </TableCell>
+                  <TableCell>
+                    {doc.isProcessed ? (
+                      <Badge variant="default">Ready</Badge>
+                    ) : (
+                      <Badge variant="secondary">Pending</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {doc.validationConfidence !== null && doc.validationConfidence !== undefined ? (
+                      <div className="flex items-center gap-1">
+                        {doc.needsReview ? (
+                          <>
+                            <AlertTriangle className="h-4 w-4 text-amber-500" data-testid={`icon-validation-warning-${doc.id}`} />
+                            <span className="text-xs text-amber-500 font-medium">
+                              {Math.round(doc.validationConfidence * 100)}%
+                            </span>
+                          </>
+                        ) : doc.validationConfidence >= 0.8 ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 text-emerald-500" data-testid={`icon-validation-pass-${doc.id}`} />
+                            <span className="text-xs text-emerald-500 font-medium">
+                              {Math.round(doc.validationConfidence * 100)}%
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <HelpCircle className="h-4 w-4 text-muted-foreground" data-testid={`icon-validation-pending-${doc.id}`} />
+                            <span className="text-xs text-muted-foreground font-medium">
+                              {Math.round(doc.validationConfidence * 100)}%
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          data-testid={`button-document-menu-${doc.id}`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleRename(doc)}
+                          data-testid={`menu-item-rename-${doc.id}`}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onMoveDocument(doc)}
+                          data-testid={`menu-item-move-${doc.id}`}
+                        >
+                          <FolderInput className="mr-2 h-4 w-4" />
+                          Move to Folder
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => onDeleteDocument(doc)}
+                          data-testid={`menu-item-delete-${doc.id}`}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
