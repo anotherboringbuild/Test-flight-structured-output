@@ -336,9 +336,7 @@ export function DocumentLibrary({
 
       {/* Sort and Bulk Actions */}
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
-
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -357,9 +355,9 @@ export function DocumentLibrary({
                 <SelectItem value="size">Size</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+        </div>
 
-          {selectedIds.size > 0 && (
+        {selectedIds.size > 0 && (
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{selectedIds.size} selected</Badge>
               <Button
@@ -397,8 +395,7 @@ export function DocumentLibrary({
                 Delete
               </Button>
             </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Document List */}
