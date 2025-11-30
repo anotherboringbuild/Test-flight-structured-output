@@ -21,6 +21,7 @@ import type { UploadMode, UploadData, DocumentSetUpload } from "./DocumentUpload
 interface Folder {
   id: string;
   name: string;
+  parentFolderId?: string | null;
 }
 
 interface DocumentUploadChatProps {
