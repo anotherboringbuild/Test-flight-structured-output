@@ -11,14 +11,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Folder {
+  id: string;
+  name: string;
+  parentFolderId?: string | null;
+}
 
 interface FolderDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (name: string, description?: string) => void;
+  onSubmit: (name: string, description?: string, parentFolderId?: string | null) => void;
   initialName?: string;
   initialDescription?: string;
+  initialParentFolderId?: string | null;
   mode: "create" | "edit";
+  folders?: Folder[];
 }
 
 export function FolderDialog({
@@ -27,22 +42,27 @@ export function FolderDialog({
   onSubmit,
   initialName = "",
   initialDescription = "",
+  initialParentFolderId = null,
   mode,
+  folders = [],
 }: FolderDialogProps) {
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [parentFolderId, setParentFolderId] = useState<string | null>(initialParentFolderId);
 
   useEffect(() => {
     setName(initialName);
     setDescription(initialDescription);
-  }, [initialName, initialDescription, open]);
+    setParentFolderId(initialParentFolderId);
+  }, [initialName, initialDescription, initialParentFolderId, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit(name.trim(), description.trim() || undefined);
+      onSubmit(name.trim(), description.trim() || undefined, parentFolderId);
       setName("");
       setDescription("");
+      setParentFolderId(null);
       onClose();
     }
   };
@@ -84,6 +104,24 @@ export function FolderDialog({
                 rows={2}
               />
             </div>
+            {mode === "create" && folders.length > 0 && (
+              <div className="grid gap-2">
+                <Label htmlFor="parent-folder">Parent Folder (Optional)</Label>
+                <Select value={parentFolderId || ""} onValueChange={(value) => setParentFolderId(value || null)}>
+                  <SelectTrigger id="parent-folder" data-testid="select-parent-folder">
+                    <SelectValue placeholder="No parent folder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No parent folder</SelectItem>
+                    {folders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
