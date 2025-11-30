@@ -546,7 +546,6 @@ export function DocumentLibrary({
           </Table>
         </div>
       )}
-    </div>
 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
