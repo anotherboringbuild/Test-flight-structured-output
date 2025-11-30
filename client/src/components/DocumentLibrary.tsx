@@ -246,28 +246,17 @@ export function DocumentLibrary({
 
   return (
     <div className="flex flex-col gap-6 p-8">
-      {/* Search and Filter Toggle */}
-      <div className="flex gap-2 items-center">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-            data-testid="input-search-documents"
-          />
-        </div>
-        <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" data-testid="button-toggle-filters">
-              <Filter className="mr-2 h-4 w-4" />
-              Filters
-              <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-4">
-            <div className="flex flex-wrap gap-2">
+      {/* Filters */}
+      <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm" data-testid="button-toggle-filters">
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+            <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mb-4">
+          <div className="flex flex-wrap gap-2">
               <Select value={filterFolder} onValueChange={setFilterFolder}>
                 <SelectTrigger className="w-[180px]" data-testid="select-filter-folder">
                   <SelectValue placeholder="All Folders" />
@@ -331,24 +320,34 @@ export function DocumentLibrary({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-      {/* Sort and Bulk Actions */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
+      {/* Search, Sort and Bulk Actions */}
+      <div className="flex flex-col gap-0">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-6 border-0 bg-transparent focus-visible:ring-0"
+              data-testid="input-search-documents"
+            />
+          </div>
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
               data-testid="button-toggle-sort-direction"
             >
               {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
             </Button>
             <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
-              <SelectTrigger className="w-[140px]" data-testid="select-sort-field">
+              <SelectTrigger className="w-[140px] border-0 bg-transparent focus-visible:ring-0" data-testid="select-sort-field">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -357,6 +356,7 @@ export function DocumentLibrary({
                 <SelectItem value="size">Size</SelectItem>
               </SelectContent>
             </Select>
+          </div>
         </div>
 
         {selectedIds.size > 0 && (
