@@ -398,8 +398,7 @@ export function DocumentLibrary({
           </CardContent>
         </Card>
       ) : (
-        <div className="border rounded-md">
-          <Table>
+        <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -544,7 +543,6 @@ export function DocumentLibrary({
               ))}
             </TableBody>
           </Table>
-        </div>
       )}
 
       {/* Rename Dialog */}
