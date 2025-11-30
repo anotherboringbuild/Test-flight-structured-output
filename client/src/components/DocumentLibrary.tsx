@@ -248,11 +248,13 @@ export function DocumentLibrary({
     <div className="flex flex-col gap-6 p-8">
       {/* Search and Filter Toggle */}
       <div className="flex gap-2 items-center">
-        <div className="relative flex-1">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search documents..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
             data-testid="input-search-documents"
           />
         </div>
