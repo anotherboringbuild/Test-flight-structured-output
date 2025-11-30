@@ -291,32 +291,53 @@ export function DocumentUploadChat({
                         />
                         No Folder
                       </CommandItem>
-                      {folders.map((folder) => (
-                        <CommandItem
-                          key={folder.id}
-                          value={folder.name}
-                          onSelect={() => {
-                            if (uploadMode === "set") {
-                              setFolderName(folder.name);
-                              onFolderChange(folder.id);
-                            } else {
-                              onFolderChange(folder.id);
-                            }
-                            setFolderSearchValue("");
-                            setOpenFolderCombo(false);
-                          }}
-                          data-testid={`option-folder-${folder.id}`}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              (uploadMode === "set" ? folderName === folder.name : selectedFolderId === folder.id) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <FolderOpen className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {folder.name}
-                        </CommandItem>
-                      ))}
+                      {(() => {
+                        // Build hierarchical folder structure
+                        const getRenderableFolders = () => {
+                          const result: (typeof folders[0] & { level: number })[] = [];
+                          
+                          const addFolder = (folder: typeof folders[0], level: number) => {
+                            result.push({ ...folder, level });
+                            const children = folders.filter(f => f.parentFolderId === folder.id);
+                            children.forEach(child => addFolder(child, level + 1));
+                          };
+                          
+                          folders
+                            .filter(f => !f.parentFolderId)
+                            .forEach(folder => addFolder(folder, 0));
+                          
+                          return result;
+                        };
+                        
+                        return getRenderableFolders().map((folder) => (
+                          <CommandItem
+                            key={folder.id}
+                            value={folder.name}
+                            onSelect={() => {
+                              if (uploadMode === "set") {
+                                setFolderName(folder.name);
+                                onFolderChange(folder.id);
+                              } else {
+                                onFolderChange(folder.id);
+                              }
+                              setFolderSearchValue("");
+                              setOpenFolderCombo(false);
+                            }}
+                            data-testid={`option-folder-${folder.id}`}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                (uploadMode === "set" ? folderName === folder.name : selectedFolderId === folder.id) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <FolderOpen className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span style={{ marginLeft: `${folder.level * 12}px` }}>
+                              {folder.name}
+                            </span>
+                          </CommandItem>
+                        ));
+                      })()}
                     </CommandGroup>
                   </CommandList>
                 </Command>

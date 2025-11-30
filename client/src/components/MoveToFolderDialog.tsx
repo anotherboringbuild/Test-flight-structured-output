@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 interface Folder {
   id: string;
   name: string;
+  parentFolderId?: string | null;
 }
 
 interface MoveToFolderDialogProps {
@@ -46,6 +47,25 @@ export function MoveToFolderDialog({
   useEffect(() => {
     setSelectedFolderId(currentFolderId || null);
   }, [currentFolderId, open]);
+
+  // Build hierarchical folder structure
+  const getRenderableFolders = () => {
+    const folderMap = new Map(folders.map(f => [f.id, { ...f, level: 0 }]));
+    const result: (Folder & { level: number })[] = [];
+    
+    const addFolder = (folder: Folder, level: number) => {
+      result.push({ ...folder, level });
+      const children = folders.filter(f => f.parentFolderId === folder.id);
+      children.forEach(child => addFolder(child, level + 1));
+    };
+    
+    // Add root-level folders (those without a parent)
+    folders
+      .filter(f => !f.parentFolderId)
+      .forEach(folder => addFolder(folder, 0));
+    
+    return result;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +102,15 @@ export function MoveToFolderDialog({
                   <SelectItem value="none" data-testid="option-no-folder">
                     No Folder (Root)
                   </SelectItem>
-                  {folders.map((folder) => (
+                  {getRenderableFolders().map((folder) => (
                     <SelectItem
                       key={folder.id}
                       value={folder.id}
                       data-testid={`option-folder-${folder.id}`}
                     >
-                      {folder.name}
+                      <span style={{ marginLeft: `${folder.level * 16}px` }}>
+                        {folder.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
