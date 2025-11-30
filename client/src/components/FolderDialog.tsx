@@ -107,12 +107,12 @@ export function FolderDialog({
             {mode === "create" && folders.length > 0 && (
               <div className="grid gap-2">
                 <Label htmlFor="parent-folder">Parent Folder (Optional)</Label>
-                <Select value={parentFolderId || ""} onValueChange={(value) => setParentFolderId(value || null)}>
+                <Select value={parentFolderId || "__none__"} onValueChange={(value) => setParentFolderId(value === "__none__" ? null : value)}>
                   <SelectTrigger id="parent-folder" data-testid="select-parent-folder">
                     <SelectValue placeholder="No parent folder" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No parent folder</SelectItem>
+                    <SelectItem value="__none__">No parent folder</SelectItem>
                     {folders.map((folder) => (
                       <SelectItem key={folder.id} value={folder.id}>
                         {folder.name}
