@@ -1,6 +1,6 @@
 # Overview
 
-DocExtract is a document extraction and review application that processes Word (DOCX), PDF, and Pages files to extract and structure their content using AI-powered processing. The application features **AI-as-a-Judge validation** to enforce extraction accuracy using GPT-4o as a quality assurance layer.
+Objects is a document extraction and review application that processes Word (DOCX), PDF, and Pages files to extract and structure their content using AI-powered processing. The application features **AI-as-a-Judge validation** to enforce extraction accuracy using GPT-4o as a quality assurance layer.
 
 The system is built as a full-stack TypeScript application with React on the frontend and Express on the backend, using PostgreSQL for data persistence and OpenAI's GPT API for intelligent text extraction, structuring, and validation.
 

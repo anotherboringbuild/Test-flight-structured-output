@@ -14,7 +14,7 @@ export function TopBar({ onSettingsClick, hasApiKey }: TopBarProps) {
       <div className="flex items-center gap-3">
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold tracking-tight leading-tight" data-testid="text-app-title">
-            Structured Data
+            Objects
           </h1>
           <h4 className="text-xs text-muted-foreground" data-testid="text-app-subtitle">
             powered by knowledge kit
