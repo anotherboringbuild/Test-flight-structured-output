@@ -535,9 +535,9 @@ function AppContent() {
     setShowDeleteDialog(true);
   };
 
-  const handleFolderSubmit = (name: string, description?: string) => {
+  const handleFolderSubmit = (name: string, description?: string, parentFolderId?: string | null) => {
     if (folderDialogMode === "create") {
-      createFolderMutation.mutate({ name, description });
+      createFolderMutation.mutate({ name, description, parentFolderId });
     } else if (editingFolder) {
       updateFolderMutation.mutate({ id: editingFolder.id, name, description });
     }
@@ -835,7 +835,9 @@ function AppContent() {
           onSubmit={handleFolderSubmit}
           initialName={editingFolder?.name || ""}
           initialDescription={editingFolder?.description || ""}
+          initialParentFolderId={editingFolder?.parentFolderId || null}
           mode={folderDialogMode}
+          folders={folders}
         />
 
         <DeleteFolderDialog
