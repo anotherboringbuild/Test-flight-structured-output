@@ -27,6 +27,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import {
   Search,
@@ -44,6 +49,7 @@ import {
   AlertTriangle,
   CheckCircle,
   HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import type { Document as DocumentType, Folder as FolderType } from "@shared/schema";
 
@@ -105,6 +111,7 @@ export function DocumentLibrary({
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renamingDoc, setRenamingDoc] = useState<DocumentType | null>(null);
   const [newName, setNewName] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const filteredAndSortedDocuments = useMemo(() => {
     let filtered = documents;
@@ -239,84 +246,98 @@ export function DocumentLibrary({
 
   return (
     <div className="flex flex-col gap-6 p-8">
-      {/* Search and Filters */}
+      {/* Search and Filter Toggle */}
+      <div className="flex gap-2 items-center">
+        <div className="relative flex-1">
+          <Input
+            placeholder="Search documents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            data-testid="input-search-documents"
+          />
+        </div>
+        <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" data-testid="button-toggle-filters">
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+              <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              <Select value={filterFolder} onValueChange={setFilterFolder}>
+                <SelectTrigger className="w-[180px]" data-testid="select-filter-folder">
+                  <SelectValue placeholder="All Folders" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Folders</SelectItem>
+                  <SelectItem value="none">No Folder</SelectItem>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[140px]" data-testid="select-filter-type">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="docx">DOCX</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="pages">Pages</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[140px]" data-testid="select-filter-status">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="processed">Processed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
+                <SelectTrigger className="w-[150px]" data-testid="select-filter-month">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  <SelectItem value="none">No Month</SelectItem>
+                  {months.filter((month) => uniqueMonths.includes(month)).map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {month}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger className="w-[120px]" data-testid="select-filter-year">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="none">No Year</SelectItem>
+                  {uniqueYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Sort and Bulk Actions */}
       <div className="flex flex-col gap-4">
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              data-testid="input-search-documents"
-            />
-          </div>
-          <Select value={filterFolder} onValueChange={setFilterFolder}>
-            <SelectTrigger className="w-[180px]" data-testid="select-filter-folder">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="All Folders" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Folders</SelectItem>
-              <SelectItem value="none">No Folder</SelectItem>
-              {folders.map((folder) => (
-                <SelectItem key={folder.id} value={folder.id}>
-                  {folder.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[140px]" data-testid="select-filter-type">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="docx">DOCX</SelectItem>
-              <SelectItem value="pdf">PDF</SelectItem>
-              <SelectItem value="pages">Pages</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[140px]" data-testid="select-filter-status">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="processed">Processed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-[150px]" data-testid="select-filter-month">
-              <SelectValue placeholder="All Months" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
-              <SelectItem value="none">No Month</SelectItem>
-              {months.filter((month) => uniqueMonths.includes(month)).map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[120px]" data-testid="select-filter-year">
-              <SelectValue placeholder="All Years" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Years</SelectItem>
-              <SelectItem value="none">No Year</SelectItem>
-              {uniqueYears.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
