@@ -196,6 +196,9 @@ export class DbStorage implements IStorage {
       return;
     }
 
+    // Get the latest version number for this document
+    const latestVersionNumber = await this.getLatestVersionNumber(documentId);
+
     // Delete existing variants for this document
     const existingVariants = await this.getProductVariantsByDocument(documentId);
     for (const variant of existingVariants) {
@@ -219,11 +222,11 @@ export class DbStorage implements IStorage {
           product = await this.createProduct({ name: productName });
         }
 
-        // Create product variant
+        // Create product variant with version tracking
         await this.createProductVariant({
           productId: product.id,
           documentId: documentId,
-          versionNumber: null,
+          versionNumber: latestVersionNumber,
           locale: document.language || null,
           copyType: copyType,
           headlines: item.Headlines || [],
