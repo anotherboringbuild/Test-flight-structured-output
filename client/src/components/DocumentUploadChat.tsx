@@ -211,7 +211,7 @@ export function DocumentUploadChat({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-base">
-          <span className="text-muted-foreground">{uploadMode === "set" ? "Create or select folder" : "Organize with"}</span>
+          <span className="text-muted-foreground">Organize with</span>
           
           {onFolderChange && (
             <Popover open={openFolderCombo} onOpenChange={handleCloseFolderCombo}>
@@ -239,7 +239,7 @@ export function DocumentUploadChat({
               <PopoverContent className="w-64 p-0">
                 <Command>
                   <CommandInput 
-                    placeholder={uploadMode === "set" ? "Type to create or search..." : "Search folders..."} 
+                    placeholder="Search or create..." 
                     value={folderSearchValue}
                     onValueChange={setFolderSearchValue}
                     data-testid="input-folder-search"
