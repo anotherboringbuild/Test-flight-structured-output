@@ -493,6 +493,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all documents in the same folder (language variants)
+  app.get("/api/documents/:id/folder-variants", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // If document is not in a folder, return only itself
+      if (!document.folderId) {
+        const { filePath: _, ...safeDocument } = document;
+        return res.json([safeDocument]);
+      }
+
+      // Get all documents in the same folder
+      const folderDocuments = await storage.getDocumentsByFolder(document.folderId);
+      
+      // Remove filePath from all documents for security and filter only processed ones
+      const safeDocuments = folderDocuments
+        .filter(doc => doc.isProcessed)
+        .map(({ filePath: _, ...doc }) => doc);
+      
+      res.json(safeDocuments);
+    } catch (error) {
+      console.error("Error fetching folder variants:", error);
+      res.status(500).json({ error: "Failed to fetch folder variants" });
+    }
+  });
+
   app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {

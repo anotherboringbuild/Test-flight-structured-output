@@ -10,6 +10,7 @@ import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ComparisonViewProps {
+  documentId: string;
   documentName: string;
   extractedText: string;
   translatedText?: string | null;
@@ -21,8 +22,10 @@ interface ComparisonViewProps {
   isProcessing?: boolean;
   isTranslating?: boolean;
   isValidating?: boolean;
+  folderId?: string | null;
   onBack: () => void;
   onExport: () => void;
+  onExportProduct?: (productId: string, productName: string, section: string) => void;
   onSave?: (newData: string) => void;
   onReprocess?: () => void;
   onTranslate?: () => void;
@@ -66,6 +69,7 @@ function extractProductsFromSection(
 }
 
 export function ComparisonView({
+  documentId,
   documentName,
   extractedText,
   translatedText,
@@ -77,8 +81,10 @@ export function ComparisonView({
   isProcessing = false,
   isTranslating = false,
   isValidating = false,
+  folderId,
   onBack,
   onExport,
+  onExportProduct,
   onSave,
   onReprocess,
   onTranslate,
@@ -773,8 +779,23 @@ export function ComparisonView({
                 </Button>
                 <Button onClick={onExport} data-testid="button-export-comparison">
                   <Download className="mr-2 h-4 w-4" />
-                  Export
+                  Export Document
                 </Button>
+                {onExportProduct && selectedProduct !== "all" && folderId && (
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      const product = allProducts.find(p => p.id === selectedProduct);
+                      if (product) {
+                        onExportProduct(selectedProduct, product.name, product.section);
+                      }
+                    }}
+                    data-testid="button-export-product-locales"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Product Across Locales
+                  </Button>
+                )}
               </>
             )}
           </div>

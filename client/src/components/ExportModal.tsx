@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +34,11 @@ export interface ExcelTemplateConfig {
 interface ExportModalProps {
   open: boolean;
   onClose: () => void;
-  onExport: (format: string, filename: string, templateConfig?: ExcelTemplateConfig) => void;
+  onExport: (format: string, filename: string, templateConfig?: ExcelTemplateConfig, selectedLocales?: string[]) => void;
   documentName: string;
   jsonData: string;
+  exportMode?: "document" | "product";
+  productData?: any;
 }
 
 export function ExportModal({
@@ -45,9 +47,12 @@ export function ExportModal({
   onExport,
   documentName,
   jsonData,
+  exportMode = "document",
+  productData,
 }: ExportModalProps) {
   const [format, setFormat] = useState("json");
   const [filename, setFilename] = useState(documentName.replace(/\.[^/.]+$/, ""));
+  const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
   const [templateConfig, setTemplateConfig] = useState<ExcelTemplateConfig>({
     includeSummary: true,
     includeRawJSON: true,
@@ -66,9 +71,33 @@ export function ExportModal({
   });
 
   const handleExport = () => {
-    onExport(format, filename, templateConfig);
+    // Validate that at least one locale is selected for product export
+    if (exportMode === "product" && selectedLocales.length === 0) {
+      return; // Button will be disabled anyway
+    }
+    
+    if (exportMode === "product") {
+      onExport(format, filename, templateConfig, selectedLocales);
+    } else {
+      onExport(format, filename, templateConfig);
+    }
     onClose();
   };
+
+  const toggleLocale = (locale: string) => {
+    setSelectedLocales((prev) =>
+      prev.includes(locale) ? prev.filter((l) => l !== locale) : [...prev, locale]
+    );
+  };
+
+  // Reset selectedLocales when productData changes OR modal opens
+  useEffect(() => {
+    if (open && productData && exportMode === "product") {
+      setSelectedLocales(Object.keys(productData.locales));
+    } else if (!open) {
+      setSelectedLocales([]);
+    }
+  }, [productData, exportMode, open]);
 
   const getFileExtension = () => {
     switch (format) {
@@ -89,9 +118,13 @@ export function ExportModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl max-h-screen overflow-y-auto" data-testid="modal-export">
         <DialogHeader>
-          <DialogTitle>Export Document</DialogTitle>
+          <DialogTitle>
+            {exportMode === "product" ? "Export Product Across Locales" : "Export Document"}
+          </DialogTitle>
           <DialogDescription>
-            Choose the format and filename for your export.
+            {exportMode === "product"
+              ? "Export this product's data from all selected language variants."
+              : "Choose the format and filename for your export."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
@@ -141,7 +174,31 @@ export function ExportModal({
             </div>
           </div>
 
-          {format === "xlsx" && (
+          {exportMode === "product" && productData && (
+            <div className="border rounded-lg p-3 bg-muted/50">
+              <Label className="text-sm font-medium mb-2 block">Select Locales to Include</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.keys(productData.locales).map((locale) => (
+                  <div key={locale} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`locale-${locale}`}
+                      checked={selectedLocales.includes(locale)}
+                      onCheckedChange={() => toggleLocale(locale)}
+                      data-testid={`checkbox-locale-${locale}`}
+                    />
+                    <Label htmlFor={`locale-${locale}`} className="font-normal cursor-pointer">
+                      {locale} {productData.locales[locale].isOriginal ? "★" : ""}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                ★ indicates original document • {selectedLocales.length} locale{selectedLocales.length !== 1 ? 's' : ''} selected
+              </p>
+            </div>
+          )}
+
+          {format === "xlsx" && exportMode === "document" && (
             <div className="border rounded-lg p-3 bg-muted/50">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -361,7 +418,7 @@ export function ExportModal({
           </Button>
           <Button
             onClick={handleExport}
-            disabled={!filename.trim()}
+            disabled={!filename.trim() || (exportMode === "product" && selectedLocales.length === 0)}
             data-testid="button-confirm-export"
           >
             Export

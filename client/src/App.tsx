@@ -36,6 +36,8 @@ function AppContent() {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportingDocument, setExportingDocument] = useState<DocumentType | null>(null);
+  const [exportMode, setExportMode] = useState<"document" | "product">("document");
+  const [exportProductData, setExportProductData] = useState<any>(null);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [folderDialogMode, setFolderDialogMode] = useState<"create" | "edit">("create");
   const [editingFolder, setEditingFolder] = useState<FolderType | null>(null);
@@ -495,14 +497,188 @@ function AppContent() {
     }
   };
 
+  const handleExportProduct = async (documentId: string, productId: string, productName: string, section: string) => {
+    try {
+      // Fetch all language variants in the folder
+      const response = await fetch(`/api/documents/${documentId}/folder-variants`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch language variants");
+      }
+      
+      const folderDocuments: DocumentType[] = await response.json();
+      
+      // Extract the product from each document using ProductName matching (not index)
+      const [sectionName] = productId.split("-");
+      
+      const productsByLocale: Record<string, any> = {};
+      const missingLocales: string[] = [];
+      
+      folderDocuments.forEach((doc) => {
+        if (!doc.structuredData || !doc.language) return;
+        
+        const data = doc.structuredData as any;
+        const sectionData = data[sectionName];
+        
+        if (Array.isArray(sectionData)) {
+          // Match by ProductName (case-insensitive, trimmed) instead of index
+          const matchingProduct = sectionData.find(
+            (p: any) => p.ProductName?.trim().toLowerCase() === productName.trim().toLowerCase()
+          );
+          
+          if (matchingProduct) {
+            productsByLocale[doc.language] = {
+              language: doc.language,
+              documentName: doc.name,
+              product: matchingProduct,
+              isOriginal: doc.isOriginal
+            };
+          } else {
+            // Track missing products for better error reporting
+            missingLocales.push(doc.language);
+          }
+        }
+      });
+      
+      // Warn if some locales don't have this product
+      if (missingLocales.length > 0) {
+        toast({
+          title: "Warning",
+          description: `Product "${productName}" not found in ${missingLocales.length} locale(s): ${missingLocales.join(", ")}`,
+          variant: "destructive",
+        });
+      }
+      
+      // Set the aggregated data and show export modal
+      setExportProductData({
+        productName,
+        section: sectionName,
+        locales: productsByLocale,
+      });
+      setExportMode("product");
+      setShowExportModal(true);
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: error instanceof Error ? error.message : "Failed to fetch language variants",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleExportDocument = () => {
     if (selectedDocument && selectedDocument.isProcessed) {
       setExportingDocument(selectedDocument);
+      setExportMode("document");
       setShowExportModal(true);
     }
   };
 
-  const handleExport = (format: string, filename: string, templateConfig: any = {}) => {
+  const handleExport = (format: string, filename: string, templateConfig: any = {}, selectedLocales?: string[]) => {
+    // Handle product export
+    if (exportMode === "product" && exportProductData) {
+      if (format === "xlsx") {
+        const wb = XLSX.utils.book_new();
+        const locales = selectedLocales || Object.keys(exportProductData.locales);
+        
+        // Create a more structured layout with separate rows for each locale
+        const rows: any[][] = [];
+        
+        // Header row
+        rows.push(["Product", exportProductData.productName]);
+        rows.push(["Section", exportProductData.section]);
+        rows.push(["Export Date", new Date().toLocaleDateString()]);
+        rows.push([]); // Empty row for spacing
+        
+        // Data header
+        rows.push(["Locale", "Field", "Content"]);
+        
+        // For each locale, create multiple rows (one per field/value)
+        locales.forEach((locale) => {
+          const localeData = exportProductData.locales[locale];
+          if (!localeData) {
+            rows.push([locale, "Product", "[NOT FOUND IN THIS LOCALE]"]);
+            rows.push([]); // Spacing
+            return;
+          }
+          
+          const product = localeData.product;
+          const localeLabel = `${locale}${localeData.isOriginal ? " ★" : ""}`;
+          
+          // ProductName
+          rows.push([localeLabel, "ProductName", product.ProductName || ""]);
+          
+          // Headlines (one per line)
+          if (Array.isArray(product.Headlines) && product.Headlines.length > 0) {
+            product.Headlines.forEach((headline: string, idx: number) => {
+              rows.push([idx === 0 ? localeLabel : "", `Headline ${idx + 1}`, headline]);
+            });
+          } else {
+            rows.push([localeLabel, "Headlines", ""]);
+          }
+          
+          // AdvertisingCopy
+          rows.push([localeLabel, "AdvertisingCopy", product.AdvertisingCopy || ""]);
+          
+          // KeyFeatureBullets (one per line)
+          if (Array.isArray(product.KeyFeatureBullets) && product.KeyFeatureBullets.length > 0) {
+            product.KeyFeatureBullets.forEach((bullet: string, idx: number) => {
+              rows.push([idx === 0 ? localeLabel : "", `Feature Bullet ${idx + 1}`, bullet]);
+            });
+          } else {
+            rows.push([localeLabel, "KeyFeatureBullets", ""]);
+          }
+          
+          // LegalReferences (one per line)
+          if (Array.isArray(product.LegalReferences) && product.LegalReferences.length > 0) {
+            product.LegalReferences.forEach((legal: string, idx: number) => {
+              rows.push([idx === 0 ? localeLabel : "", `Legal Reference ${idx + 1}`, legal]);
+            });
+          } else {
+            rows.push([localeLabel, "LegalReferences", ""]);
+          }
+          
+          rows.push([]); // Empty row between locales
+        });
+        
+        const sheet = XLSX.utils.aoa_to_sheet(rows);
+        sheet["!cols"] = [{ wch: 15 }, { wch: 20 }, { wch: 60 }];
+        XLSX.utils.book_append_sheet(wb, sheet, "Product Export");
+        
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+      } else {
+        // JSON format for product export
+        const locales = selectedLocales || Object.keys(exportProductData.locales);
+        const jsonData: any = {
+          product: exportProductData.productName,
+          section: exportProductData.section,
+          locales: {}
+        };
+        
+        locales.forEach((locale) => {
+          const localeData = exportProductData.locales[locale];
+          if (localeData) {
+            jsonData.locales[locale] = localeData.product;
+          }
+        });
+        
+        const dataStr = JSON.stringify(jsonData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${filename}.${format}`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+      
+      toast({
+        title: "Export successful",
+        description: `Product exported across ${selectedLocales?.length || Object.keys(exportProductData.locales).length} locales`,
+      });
+      return;
+    }
+    
+    // Handle document export
     if (!exportingDocument) return;
 
     if (format === "xlsx") {
@@ -810,6 +986,7 @@ function AppContent() {
             <main className={`flex-1 relative ${selectedDocument ? 'overflow-hidden' : 'overflow-auto'}`}>
               {selectedDocument ? (
                 <ComparisonView
+                  documentId={selectedDocument.id}
                   documentName={selectedDocument.name}
                   extractedText={selectedDocument.extractedText || ""}
                   translatedText={selectedDocument.translatedText}
@@ -825,11 +1002,15 @@ function AppContent() {
                   isProcessing={reprocessDocumentMutation.isPending}
                   isTranslating={translateDocumentMutation.isPending}
                   isValidating={validateDocumentMutation.isPending}
+                  folderId={selectedDocument.folderId}
                   onBack={() => {
                     setSelectedDocumentId(null);
                     setCurrentView("all-documents");
                   }}
                   onExport={handleExportDocument}
+                  onExportProduct={(productId, productName, section) => {
+                    handleExportProduct(selectedDocument.id, productId, productName, section);
+                  }}
                   onSave={(newData) => {
                     try {
                       const parsedData = JSON.parse(newData);
@@ -900,20 +1081,23 @@ function AppContent() {
           </div>
         </div>
 
-        {exportingDocument && (
+        {(exportingDocument || exportProductData) && (
           <ExportModal
             open={showExportModal}
             onClose={() => {
               setShowExportModal(false);
               setExportingDocument(null);
+              setExportProductData(null);
             }}
             onExport={handleExport}
-            documentName={exportingDocument.name}
+            documentName={exportMode === "document" ? exportingDocument?.name || "" : exportProductData?.productName || ""}
             jsonData={
-              exportingDocument.structuredData
+              exportMode === "document" && exportingDocument?.structuredData
                 ? JSON.stringify(exportingDocument.structuredData, null, 2)
                 : "{}"
             }
+            exportMode={exportMode}
+            productData={exportMode === "product" ? exportProductData : undefined}
           />
         )}
 
