@@ -33,6 +33,18 @@ export const documents = pgTable("documents", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const documentVersions = pgTable("document_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentId: varchar("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
+  versionNumber: real("version_number").notNull(),
+  extractedText: text("extracted_text"),
+  structuredData: json("structured_data"),
+  validationConfidence: real("validation_confidence"),
+  validationIssues: json("validation_issues").$type<string[]>(),
+  changeDescription: text("change_description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertFolderSchema = createInsertSchema(folders).omit({
   id: true,
   createdAt: true,
@@ -44,7 +56,14 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
   updatedAt: true,
 });
 
+export const insertDocumentVersionSchema = createInsertSchema(documentVersions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertFolder = z.infer<typeof insertFolderSchema>;
 export type Folder = typeof folders.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documents.$inferSelect;
+export type InsertDocumentVersion = z.infer<typeof insertDocumentVersionSchema>;
+export type DocumentVersion = typeof documentVersions.$inferSelect;

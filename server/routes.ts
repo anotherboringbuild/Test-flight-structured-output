@@ -739,6 +739,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
+      // Save current version before reprocessing
+      if (document.structuredData) {
+        const latestVersion = await storage.getLatestVersionNumber(id);
+        await storage.createDocumentVersion({
+          documentId: id,
+          versionNumber: latestVersion + 1,
+          extractedText: document.extractedText,
+          structuredData: document.structuredData,
+          validationConfidence: document.validationConfidence,
+          validationIssues: document.validationIssues,
+          changeDescription: "Reprocessed with updated AI extraction"
+        });
+      }
+
       // Re-extract text from the file
       const extractedText = await extractTextFromFile(document.filePath, document.fileType);
 
@@ -873,6 +887,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Validation error:", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Failed to validate document" });
+    }
+  });
+
+  // Get version history for a document
+  app.get("/api/documents/:id/versions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const versions = await storage.getDocumentVersions(id);
+      res.json(versions);
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+      res.status(500).json({ error: "Failed to fetch version history" });
+    }
+  });
+
+  // Restore a specific version
+  app.post("/api/documents/:id/restore-version", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { versionId } = req.body;
+      
+      if (!versionId) {
+        return res.status(400).json({ error: "versionId is required" });
+      }
+
+      // Get the version to restore
+      const versions = await storage.getDocumentVersions(id);
+      const versionToRestore = versions.find(v => v.id === versionId);
+      
+      if (!versionToRestore) {
+        return res.status(404).json({ error: "Version not found" });
+      }
+
+      // Get current document state to save it as a new version
+      const currentDocument = await storage.getDocument(id);
+      if (!currentDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Save current state as a new version before restoring
+      if (currentDocument.structuredData) {
+        const latestVersion = await storage.getLatestVersionNumber(id);
+        await storage.createDocumentVersion({
+          documentId: id,
+          versionNumber: latestVersion + 1,
+          extractedText: currentDocument.extractedText,
+          structuredData: currentDocument.structuredData,
+          validationConfidence: currentDocument.validationConfidence,
+          validationIssues: currentDocument.validationIssues,
+          changeDescription: `Before restoring to version ${versionToRestore.versionNumber}`
+        });
+      }
+
+      // Restore the selected version
+      const updatedDocument = await storage.updateDocument(id, {
+        extractedText: versionToRestore.extractedText,
+        structuredData: versionToRestore.structuredData,
+        validationConfidence: versionToRestore.validationConfidence,
+        validationIssues: versionToRestore.validationIssues,
+      });
+
+      if (!updatedDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Remove filePath from response for security
+      const { filePath: _, ...safeDocument } = updatedDocument;
+      res.json(safeDocument);
+    } catch (error) {
+      console.error("Error restoring version:", error);
+      res.status(500).json({ error: "Failed to restore version" });
     }
   });
 

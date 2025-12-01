@@ -1,6 +1,6 @@
-import { type Document, type InsertDocument, type Folder, type InsertFolder } from "@shared/schema";
+import { type Document, type InsertDocument, type Folder, type InsertFolder, type DocumentVersion, type InsertDocumentVersion } from "@shared/schema";
 import { db } from "./db";
-import { documents, folders } from "@shared/schema";
+import { documents, folders, documentVersions } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
@@ -19,6 +19,10 @@ export interface IStorage {
   updateFolder(id: string, updates: Partial<InsertFolder>): Promise<Folder | undefined>;
   deleteFolder(id: string): Promise<void>;
   
+  // Document Versions
+  getDocumentVersions(documentId: string): Promise<DocumentVersion[]>;
+  createDocumentVersion(version: InsertDocumentVersion): Promise<DocumentVersion>;
+  getLatestVersionNumber(documentId: string): Promise<number>;
 }
 
 export class DbStorage implements IStorage {
@@ -37,7 +41,7 @@ export class DbStorage implements IStorage {
   }
 
   async createDocument(document: InsertDocument): Promise<Document> {
-    const result = await db.insert(documents).values(document).returning();
+    const result = await db.insert(documents).values([document]).returning();
     return result[0];
   }
 
@@ -68,7 +72,7 @@ export class DbStorage implements IStorage {
   }
 
   async createFolder(folder: InsertFolder): Promise<Folder> {
-    const result = await db.insert(folders).values(folder).returning();
+    const result = await db.insert(folders).values([folder]).returning();
     return result[0];
   }
 
@@ -83,6 +87,31 @@ export class DbStorage implements IStorage {
 
   async deleteFolder(id: string): Promise<void> {
     await db.delete(folders).where(eq(folders.id, id));
+  }
+
+  // Document Versions
+  async getDocumentVersions(documentId: string): Promise<DocumentVersion[]> {
+    return await db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.documentId, documentId))
+      .orderBy(desc(documentVersions.versionNumber));
+  }
+
+  async createDocumentVersion(version: InsertDocumentVersion): Promise<DocumentVersion> {
+    const result = await db.insert(documentVersions).values([version]).returning();
+    return result[0];
+  }
+
+  async getLatestVersionNumber(documentId: string): Promise<number> {
+    const versions = await db
+      .select()
+      .from(documentVersions)
+      .where(eq(documentVersions.documentId, documentId))
+      .orderBy(desc(documentVersions.versionNumber))
+      .limit(1);
+    
+    return versions.length > 0 ? versions[0].versionNumber : 0;
   }
 }
 
