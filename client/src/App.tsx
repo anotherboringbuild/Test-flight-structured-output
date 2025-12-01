@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClientProvider, useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "./lib/queryClient";
+import * as XLSX from "xlsx";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -504,18 +505,79 @@ function AppContent() {
   const handleExport = (format: string, filename: string) => {
     if (!exportingDocument) return;
 
-    const dataStr = JSON.stringify(exportingDocument.structuredData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${filename}.${format}`;
-    link.click();
-    URL.revokeObjectURL(url);
+    if (format === "xlsx") {
+      // Export to Excel with template
+      const wb = XLSX.utils.book_new();
+      const data = exportingDocument.structuredData as any || {};
+      
+      // Create a summary sheet
+      const summary = [
+        ["Document Summary"],
+        ["Name", exportingDocument.name],
+        ["Language", exportingDocument.language || "Unknown"],
+        ["Extracted Date", new Date().toLocaleDateString()],
+        [],
+        ["Data Overview"],
+        ["ProductCopy Count", Array.isArray(data.ProductCopy) ? data.ProductCopy.length : 0],
+        ["BusinessCopy Count", Array.isArray(data.BusinessCopy) ? data.BusinessCopy.length : 0],
+        ["UpgraderCopy Count", Array.isArray(data.UpgraderCopy) ? data.UpgraderCopy.length : 0],
+      ];
+      const summarySheet = XLSX.utils.aoa_to_sheet(summary);
+      summarySheet["!cols"] = [{ wch: 20 }, { wch: 40 }];
+      XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+
+      // Create sheets for each copy type
+      const createCopySheet = (copyType: string, items: any[]) => {
+        if (!Array.isArray(items) || items.length === 0) return;
+        
+        const rows: any[] = [
+          ["ProductName", "Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"]
+        ];
+        
+        items.forEach((item) => {
+          rows.push([
+            item.ProductName || "",
+            Array.isArray(item.Headlines) ? item.Headlines.join("; ") : "",
+            item.AdvertisingCopy || "",
+            Array.isArray(item.KeyFeatureBullets) ? item.KeyFeatureBullets.join("; ") : "",
+            Array.isArray(item.LegalReferences) ? item.LegalReferences.join("; ") : "",
+          ]);
+        });
+        
+        const sheet = XLSX.utils.aoa_to_sheet(rows);
+        sheet["!cols"] = [
+          { wch: 20 },
+          { wch: 30 },
+          { wch: 40 },
+          { wch: 40 },
+          { wch: 40 }
+        ];
+        XLSX.utils.book_append_sheet(wb, sheet, copyType);
+      };
+
+      if (data.ProductCopy) createCopySheet("ProductCopy", data.ProductCopy);
+      if (data.BusinessCopy) createCopySheet("BusinessCopy", data.BusinessCopy);
+      if (data.UpgraderCopy) createCopySheet("UpgraderCopy", data.UpgraderCopy);
+
+      // Create raw JSON sheet
+      const jsonSheet = XLSX.utils.json_to_sheet([{ json: JSON.stringify(data, null, 2) }]);
+      XLSX.utils.book_append_sheet(wb, jsonSheet, "Raw JSON");
+
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+    } else {
+      const dataStr = JSON.stringify(exportingDocument.structuredData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${filename}.${format}`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
 
     toast({
       title: "Export successful",
-      description: `Document exported as ${filename}.${format}`,
+      description: `Document exported as ${filename}.${format === "xlsx" ? "Excel" : format}`,
     });
   };
 

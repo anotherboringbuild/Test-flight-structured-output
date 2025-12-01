@@ -44,6 +44,8 @@ export function ExportModal({
         return ".csv";
       case "txt":
         return ".txt";
+      case "xlsx":
+        return ".xlsx";
       default:
         return ".json";
     }
@@ -78,6 +80,12 @@ export function ExportModal({
                 <RadioGroupItem value="txt" id="txt" data-testid="radio-txt" />
                 <Label htmlFor="txt" className="font-normal cursor-pointer">
                   TXT - Plain text
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="xlsx" id="xlsx" data-testid="radio-xlsx" />
+                <Label htmlFor="xlsx" className="font-normal cursor-pointer">
+                  Excel - Spreadsheet template with populated data
                 </Label>
               </div>
             </RadioGroup>
