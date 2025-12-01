@@ -461,6 +461,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Products
+  app.get("/api/products", async (req, res) => {
+    try {
+      const products = await storage.getAllProducts();
+      
+      // Enrich each product with variant count and locales
+      const enrichedProducts = await Promise.all(
+        products.map(async (product) => {
+          const variants = await storage.getProductVariants(product.id);
+          const locales = [...new Set(variants.map(v => v.locale).filter(Boolean))];
+          const copyTypes = [...new Set(variants.map(v => v.copyType))];
+          
+          return {
+            ...product,
+            variantCount: variants.length,
+            locales,
+            copyTypes,
+          };
+        })
+      );
+      
+      res.json(enrichedProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  app.get("/api/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const product = await storage.getProduct(id);
+      
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const variants = await storage.getProductVariants(id);
+      
+      res.json({
+        ...product,
+        variants,
+      });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      res.status(500).json({ error: "Failed to fetch product" });
+    }
+  });
+
+  app.get("/api/products/:id/variants", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const variants = await storage.getProductVariants(id);
+      res.json(variants);
+    } catch (error) {
+      console.error("Error fetching product variants:", error);
+      res.status(500).json({ error: "Failed to fetch product variants" });
+    }
+  });
+
+  app.patch("/api/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const product = await storage.updateProduct(id, req.body);
+      
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      console.error("Error updating product:", error);
+      res.status(400).json({ error: "Failed to update product" });
+    }
+  });
+
+  app.delete("/api/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteProduct(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.status(400).json({ error: "Failed to delete product" });
+    }
+  });
+
   // Documents
   app.get("/api/documents", async (req, res) => {
     try {
