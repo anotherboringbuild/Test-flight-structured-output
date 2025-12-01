@@ -1,15 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { Search, FileText, Globe, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, FileText, Globe, X, ChevronLeft, ChevronRight, Upload, Download, FolderOpen, File } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Product, ProductVariant } from "@shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Product, ProductVariant, Document as DocumentType } from "@shared/schema";
+import * as XLSX from "xlsx";
 
 interface EnrichedProduct extends Product {
   variantCount: number;
@@ -21,10 +26,17 @@ interface ProductWithVariants extends Product {
   variants: ProductVariant[];
 }
 
-export default function ProductBrowser() {
+interface ProductBrowserProps {
+  onUploadClick?: () => void;
+}
+
+export default function ProductBrowser({ onUploadClick }: ProductBrowserProps) {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
+  const [copyTypeFilter, setCopyTypeFilter] = useState<string>("all");
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
 
   const { data: products = [], isLoading } = useQuery<EnrichedProduct[]>({
     queryKey: ["/api/products"],
@@ -35,13 +47,31 @@ export default function ProductBrowser() {
     enabled: !!selectedProductId,
   });
 
+  const { data: documents = [] } = useQuery<DocumentType[]>({
+    queryKey: ["/api/documents"],
+  });
+
+  // Get source documents for selected product
+  const sourceDocuments = selectedProduct
+    ? documents.filter((doc) =>
+        selectedProduct.variants.some((v) => v.documentId === doc.id)
+      )
+    : [];
+
+  const uniqueCopyTypes = ["all", ...Array.from(new Set(products.flatMap((p) => p.copyTypes)))];
+  const uniqueLocales = ["all", ...Array.from(new Set(products.flatMap((p) => p.locales)))];
+
   const filteredProducts = products.filter((product) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       product.name.toLowerCase().includes(query) ||
       product.locales.some((locale) => locale?.toLowerCase().includes(query)) ||
-      product.copyTypes.some((copyType) => copyType?.toLowerCase().includes(query))
-    );
+      product.copyTypes.some((copyType) => copyType?.toLowerCase().includes(query));
+
+    const matchesCopyType = copyTypeFilter === "all" || product.copyTypes.includes(copyTypeFilter);
+    const matchesLocale = localeFilter === "all" || product.locales.includes(localeFilter);
+
+    return matchesSearch && matchesCopyType && matchesLocale;
   });
 
   const getLanguageBadge = (language: string | null) => {
@@ -84,6 +114,98 @@ export default function ProductBrowser() {
     });
   };
 
+  const handleExportProduct = () => {
+    if (!selectedProduct) return;
+
+    const wb = XLSX.utils.book_new();
+    const variantsByLocale = groupVariantsByLanguage(selectedProduct.variants);
+    const locales = Object.keys(variantsByLocale);
+
+    // Build matrix: rows = fields, columns = locales
+    const rows: any[][] = [];
+    
+    // Metadata
+    rows.push(["Product", selectedProduct.name]);
+    rows.push(["Export Date", new Date().toLocaleDateString()]);
+    rows.push(["Total Variants", selectedProduct.variants.length]);
+    rows.push([]);
+
+    // Header row
+    const headerRow = ["Field"];
+    locales.forEach((locale) => {
+      headerRow.push(locale);
+    });
+    rows.push(headerRow);
+
+    // Determine max array lengths
+    let maxHeadlines = 0;
+    let maxFeatureBullets = 0;
+    let maxLegalReferences = 0;
+
+    Object.values(variantsByLocale).forEach((variants) => {
+      variants.forEach((v) => {
+        maxHeadlines = Math.max(maxHeadlines, v.headlines?.length || 0);
+        maxFeatureBullets = Math.max(maxFeatureBullets, v.keyFeatureBullets?.length || 0);
+        maxLegalReferences = Math.max(maxLegalReferences, v.legalReferences?.length || 0);
+      });
+    });
+
+    // For each copy type across all locales
+    const copyTypes = Array.from(new Set(selectedProduct.variants.map((v) => v.copyType)));
+    copyTypes.forEach((copyType) => {
+      rows.push([copyTypeLabels[copyType] || copyType]);
+
+      // Headlines
+      for (let i = 0; i < maxHeadlines; i++) {
+        const row = [`Headline ${i + 1}`];
+        locales.forEach((locale) => {
+          const variant = variantsByLocale[locale]?.find((v) => v.copyType === copyType);
+          row.push(variant?.headlines?.[i] || "");
+        });
+        rows.push(row);
+      }
+
+      // Advertising Copy
+      const adCopyRow = ["Advertising Copy"];
+      locales.forEach((locale) => {
+        const variant = variantsByLocale[locale]?.find((v) => v.copyType === copyType);
+        adCopyRow.push(variant?.advertisingCopy || "");
+      });
+      rows.push(adCopyRow);
+
+      // Feature Bullets
+      for (let i = 0; i < maxFeatureBullets; i++) {
+        const row = [`Feature ${i + 1}`];
+        locales.forEach((locale) => {
+          const variant = variantsByLocale[locale]?.find((v) => v.copyType === copyType);
+          row.push(variant?.keyFeatureBullets?.[i] || "");
+        });
+        rows.push(row);
+      }
+
+      // Legal References
+      for (let i = 0; i < maxLegalReferences; i++) {
+        const row = [`Legal ${i + 1}`];
+        locales.forEach((locale) => {
+          const variant = variantsByLocale[locale]?.find((v) => v.copyType === copyType);
+          row.push(variant?.legalReferences?.[i] || "");
+        });
+        rows.push(row);
+      }
+
+      rows.push([]); // Spacing between copy types
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, "Product Export");
+    XLSX.writeFile(wb, `${selectedProduct.name}.xlsx`);
+
+    toast({
+      title: "Export complete",
+      description: `${selectedProduct.name} exported to Excel`,
+    });
+  };
+
   const availableLanguages = selectedProduct ? getAvailableLanguages(selectedProduct.variants) : [];
   const currentLanguage = availableLanguages[selectedLanguageIndex] || "English";
 
@@ -100,16 +222,72 @@ export default function ProductBrowser() {
   return (
     <PanelGroup direction="horizontal" className="h-full">
       <Panel defaultSize={selectedProductId ? 60 : 100} minSize={30} className="flex flex-col">
-        <div className="flex items-center border-b px-4 py-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search products, languages, or copy types..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-6 border-0 bg-transparent focus-visible:ring-0"
-              data-testid="input-search-products"
-            />
+        {/* Header with search and filters */}
+        <div className="border-b px-4 py-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-6 border-0 bg-transparent focus-visible:ring-0"
+                data-testid="input-search-products"
+              />
+            </div>
+            {onUploadClick && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onUploadClick}
+                data-testid="button-upload-document"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select value={copyTypeFilter} onValueChange={setCopyTypeFilter}>
+              <SelectTrigger className="w-40" data-testid="select-copy-type-filter">
+                <SelectValue placeholder="Copy Type" />
+              </SelectTrigger>
+              <SelectContent>
+                {uniqueCopyTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type === "all" ? "All Copy Types" : copyTypeLabels[type] || type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={localeFilter} onValueChange={setLocaleFilter}>
+              <SelectTrigger className="w-40" data-testid="select-locale-filter">
+                <SelectValue placeholder="Locale" />
+              </SelectTrigger>
+              <SelectContent>
+                {uniqueLocales.map((locale) => (
+                  <SelectItem key={locale} value={locale}>
+                    {locale === "all" ? "All Locales" : locale}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {(copyTypeFilter !== "all" || localeFilter !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCopyTypeFilter("all");
+                  setLocaleFilter("all");
+                }}
+                data-testid="button-clear-filters"
+              >
+                Clear
+              </Button>
+            )}
           </div>
         </div>
 
@@ -117,7 +295,15 @@ export default function ProductBrowser() {
           <Card className="m-6">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No products found</p>
+              <p className="text-sm text-muted-foreground">
+                {products.length === 0 ? "No products yet" : "No products match your filters"}
+              </p>
+              {products.length === 0 && onUploadClick && (
+                <Button variant="outline" size="sm" className="mt-4" onClick={onUploadClick}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload your first document
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -164,20 +350,33 @@ export default function ProductBrowser() {
 
       {selectedProductId && selectedProduct && (
         <Panel defaultSize={70} minSize={30} className="flex flex-col bg-muted/30">
+          {/* Product header */}
           <div className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-semibold" data-testid="text-selected-product-name">
               {selectedProduct.name}
             </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSelectedProductId(null)}
-              data-testid="button-close-panel"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportProduct}
+                data-testid="button-export-product"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedProductId(null)}
+                data-testid="button-close-panel"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
+          {/* Language selector */}
           {availableLanguages.length > 1 && (
             <div className="flex items-center justify-between border-b px-6 py-3">
               <Button
@@ -205,7 +404,8 @@ export default function ProductBrowser() {
           )}
 
           <ScrollArea className="flex-1">
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
+              {/* Product variants */}
               {groupVariantsByLanguage(selectedProduct.variants)[currentLanguage]?.map((variant, idx) => (
                 <Card
                   key={`${variant.id}-${idx}`}
@@ -218,6 +418,11 @@ export default function ProductBrowser() {
                         <p className="text-xs text-muted-foreground mt-1">
                           {copyTypeLabels[variant.copyType] || variant.copyType}
                         </p>
+                        {variant.versionNumber !== null && (
+                          <p className="text-xs text-muted-foreground">
+                            Version {variant.versionNumber}
+                          </p>
+                        )}
                       </div>
                       <Badge variant="outline" className="ml-2">
                         {getLanguageBadge(variant.locale)}
@@ -267,6 +472,35 @@ export default function ProductBrowser() {
                   </CardContent>
                 </Card>
               ))}
+
+              {/* Source documents section */}
+              {sourceDocuments.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold">Source Documents</h3>
+                      <Badge variant="outline">{sourceDocuments.length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {sourceDocuments.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded hover-elevate"
+                          data-testid={`source-doc-${doc.id}`}
+                        >
+                          <File className="h-3 w-3" />
+                          <span className="flex-1">{doc.name}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {getLanguageBadge(doc.language)}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </ScrollArea>
         </Panel>

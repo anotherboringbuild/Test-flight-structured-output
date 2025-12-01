@@ -32,7 +32,7 @@ function formatDate(dateString: string): string {
 
 function AppContent() {
   const { toast } = useToast();
-  const [currentView, setCurrentView] = useState("upload");
+  const [currentView, setCurrentView] = useState("products");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportingDocument, setExportingDocument] = useState<DocumentType | null>(null);
@@ -1090,7 +1090,7 @@ function AppContent() {
               ) : currentView === "analytics" ? (
                 <Analytics />
               ) : currentView === "products" ? (
-                <ProductBrowser />
+                <ProductBrowser onUploadClick={() => setCurrentView("upload")} />
               ) : (
                 <DocumentUploadChat
                   onFilesSelected={handleUpload}
