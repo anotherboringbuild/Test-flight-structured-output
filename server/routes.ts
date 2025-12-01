@@ -576,6 +576,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue with upload even if validation fails
       }
 
+      // Extract products from document structuredData
+      try {
+        await storage.projectProductsFromDocument(document.id);
+      } catch (projectionError) {
+        console.error("Product projection error during upload:", projectionError);
+        // Continue with upload even if projection fails
+      }
+
       // Remove filePath from response for security
       const { filePath: _, ...safeDocument } = document;
       res.json(safeDocument);
@@ -667,6 +675,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (validationError) {
             console.error("Validation error during upload:", validationError);
             // Continue with upload even if validation fails
+          }
+
+          // Extract products from document structuredData
+          try {
+            await storage.projectProductsFromDocument(document.id);
+          } catch (projectionError) {
+            console.error("Product projection error during upload:", projectionError);
+            // Continue with upload even if projection fails
           }
 
           // Remove filePath from response for security
@@ -772,6 +788,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!updatedDocument) {
         return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Extract products from reprocessed document
+      try {
+        await storage.projectProductsFromDocument(id);
+      } catch (projectionError) {
+        console.error("Product projection error during reprocess:", projectionError);
+        // Continue with reprocess even if projection fails
       }
 
       // Remove filePath from response for security
