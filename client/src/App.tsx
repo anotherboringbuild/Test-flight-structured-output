@@ -742,7 +742,7 @@ function AppContent() {
                   isValidating={validateDocumentMutation.isPending}
                   onBack={() => {
                     setSelectedDocumentId(null);
-                    setCurrentView("library");
+                    setCurrentView("all-documents");
                   }}
                   onExport={handleExportDocument}
                   onSave={(newData) => {
@@ -776,7 +776,7 @@ function AppContent() {
                     }
                   }}
                 />
-              ) : currentView === "library" || currentView.startsWith("folder-") ? (
+              ) : currentView === "all-documents" || currentView.startsWith("folder-") ? (
                 <DocumentLibrary
                   documents={
                     currentView.startsWith("folder-")

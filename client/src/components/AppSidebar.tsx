@@ -68,7 +68,6 @@ export function AppSidebar({
 
   const mainItems = [
     { id: "upload", title: "Upload New", icon: FileText },
-    { id: "library", title: "Library", icon: Library },
     { id: "products", title: "Products", icon: Package },
     { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];
@@ -148,6 +147,16 @@ export function AppSidebar({
           <SidebarGroupContent>
             <ScrollArea className="h-[400px]">
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={currentView === "all-documents"}
+                    onClick={() => onViewChange("all-documents")}
+                    data-testid="button-all-documents"
+                  >
+                    <Library className="h-5 w-5" />
+                    <span>All Documents</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {folders.map((folder) => {
                   const folderDocs = getDocumentsForFolder(folder.id);
                   const originalDoc = folderDocs.find(d => d.isOriginal);
