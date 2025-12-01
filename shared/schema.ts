@@ -45,6 +45,28 @@ export const documentVersions = pgTable("document_versions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const productVariants = pgTable("product_variants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  documentId: varchar("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
+  versionNumber: integer("version_number"),
+  locale: varchar("locale", { length: 50 }),
+  copyType: varchar("copy_type", { length: 50 }).notNull(),
+  headlines: json("headlines").$type<string[]>(),
+  advertisingCopy: text("advertising_copy"),
+  keyFeatureBullets: json("key_feature_bullets").$type<string[]>(),
+  legalReferences: json("legal_references").$type<string[]>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertFolderSchema = createInsertSchema(folders).omit({
   id: true,
   createdAt: true,
@@ -61,9 +83,25 @@ export const insertDocumentVersionSchema = createInsertSchema(documentVersions).
   createdAt: true,
 });
 
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProductVariantSchema = createInsertSchema(productVariants).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertFolder = z.infer<typeof insertFolderSchema>;
 export type Folder = typeof folders.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documents.$inferSelect;
 export type InsertDocumentVersion = z.infer<typeof insertDocumentVersionSchema>;
 export type DocumentVersion = typeof documentVersions.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertProductVariant = z.infer<typeof insertProductVariantSchema>;
+export type ProductVariant = typeof productVariants.$inferSelect;
