@@ -70,31 +70,14 @@ export function DocumentUploadChat({
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      if (uploadMode === "single") {
-        // For single mode, upload immediately with current metadata
-        if (onUploadReady) {
-          onUploadReady({
-            mode: "single",
-            files: acceptedFiles,
-            folderId: selectedFolderId,
-            month: selectedMonth,
-            year: selectedYear,
-            addToAVA,
-          });
-        } else {
-          // Fallback to old behavior if onUploadReady not provided
-          onFilesSelected(acceptedFiles);
-        }
-      } else {
-        // For document set mode, collect files and wait for manual submission
-        setSelectedFiles((prev) => [...prev, ...acceptedFiles]);
-        if (acceptedFiles.length > 0 && !folderName) {
-          const fileName = acceptedFiles[0].name.replace(/\.(docx|pdf|pages)$/i, '');
-          setFolderName(fileName);
-        }
+      // For both modes, collect files and wait for manual submission
+      setSelectedFiles((prev) => [...prev, ...acceptedFiles]);
+      if (acceptedFiles.length > 0 && uploadMode === "set" && !folderName) {
+        const fileName = acceptedFiles[0].name.replace(/\.(docx|pdf|pages)$/i, '');
+        setFolderName(fileName);
       }
     },
-    [onFilesSelected, onUploadReady, uploadMode, folderName, selectedFolderId, selectedMonth, selectedYear, addToAVA]
+    [uploadMode, folderName]
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -125,6 +108,21 @@ export function DocumentUploadChat({
 
   const handleBrowseClick = () => {
     open();
+  };
+
+  const handleUploadSingle = () => {
+    if (!onUploadReady || selectedFiles.length === 0) return;
+    
+    onUploadReady({
+      mode: "single",
+      files: selectedFiles,
+      folderId: selectedFolderId,
+      month: selectedMonth,
+      year: selectedYear,
+      addToAVA,
+    });
+    
+    setSelectedFiles([]);
   };
 
   const handleUploadSet = () => {
@@ -454,17 +452,31 @@ export function DocumentUploadChat({
       )}
 
       {/* Upload Button */}
-      {uploadMode === "set" && selectedFiles.length > 0 && (
-        <Button
-          onClick={handleUploadSet}
-          disabled={!folderName.trim() || selectedFiles.length === 0 || disabled}
-          size="lg"
-          className="rounded-full px-8"
-          data-testid="button-upload-set-chat"
-        >
-          <Send className="mr-2 h-5 w-5" />
-          Upload {selectedFiles.length} File{selectedFiles.length > 1 ? 's' : ''}
-        </Button>
+      {selectedFiles.length > 0 && (
+        <div className="flex justify-center">
+          {uploadMode === "single" ? (
+            <Button
+              onClick={handleUploadSingle}
+              disabled={selectedFiles.length === 0 || disabled}
+              size="icon"
+              className="rounded-full h-16 w-16"
+              data-testid="button-upload-single-chat"
+            >
+              <Send className="h-6 w-6" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleUploadSet}
+              disabled={!folderName.trim() || selectedFiles.length === 0 || disabled}
+              size="lg"
+              className="rounded-full px-8"
+              data-testid="button-upload-set-chat"
+            >
+              <Send className="mr-2 h-5 w-5" />
+              Upload {selectedFiles.length} File{selectedFiles.length > 1 ? 's' : ''}
+            </Button>
+          )}
+        </div>
       )}
 
       {/* File Format Hint and Submission Info */}
@@ -472,16 +484,10 @@ export function DocumentUploadChat({
         <p className="text-sm text-muted-foreground">
           Supports: Word (.docx), PDF (.pdf), Pages (.pages) • Drag and drop or click "Upload Document" to begin
         </p>
-        {uploadMode === "single" ? (
+        {selectedFiles.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Files will be uploaded immediately when selected
+            Configure your upload above, then click the button below to submit
           </p>
-        ) : (
-          selectedFiles.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Click the upload button below to submit all files
-            </p>
-          )
         )}
       </div>
     </div>
