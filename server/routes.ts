@@ -665,7 +665,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract products from document structuredData
       try {
-        await storage.projectProductsFromDocument(document.id);
+        // For initial upload, this is version 0 (no version history yet)
+        await storage.projectProductsFromDocument(document.id, 0);
       } catch (projectionError) {
         console.error("Product projection error during upload:", projectionError);
         // Continue with upload even if projection fails
@@ -766,7 +767,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Extract products from document structuredData
           try {
-            await storage.projectProductsFromDocument(document.id);
+            // For initial upload, this is version 0 (no version history yet)
+            await storage.projectProductsFromDocument(document.id, 0);
           } catch (projectionError) {
             console.error("Product projection error during upload:", projectionError);
             // Continue with upload even if projection fails
@@ -842,19 +844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
-      // Save current version before reprocessing
-      if (document.structuredData) {
-        const latestVersion = await storage.getLatestVersionNumber(id);
-        await storage.createDocumentVersion({
-          documentId: id,
-          versionNumber: latestVersion + 1,
-          extractedText: document.extractedText,
-          structuredData: document.structuredData,
-          validationConfidence: document.validationConfidence,
-          validationIssues: document.validationIssues,
-          changeDescription: "Reprocessed with updated AI extraction"
-        });
-      }
+      // Calculate the new version number
+      const latestVersion = await storage.getLatestVersionNumber(id);
+      const newVersionNumber = latestVersion + 1;
 
       // Re-extract text from the file
       const extractedText = await extractTextFromFile(document.filePath, document.fileType);
@@ -877,9 +869,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
-      // Extract products from reprocessed document
+      // Save the NEW reprocessed state as a version
+      await storage.createDocumentVersion({
+        documentId: id,
+        versionNumber: newVersionNumber,
+        extractedText: updatedDocument.extractedText,
+        structuredData: updatedDocument.structuredData,
+        validationConfidence: updatedDocument.validationConfidence,
+        validationIssues: updatedDocument.validationIssues,
+        changeDescription: "Reprocessed with updated AI extraction"
+      });
+
+      // Extract products from reprocessed document with the new version number
       try {
-        await storage.projectProductsFromDocument(id);
+        await storage.projectProductsFromDocument(id, newVersionNumber);
       } catch (projectionError) {
         console.error("Product projection error during reprocess:", projectionError);
         // Continue with reprocess even if projection fails

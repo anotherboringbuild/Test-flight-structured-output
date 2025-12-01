@@ -39,7 +39,7 @@ export interface IStorage {
   deleteProductVariant(id: string): Promise<void>;
   
   // Product Projection (extract products from document structuredData)
-  projectProductsFromDocument(documentId: string): Promise<void>;
+  projectProductsFromDocument(documentId: string, versionNumber: number): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -190,14 +190,11 @@ export class DbStorage implements IStorage {
   }
 
   // Product Projection - Extract products from document structuredData
-  async projectProductsFromDocument(documentId: string): Promise<void> {
+  async projectProductsFromDocument(documentId: string, versionNumber: number): Promise<void> {
     const document = await this.getDocument(documentId);
     if (!document || !document.structuredData) {
       return;
     }
-
-    // Get the latest version number for this document
-    const latestVersionNumber = await this.getLatestVersionNumber(documentId);
 
     // Delete existing variants for this document
     const existingVariants = await this.getProductVariantsByDocument(documentId);
@@ -226,7 +223,7 @@ export class DbStorage implements IStorage {
         await this.createProductVariant({
           productId: product.id,
           documentId: documentId,
-          versionNumber: latestVersionNumber,
+          versionNumber: versionNumber,
           locale: document.language || null,
           copyType: copyType,
           headlines: item.Headlines || [],

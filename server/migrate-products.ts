@@ -24,7 +24,9 @@ async function migrateProducts() {
       }
       
       try {
-        await storage.projectProductsFromDocument(document.id);
+        // Get the latest version number for this document, or 0 if no versions exist
+        const versionNumber = await storage.getLatestVersionNumber(document.id);
+        await storage.projectProductsFromDocument(document.id, versionNumber);
         processedCount++;
         console.log(`✓ Processed document ${document.name} (${processedCount}/${documents.length})`);
       } catch (error) {
