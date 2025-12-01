@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export interface ExcelTemplateConfig {
   includeSummary: boolean;
@@ -143,14 +142,10 @@ export function ExportModal({
           </div>
 
           {format === "xlsx" && (
-            <div className="border rounded-lg p-4 bg-muted/50">
-              <Tabs defaultValue="sheets" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="sheets">Include</TabsTrigger>
-                  <TabsTrigger value="fields">Fields</TabsTrigger>
-                </TabsList>
-                <TabsContent value="sheets" className="space-y-3 mt-4">
-                  <Label>Sheets to Include</Label>
+            <div className="border rounded-lg p-3 bg-muted/50">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Sheets to Include</Label>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -242,9 +237,9 @@ export function ExportModal({
                       </Label>
                     </div>
                   </div>
-                </TabsContent>
-                <TabsContent value="fields" className="space-y-3 mt-4">
-                  <Label>Columns to Include</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Columns to Include</Label>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -342,8 +337,8 @@ export function ExportModal({
                       </Label>
                     </div>
                   </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+              </div>
             </div>
           )}
 
