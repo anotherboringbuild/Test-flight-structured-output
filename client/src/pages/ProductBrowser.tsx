@@ -172,7 +172,7 @@ export default function ProductBrowser() {
           Product Browser
         </h1>
         <p className="text-muted-foreground">
-          Browse all {allProducts.length} unique products and their language variants
+          Browse all {allProducts.length} unique products across different languages
         </p>
       </div>
 
@@ -213,10 +213,7 @@ export default function ProductBrowser() {
                     <div className="flex-1 text-left">
                       <CardTitle className="text-lg">{item.productName}</CardTitle>
                     </div>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary">{languageCount} language(s)</Badge>
-                      <Badge variant="outline">{item.variants.length} variant(s)</Badge>
-                    </div>
+                    <Badge variant="secondary">{languageCount} language(s)</Badge>
                   </button>
                 </CardHeader>
 
