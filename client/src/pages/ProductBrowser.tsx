@@ -188,170 +188,167 @@ export default function ProductBrowser() {
           </CardContent>
         </Card>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10" />
-              <TableHead>Product Name</TableHead>
-              <TableHead className="w-32">Languages</TableHead>
-              <TableHead className="w-32">Documents</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10" />
+                <TableHead>Product Name</TableHead>
+                <TableHead className="w-32">Languages</TableHead>
+                <TableHead className="w-32">Documents</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
             {filteredProducts.map((item) => {
               const variantsByLanguage = groupVariantsByLanguage(item.variants);
               const languageCount = Object.keys(variantsByLanguage).length;
               const isExpanded = expandedProducts.has(item.productName);
 
               return (
-                <TableRow
-                  key={item.productName}
-                  data-testid={`row-product-${item.productName}`}
-                  className="cursor-pointer"
-                >
-                  <TableCell>
-                    <button
-                      onClick={() => toggleProduct(item.productName)}
-                      data-testid={`button-expand-${item.productName}`}
-                      className="flex items-center justify-center"
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
-                  </TableCell>
-                  <TableCell className="font-medium">{item.productName}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{languageCount}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {item.variants.length}
-                  </TableCell>
-                </TableRow>
+                <div key={item.productName}>
+                  <TableRow
+                    data-testid={`row-product-${item.productName}`}
+                    className="cursor-pointer"
+                  >
+                    <TableCell>
+                      <button
+                        onClick={() => toggleProduct(item.productName)}
+                        data-testid={`button-expand-${item.productName}`}
+                        className="flex items-center justify-center"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.productName}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{languageCount}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {item.variants.length}
+                    </TableCell>
+                  </TableRow>
+                  
+                  {isExpanded && (
+                    <TableRow className="bg-muted/40">
+                      <TableCell colSpan={4} className="p-6">
+                        <div className="space-y-6">
+                          {Object.entries(variantsByLanguage)
+                            .sort(([langA], [langB]) => {
+                              if (langA === "English") return -1;
+                              if (langB === "English") return 1;
+                              return langA.localeCompare(langB);
+                            })
+                            .map(([language, variants]) => (
+                              <div key={language}>
+                                <div className="flex items-center gap-2 mb-4">
+                                  <Globe className="h-4 w-4 text-muted-foreground" />
+                                  <h3 className="font-semibold text-sm">{language}</h3>
+                                  <Badge variant="outline" className="ml-auto">
+                                    {getLanguageBadge(language)}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-4 ml-6">
+                                  {variants.map((variant, idx) => (
+                                    <Card
+                                      key={`${variant.documentId}-${variant.copyType}-${idx}`}
+                                      className="bg-background"
+                                      data-testid={`card-variant-${variant.documentId}-${idx}`}
+                                    >
+                                      <CardContent className="pt-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                          <div>
+                                            <p className="text-sm font-semibold text-muted-foreground">
+                                              {variant.documentName}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                              {copyTypeLabels[variant.copyType]}
+                                            </p>
+                                          </div>
+                                          <Badge variant="outline">
+                                            {copyTypeLabels[variant.copyType]}
+                                          </Badge>
+                                        </div>
+
+                                        {variant.product.Headlines &&
+                                          variant.product.Headlines.length > 0 && (
+                                            <div className="mb-3">
+                                              <p className="text-xs text-muted-foreground font-semibold mb-1">
+                                                Headlines ({variant.product.Headlines.length})
+                                              </p>
+                                              <ul className="text-sm space-y-1 ml-2">
+                                                {variant.product.Headlines.map((headline, i) => (
+                                                  <li key={i} className="text-muted-foreground">
+                                                    • {headline}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+
+                                        {variant.product.AdvertisingCopy && (
+                                          <div className="mb-3">
+                                            <p className="text-xs text-muted-foreground font-semibold mb-1">
+                                              Advertising Copy
+                                            </p>
+                                            <p className="text-sm text-foreground italic">
+                                              {variant.product.AdvertisingCopy}
+                                            </p>
+                                          </div>
+                                        )}
+
+                                        {variant.product.KeyFeatureBullets &&
+                                          variant.product.KeyFeatureBullets.length > 0 && (
+                                            <div className="mb-3">
+                                              <p className="text-xs text-muted-foreground font-semibold mb-1">
+                                                Key Features ({variant.product.KeyFeatureBullets.length})
+                                              </p>
+                                              <ul className="text-sm space-y-1 ml-2">
+                                                {variant.product.KeyFeatureBullets.map((bullet, i) => (
+                                                  <li key={i} className="text-muted-foreground">
+                                                    • {bullet}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+
+                                        {variant.product.LegalReferences &&
+                                          variant.product.LegalReferences.length > 0 && (
+                                            <div>
+                                              <p className="text-xs text-muted-foreground font-semibold mb-1">
+                                                Legal References ({variant.product.LegalReferences.length})
+                                              </p>
+                                              <ul className="text-sm space-y-1 ml-2">
+                                                {variant.product.LegalReferences.map((ref, i) => (
+                                                  <li key={i} className="text-muted-foreground">
+                                                    • {ref}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </div>
               );
             })}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </div>
       )}
-
-      {/* Expanded Content */}
-      {filteredProducts.map((item) => {
-        if (!expandedProducts.has(item.productName)) return null;
-
-        const variantsByLanguage = groupVariantsByLanguage(item.variants);
-
-        return (
-          <div
-            key={`expanded-${item.productName}`}
-            className="border-b bg-muted/40 px-6 py-6"
-          >
-            {Object.entries(variantsByLanguage)
-              .sort(([langA], [langB]) => {
-                if (langA === "English") return -1;
-                if (langB === "English") return 1;
-                return langA.localeCompare(langB);
-              })
-              .map(([language, variants]) => (
-                <div key={language} className="mb-6 last:mb-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="font-semibold text-sm">{language}</h3>
-                    <Badge variant="outline" className="ml-auto">
-                      {getLanguageBadge(language)}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-4 ml-6">
-                    {variants.map((variant, idx) => (
-                      <Card
-                        key={`${variant.documentId}-${variant.copyType}-${idx}`}
-                        className="bg-background"
-                        data-testid={`card-variant-${variant.documentId}-${idx}`}
-                      >
-                        <CardContent className="pt-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <p className="text-sm font-semibold text-muted-foreground">
-                                {variant.documentName}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {copyTypeLabels[variant.copyType]}
-                              </p>
-                            </div>
-                            <Badge variant="outline">
-                              {copyTypeLabels[variant.copyType]}
-                            </Badge>
-                          </div>
-
-                          {variant.product.Headlines &&
-                            variant.product.Headlines.length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                  Headlines ({variant.product.Headlines.length})
-                                </p>
-                                <ul className="text-sm space-y-1 ml-2">
-                                  {variant.product.Headlines.map((headline, i) => (
-                                    <li key={i} className="text-muted-foreground">
-                                      • {headline}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                          {variant.product.AdvertisingCopy && (
-                            <div className="mb-3">
-                              <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                Advertising Copy
-                              </p>
-                              <p className="text-sm text-foreground italic">
-                                {variant.product.AdvertisingCopy}
-                              </p>
-                            </div>
-                          )}
-
-                          {variant.product.KeyFeatureBullets &&
-                            variant.product.KeyFeatureBullets.length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                  Key Features ({variant.product.KeyFeatureBullets.length})
-                                </p>
-                                <ul className="text-sm space-y-1 ml-2">
-                                  {variant.product.KeyFeatureBullets.map((bullet, i) => (
-                                    <li key={i} className="text-muted-foreground">
-                                      • {bullet}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                          {variant.product.LegalReferences &&
-                            variant.product.LegalReferences.length > 0 && (
-                              <div>
-                                <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                  Legal References ({variant.product.LegalReferences.length})
-                                </p>
-                                <ul className="text-sm space-y-1 ml-2">
-                                  {variant.product.LegalReferences.map((ref, i) => (
-                                    <li key={i} className="text-muted-foreground">
-                                      • {ref}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-          </div>
-        );
-      })}
     </div>
   );
 }
