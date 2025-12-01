@@ -248,7 +248,7 @@ export default function ProductBrowser() {
 
       {/* Right Panel - Product Details */}
       {selectedProduct && selectedProductData && (
-        <Panel defaultSize={55} minSize={30} className="flex flex-col bg-muted/30">
+        <Panel defaultSize={70} minSize={30} className="flex flex-col bg-muted/30">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-semibold" data-testid="text-selected-product-name">
               {selectedProduct}
