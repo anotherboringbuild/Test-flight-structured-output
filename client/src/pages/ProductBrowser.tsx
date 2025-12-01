@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Package, Leaf, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight, Package, Leaf, Globe, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Document as DocumentType } from "@shared/schema";
 
@@ -176,14 +176,18 @@ export default function ProductBrowser() {
         </p>
       </div>
 
-      <Input
-        type="search"
-        placeholder="Search products, documents, languages, or copy types..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full"
-        data-testid="input-search-products"
-      />
+      <div className="flex items-center border-b px-4 py-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search products, documents, languages, or copy types..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-6 border-0 bg-transparent focus-visible:ring-0"
+            data-testid="input-search-products"
+          />
+        </div>
+      </div>
 
       {filteredProducts.length === 0 ? (
         <Card>
