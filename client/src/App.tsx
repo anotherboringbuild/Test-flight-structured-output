@@ -502,7 +502,7 @@ function AppContent() {
     }
   };
 
-  const handleExport = (format: string, filename: string) => {
+  const handleExport = (format: string, filename: string, templateConfig: any = {}) => {
     if (!exportingDocument) return;
 
     if (format === "xlsx") {
@@ -510,58 +510,81 @@ function AppContent() {
       const wb = XLSX.utils.book_new();
       const data = exportingDocument.structuredData as any || {};
       
-      // Create a summary sheet
-      const summary = [
-        ["Document Summary"],
-        ["Name", exportingDocument.name],
-        ["Language", exportingDocument.language || "Unknown"],
-        ["Extracted Date", new Date().toLocaleDateString()],
-        [],
-        ["Data Overview"],
-        ["ProductCopy Count", Array.isArray(data.ProductCopy) ? data.ProductCopy.length : 0],
-        ["BusinessCopy Count", Array.isArray(data.BusinessCopy) ? data.BusinessCopy.length : 0],
-        ["UpgraderCopy Count", Array.isArray(data.UpgraderCopy) ? data.UpgraderCopy.length : 0],
-      ];
-      const summarySheet = XLSX.utils.aoa_to_sheet(summary);
-      summarySheet["!cols"] = [{ wch: 20 }, { wch: 40 }];
-      XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+      // Use default config if not provided
+      const config = {
+        includeSummary: templateConfig.includeSummary !== false,
+        includeRawJSON: templateConfig.includeRawJSON !== false,
+        copyTypes: templateConfig.copyTypes || {
+          ProductCopy: true,
+          BusinessCopy: true,
+          UpgraderCopy: true,
+        },
+        fields: templateConfig.fields || {
+          ProductName: true,
+          Headlines: true,
+          AdvertisingCopy: true,
+          KeyFeatureBullets: true,
+          LegalReferences: true,
+        },
+      };
+
+      // Create a summary sheet if enabled
+      if (config.includeSummary) {
+        const summary = [
+          ["Document Summary"],
+          ["Name", exportingDocument.name],
+          ["Language", exportingDocument.language || "Unknown"],
+          ["Extracted Date", new Date().toLocaleDateString()],
+          [],
+          ["Data Overview"],
+          ["ProductCopy Count", Array.isArray(data.ProductCopy) ? data.ProductCopy.length : 0],
+          ["BusinessCopy Count", Array.isArray(data.BusinessCopy) ? data.BusinessCopy.length : 0],
+          ["UpgraderCopy Count", Array.isArray(data.UpgraderCopy) ? data.UpgraderCopy.length : 0],
+        ];
+        const summarySheet = XLSX.utils.aoa_to_sheet(summary);
+        summarySheet["!cols"] = [{ wch: 20 }, { wch: 40 }];
+        XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+      }
 
       // Create sheets for each copy type
       const createCopySheet = (copyType: string, items: any[]) => {
         if (!Array.isArray(items) || items.length === 0) return;
         
-        const rows: any[] = [
-          ["ProductName", "Headlines", "AdvertisingCopy", "KeyFeatureBullets", "LegalReferences"]
-        ];
+        const headers: string[] = [];
+        const widths: Array<{ wch: number }> = [];
+        
+        if (config.fields.ProductName) { headers.push("ProductName"); widths.push({ wch: 20 }); }
+        if (config.fields.Headlines) { headers.push("Headlines"); widths.push({ wch: 30 }); }
+        if (config.fields.AdvertisingCopy) { headers.push("AdvertisingCopy"); widths.push({ wch: 40 }); }
+        if (config.fields.KeyFeatureBullets) { headers.push("KeyFeatureBullets"); widths.push({ wch: 40 }); }
+        if (config.fields.LegalReferences) { headers.push("LegalReferences"); widths.push({ wch: 40 }); }
+        
+        const rows: any[] = [headers];
         
         items.forEach((item) => {
-          rows.push([
-            item.ProductName || "",
-            Array.isArray(item.Headlines) ? item.Headlines.join("; ") : "",
-            item.AdvertisingCopy || "",
-            Array.isArray(item.KeyFeatureBullets) ? item.KeyFeatureBullets.join("; ") : "",
-            Array.isArray(item.LegalReferences) ? item.LegalReferences.join("; ") : "",
-          ]);
+          const row: any[] = [];
+          if (config.fields.ProductName) row.push(item.ProductName || "");
+          if (config.fields.Headlines) row.push(Array.isArray(item.Headlines) ? item.Headlines.join("; ") : "");
+          if (config.fields.AdvertisingCopy) row.push(item.AdvertisingCopy || "");
+          if (config.fields.KeyFeatureBullets) row.push(Array.isArray(item.KeyFeatureBullets) ? item.KeyFeatureBullets.join("; ") : "");
+          if (config.fields.LegalReferences) row.push(Array.isArray(item.LegalReferences) ? item.LegalReferences.join("; ") : "");
+          rows.push(row);
         });
         
         const sheet = XLSX.utils.aoa_to_sheet(rows);
-        sheet["!cols"] = [
-          { wch: 20 },
-          { wch: 30 },
-          { wch: 40 },
-          { wch: 40 },
-          { wch: 40 }
-        ];
+        sheet["!cols"] = widths;
         XLSX.utils.book_append_sheet(wb, sheet, copyType);
       };
 
-      if (data.ProductCopy) createCopySheet("ProductCopy", data.ProductCopy);
-      if (data.BusinessCopy) createCopySheet("BusinessCopy", data.BusinessCopy);
-      if (data.UpgraderCopy) createCopySheet("UpgraderCopy", data.UpgraderCopy);
+      if (config.copyTypes.ProductCopy && data.ProductCopy) createCopySheet("ProductCopy", data.ProductCopy);
+      if (config.copyTypes.BusinessCopy && data.BusinessCopy) createCopySheet("BusinessCopy", data.BusinessCopy);
+      if (config.copyTypes.UpgraderCopy && data.UpgraderCopy) createCopySheet("UpgraderCopy", data.UpgraderCopy);
 
-      // Create raw JSON sheet
-      const jsonSheet = XLSX.utils.json_to_sheet([{ json: JSON.stringify(data, null, 2) }]);
-      XLSX.utils.book_append_sheet(wb, jsonSheet, "Raw JSON");
+      // Create raw JSON sheet if enabled
+      if (config.includeRawJSON) {
+        const jsonSheet = XLSX.utils.json_to_sheet([{ json: JSON.stringify(data, null, 2) }]);
+        XLSX.utils.book_append_sheet(wb, jsonSheet, "Raw JSON");
+      }
 
       XLSX.writeFile(wb, `${filename}.xlsx`);
     } else {

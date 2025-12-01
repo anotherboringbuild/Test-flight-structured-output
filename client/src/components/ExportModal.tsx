@@ -11,12 +11,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export interface ExcelTemplateConfig {
+  includeSummary: boolean;
+  includeRawJSON: boolean;
+  copyTypes: {
+    ProductCopy: boolean;
+    BusinessCopy: boolean;
+    UpgraderCopy: boolean;
+  };
+  fields: {
+    ProductName: boolean;
+    Headlines: boolean;
+    AdvertisingCopy: boolean;
+    KeyFeatureBullets: boolean;
+    LegalReferences: boolean;
+  };
+}
 
 interface ExportModalProps {
   open: boolean;
   onClose: () => void;
-  onExport: (format: string, filename: string) => void;
+  onExport: (format: string, filename: string, templateConfig?: ExcelTemplateConfig) => void;
   documentName: string;
   jsonData: string;
 }
@@ -30,9 +49,25 @@ export function ExportModal({
 }: ExportModalProps) {
   const [format, setFormat] = useState("json");
   const [filename, setFilename] = useState(documentName.replace(/\.[^/.]+$/, ""));
+  const [templateConfig, setTemplateConfig] = useState<ExcelTemplateConfig>({
+    includeSummary: true,
+    includeRawJSON: true,
+    copyTypes: {
+      ProductCopy: true,
+      BusinessCopy: true,
+      UpgraderCopy: true,
+    },
+    fields: {
+      ProductName: true,
+      Headlines: true,
+      AdvertisingCopy: true,
+      KeyFeatureBullets: true,
+      LegalReferences: true,
+    },
+  });
 
   const handleExport = () => {
-    onExport(format, filename);
+    onExport(format, filename, templateConfig);
     onClose();
   };
 
@@ -106,6 +141,213 @@ export function ExportModal({
               </span>
             </div>
           </div>
+
+          {format === "xlsx" && (
+            <Tabs defaultValue="sheets" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="sheets">Include</TabsTrigger>
+                <TabsTrigger value="fields">Fields</TabsTrigger>
+              </TabsList>
+              <TabsContent value="sheets" className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Sheets to Include</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="include-summary"
+                        checked={templateConfig.includeSummary}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            includeSummary: checked as boolean,
+                          })
+                        }
+                        data-testid="checkbox-include-summary"
+                      />
+                      <Label htmlFor="include-summary" className="font-normal cursor-pointer">
+                        Summary sheet
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="productcopy"
+                        checked={templateConfig.copyTypes.ProductCopy}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            copyTypes: {
+                              ...templateConfig.copyTypes,
+                              ProductCopy: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-productcopy"
+                      />
+                      <Label htmlFor="productcopy" className="font-normal cursor-pointer">
+                        ProductCopy sheet
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="businesscopy"
+                        checked={templateConfig.copyTypes.BusinessCopy}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            copyTypes: {
+                              ...templateConfig.copyTypes,
+                              BusinessCopy: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-businesscopy"
+                      />
+                      <Label htmlFor="businesscopy" className="font-normal cursor-pointer">
+                        BusinessCopy sheet
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="upgradercopy"
+                        checked={templateConfig.copyTypes.UpgraderCopy}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            copyTypes: {
+                              ...templateConfig.copyTypes,
+                              UpgraderCopy: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-upgradercopy"
+                      />
+                      <Label htmlFor="upgradercopy" className="font-normal cursor-pointer">
+                        UpgraderCopy sheet
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="include-rawjson"
+                        checked={templateConfig.includeRawJSON}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            includeRawJSON: checked as boolean,
+                          })
+                        }
+                        data-testid="checkbox-include-rawjson"
+                      />
+                      <Label htmlFor="include-rawjson" className="font-normal cursor-pointer">
+                        Raw JSON sheet
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="fields" className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Columns to Include</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="field-productname"
+                        checked={templateConfig.fields.ProductName}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            fields: {
+                              ...templateConfig.fields,
+                              ProductName: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-field-productname"
+                      />
+                      <Label htmlFor="field-productname" className="font-normal cursor-pointer">
+                        Product Name
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="field-headlines"
+                        checked={templateConfig.fields.Headlines}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            fields: {
+                              ...templateConfig.fields,
+                              Headlines: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-field-headlines"
+                      />
+                      <Label htmlFor="field-headlines" className="font-normal cursor-pointer">
+                        Headlines
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="field-advertisingcopy"
+                        checked={templateConfig.fields.AdvertisingCopy}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            fields: {
+                              ...templateConfig.fields,
+                              AdvertisingCopy: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-field-advertisingcopy"
+                      />
+                      <Label htmlFor="field-advertisingcopy" className="font-normal cursor-pointer">
+                        Advertising Copy
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="field-keyfeatures"
+                        checked={templateConfig.fields.KeyFeatureBullets}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            fields: {
+                              ...templateConfig.fields,
+                              KeyFeatureBullets: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-field-keyfeatures"
+                      />
+                      <Label htmlFor="field-keyfeatures" className="font-normal cursor-pointer">
+                        Key Feature Bullets
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="field-legalreferences"
+                        checked={templateConfig.fields.LegalReferences}
+                        onCheckedChange={(checked) =>
+                          setTemplateConfig({
+                            ...templateConfig,
+                            fields: {
+                              ...templateConfig.fields,
+                              LegalReferences: checked as boolean,
+                            },
+                          })
+                        }
+                        data-testid="checkbox-field-legalreferences"
+                      />
+                      <Label htmlFor="field-legalreferences" className="font-normal cursor-pointer">
+                        Legal References
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
 
           <div className="space-y-2">
             <Label>Preview</Label>
