@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -9,16 +9,16 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { Search, FileText, Globe, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Product as ProductType, ProductVariant as ProductVariantType } from "@shared/schema";
+import type { Product, ProductVariant } from "@shared/schema";
 
-interface EnrichedProduct extends ProductType {
+interface EnrichedProduct extends Product {
   variantCount: number;
   locales: string[];
   copyTypes: string[];
 }
 
-interface ProductWithVariants extends ProductType {
-  variants: ProductVariantType[];
+interface ProductWithVariants extends Product {
+  variants: ProductVariant[];
 }
 
 export default function ProductBrowser() {
@@ -26,13 +26,11 @@ export default function ProductBrowser() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
 
-  // Fetch all products with enriched data
   const { data: products = [], isLoading } = useQuery<EnrichedProduct[]>({
     queryKey: ["/api/products"],
   });
 
-  // Fetch detailed product data when one is selected
-  const { data: selectedProductData } = useQuery<ProductWithVariants>({
+  const { data: selectedProduct } = useQuery<ProductWithVariants>({
     queryKey: ["/api/products", selectedProductId],
     enabled: !!selectedProductId,
   });
@@ -49,61 +47,44 @@ export default function ProductBrowser() {
   const getLanguageBadge = (language: string | null) => {
     if (!language) return "EN";
     const langCode =
-      language === "English"
-        ? "EN"
-        : language === "Japanese"
-          ? "JA"
-          : language === "Spanish"
-            ? "ES"
-            : language === "French"
-              ? "FR"
-              : language === "German"
-                ? "DE"
-                : language === "Chinese"
-                  ? "ZH"
-                  : language === "Korean"
-                    ? "KO"
+      language === "English" ? "EN"
+        : language === "Japanese" ? "JA"
+          : language === "Spanish" ? "ES"
+            : language === "French" ? "FR"
+              : language === "German" ? "DE"
+                : language === "Chinese" ? "ZH"
+                  : language === "Korean" ? "KO"
                     : language.slice(0, 2).toUpperCase();
     return langCode;
   };
 
-  const copyTypeLabels = {
+  const copyTypeLabels: Record<string, string> = {
     ProductCopy: "Product Copy",
     BusinessCopy: "Business Copy",
     UpgraderCopy: "Upgrader Copy",
   };
 
-  const groupVariantsByLanguage = (
-    variants: ProductVariant[]
-  ): Record<string, ProductVariant[]> => {
-    return variants.reduce(
-      (acc, variant) => {
-        const lang = variant.language || "English";
-        if (!acc[lang]) {
-          acc[lang] = [];
-        }
-        acc[lang].push(variant);
-        return acc;
-      },
-      {} as Record<string, ProductVariant[]>
-    );
+  const groupVariantsByLanguage = (variants: ProductVariant[]): Record<string, ProductVariant[]> => {
+    return variants.reduce((acc, variant) => {
+      const lang = variant.locale || "English";
+      if (!acc[lang]) {
+        acc[lang] = [];
+      }
+      acc[lang].push(variant);
+      return acc;
+    }, {} as Record<string, ProductVariant[]>);
   };
-
-  const selectedProductData = selectedProduct
-    ? allProducts.find((p) => p.productName === selectedProduct)
-    : null;
 
   const getAvailableLanguages = (variants: ProductVariant[]): string[] => {
     const variantsByLang = groupVariantsByLanguage(variants);
-    return Object.keys(variantsByLang)
-      .sort((a, b) => {
-        if (a === "English") return -1;
-        if (b === "English") return 1;
-        return a.localeCompare(b);
-      });
+    return Object.keys(variantsByLang).sort((a, b) => {
+      if (a === "English") return -1;
+      if (b === "English") return 1;
+      return a.localeCompare(b);
+    });
   };
 
-  const availableLanguages = selectedProductData ? getAvailableLanguages(selectedProductData.variants) : [];
+  const availableLanguages = selectedProduct ? getAvailableLanguages(selectedProduct.variants) : [];
   const currentLanguage = availableLanguages[selectedLanguageIndex] || "English";
 
   if (isLoading) {
@@ -118,13 +99,12 @@ export default function ProductBrowser() {
 
   return (
     <PanelGroup direction="horizontal" className="h-full">
-      {/* Left Panel - Table */}
-      <Panel defaultSize={selectedProduct ? 60 : 100} minSize={30} className="flex flex-col">
+      <Panel defaultSize={selectedProductId ? 60 : 100} minSize={30} className="flex flex-col">
         <div className="flex items-center border-b px-4 py-3">
           <div className="relative flex-1">
             <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search products, documents, languages, or copy types..."
+              placeholder="Search products, languages, or copy types..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-6 border-0 bg-transparent focus-visible:ring-0"
@@ -147,31 +127,29 @@ export default function ProductBrowser() {
                 <TableRow>
                   <TableHead>Product Name</TableHead>
                   <TableHead className="w-24">Languages</TableHead>
-                  <TableHead className="w-24">Documents</TableHead>
+                  <TableHead className="w-24">Variants</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((item) => {
-                  const variantsByLanguage = groupVariantsByLanguage(item.variants);
-                  const languageCount = Object.keys(variantsByLanguage).length;
-                  const isSelected = selectedProduct === item.productName;
+                {filteredProducts.map((product) => {
+                  const isSelected = selectedProductId === product.id;
 
                   return (
                     <TableRow
-                      key={item.productName}
-                      data-testid={`row-product-${item.productName}`}
+                      key={product.id}
+                      data-testid={`row-product-${product.name}`}
                       className={`cursor-pointer ${isSelected ? "bg-muted/50" : ""}`}
                       onClick={() => {
-                        setSelectedProduct(item.productName);
+                        setSelectedProductId(product.id);
                         setSelectedLanguageIndex(0);
                       }}
                     >
-                      <TableCell className="font-medium">{item.productName}</TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{languageCount}</Badge>
+                        <Badge variant="secondary">{product.locales.length}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {item.variants.length}
+                        {product.variantCount}
                       </TableCell>
                     </TableRow>
                   );
@@ -182,22 +160,18 @@ export default function ProductBrowser() {
         )}
       </Panel>
 
-      {/* Resize Handle */}
-      {selectedProduct && (
-        <PanelResizeHandle className="w-1 bg-border hover:bg-primary/20 transition-colors" />
-      )}
+      {selectedProductId && <PanelResizeHandle className="w-1 bg-border hover:bg-primary/20 transition-colors" />}
 
-      {/* Right Panel - Product Details */}
-      {selectedProduct && selectedProductData && (
+      {selectedProductId && selectedProduct && (
         <Panel defaultSize={70} minSize={30} className="flex flex-col bg-muted/30">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-semibold" data-testid="text-selected-product-name">
-              {selectedProduct}
+              {selectedProduct.name}
             </h2>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setSelectedProduct(null)}
+              onClick={() => setSelectedProductId(null)}
               data-testid="button-close-panel"
             >
               <X className="h-4 w-4" />
@@ -232,86 +206,64 @@ export default function ProductBrowser() {
 
           <ScrollArea className="flex-1">
             <div className="p-6 space-y-4">
-              {groupVariantsByLanguage(selectedProductData.variants)[currentLanguage]?.map((variant, idx) => (
+              {groupVariantsByLanguage(selectedProduct.variants)[currentLanguage]?.map((variant, idx) => (
                 <Card
-                  key={`${variant.documentId}-${variant.copyType}-${idx}`}
+                  key={`${variant.id}-${idx}`}
                   className="bg-background"
-                  data-testid={`card-variant-${variant.documentId}-${idx}`}
+                  data-testid={`card-variant-${variant.id}-${idx}`}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-muted-foreground">
-                          {variant.documentName}
-                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {copyTypeLabels[variant.copyType]}
+                          {copyTypeLabels[variant.copyType] || variant.copyType}
                         </p>
                       </div>
                       <Badge variant="outline" className="ml-2">
-                        {copyTypeLabels[variant.copyType]}
+                        {getLanguageBadge(variant.locale)}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {variant.product.Headlines &&
-                      variant.product.Headlines.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground font-semibold mb-1">
-                            Headlines
-                          </p>
-                          <ul className="text-sm space-y-1 ml-2">
-                            {variant.product.Headlines.map((headline, i) => (
-                              <li key={i} className="text-muted-foreground">
-                                • {headline}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                    {variant.product.AdvertisingCopy && (
+                  <CardContent className="space-y-4">
+                    {variant.headlines && variant.headlines.length > 0 && (
                       <div>
-                        <p className="text-xs text-muted-foreground font-semibold mb-1">
-                          Advertising Copy
-                        </p>
-                        <p className="text-sm text-foreground italic">
-                          {variant.product.AdvertisingCopy}
-                        </p>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">Headlines</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {variant.headlines.map((headline, i) => (
+                            <li key={i} className="text-sm">{headline}</li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 
-                    {variant.product.KeyFeatureBullets &&
-                      variant.product.KeyFeatureBullets.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground font-semibold mb-1">
-                            Key Features
-                          </p>
-                          <ul className="text-sm space-y-1 ml-2">
-                            {variant.product.KeyFeatureBullets.map((bullet, i) => (
-                              <li key={i} className="text-muted-foreground">
-                                • {bullet}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                    {variant.advertisingCopy && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">Advertising Copy</p>
+                        <p className="text-sm whitespace-pre-wrap">{variant.advertisingCopy}</p>
+                      </div>
+                    )}
 
-                    {variant.product.LegalReferences &&
-                      variant.product.LegalReferences.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground font-semibold mb-1">
-                            Legal References
-                          </p>
-                          <ul className="text-sm space-y-1 ml-2">
-                            {variant.product.LegalReferences.map((ref, i) => (
-                              <li key={i} className="text-muted-foreground">
-                                • {ref}
-                              </li>
-                            ))}
-                          </ul>
+                    {variant.keyFeatureBullets && variant.keyFeatureBullets.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">Key Features</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {variant.keyFeatureBullets.map((bullet, i) => (
+                            <li key={i} className="text-sm">{bullet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {variant.legalReferences && variant.legalReferences.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">Legal References</p>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          {variant.legalReferences.map((ref, i) => (
+                            <p key={i}>{ref}</p>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
