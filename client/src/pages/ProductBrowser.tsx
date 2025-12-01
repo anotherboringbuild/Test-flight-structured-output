@@ -9,99 +9,40 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { Search, FileText, Globe, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Document as DocumentType } from "@shared/schema";
+import type { Product as ProductType, ProductVariant as ProductVariantType } from "@shared/schema";
 
-interface Product {
-  ProductName: string;
-  Headlines?: string[];
-  AdvertisingCopy?: string;
-  KeyFeatureBullets?: string[];
-  LegalReferences?: string[];
+interface EnrichedProduct extends ProductType {
+  variantCount: number;
+  locales: string[];
+  copyTypes: string[];
 }
 
-interface StructuredData {
-  ProductCopy?: Product[];
-  BusinessCopy?: Product[];
-  UpgraderCopy?: Product[];
-}
-
-interface ProductVariant {
-  documentId: string;
-  documentName: string;
-  language: string | null;
-  copyType: "ProductCopy" | "BusinessCopy" | "UpgraderCopy";
-  product: Product;
-}
-
-interface GroupedProduct {
-  productName: string;
-  variants: ProductVariant[];
+interface ProductWithVariants extends ProductType {
+  variants: ProductVariantType[];
 }
 
 export default function ProductBrowser() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
 
-  const { data: documents = [], isLoading } = useQuery<DocumentType[]>({
-    queryKey: ["/api/documents"],
+  // Fetch all products with enriched data
+  const { data: products = [], isLoading } = useQuery<EnrichedProduct[]>({
+    queryKey: ["/api/products"],
   });
 
-  const extractAndGroupProducts = (): GroupedProduct[] => {
-    const productMap = new Map<string, ProductVariant[]>();
+  // Fetch detailed product data when one is selected
+  const { data: selectedProductData } = useQuery<ProductWithVariants>({
+    queryKey: ["/api/products", selectedProductId],
+    enabled: !!selectedProductId,
+  });
 
-    documents.forEach((doc) => {
-      if (!doc.structuredData || !doc.isProcessed) return;
-
-      const data = doc.structuredData as StructuredData;
-      const copyTypes: Array<"ProductCopy" | "BusinessCopy" | "UpgraderCopy"> = [
-        "ProductCopy",
-        "BusinessCopy",
-        "UpgraderCopy",
-      ];
-
-      copyTypes.forEach((copyType) => {
-        const items = data[copyType];
-        if (Array.isArray(items)) {
-          items.forEach((product) => {
-            const productName = product.ProductName;
-            const variant: ProductVariant = {
-              documentId: doc.id,
-              documentName: doc.name,
-              language: doc.language || "English",
-              copyType,
-              product,
-            };
-
-            if (!productMap.has(productName)) {
-              productMap.set(productName, []);
-            }
-            productMap.get(productName)!.push(variant);
-          });
-        }
-      });
-    });
-
-    return Array.from(productMap.entries())
-      .map(([productName, variants]) => ({
-        productName,
-        variants,
-      }))
-      .sort((a, b) => a.productName.localeCompare(b.productName));
-  };
-
-  const allProducts = extractAndGroupProducts();
-
-  const filteredProducts = allProducts.filter((item) => {
+  const filteredProducts = products.filter((product) => {
     const query = searchQuery.toLowerCase();
     return (
-      item.productName.toLowerCase().includes(query) ||
-      item.variants.some(
-        (v) =>
-          v.documentName.toLowerCase().includes(query) ||
-          v.language?.toLowerCase().includes(query) ||
-          v.copyType.toLowerCase().includes(query)
-      )
+      product.name.toLowerCase().includes(query) ||
+      product.locales.some((locale) => locale?.toLowerCase().includes(query)) ||
+      product.copyTypes.some((copyType) => copyType?.toLowerCase().includes(query))
     );
   });
 
