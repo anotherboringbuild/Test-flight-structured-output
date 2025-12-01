@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { Search, FileText, Globe, X, ChevronLeft } from "lucide-react";
+import { Search, FileText, Globe, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Document as DocumentType } from "@shared/schema";
@@ -41,6 +41,7 @@ interface GroupedProduct {
 export default function ProductBrowser() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
 
   const { data: documents = [], isLoading } = useQuery<DocumentType[]>({
     queryKey: ["/api/documents"],
@@ -151,6 +152,19 @@ export default function ProductBrowser() {
     ? allProducts.find((p) => p.productName === selectedProduct)
     : null;
 
+  const getAvailableLanguages = (variants: ProductVariant[]): string[] => {
+    const variantsByLang = groupVariantsByLanguage(variants);
+    return Object.keys(variantsByLang)
+      .sort((a, b) => {
+        if (a === "English") return -1;
+        if (b === "English") return 1;
+        return a.localeCompare(b);
+      });
+  };
+
+  const availableLanguages = selectedProductData ? getAvailableLanguages(selectedProductData.variants) : [];
+  const currentLanguage = availableLanguages[selectedLanguageIndex] || "English";
+
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
@@ -206,7 +220,10 @@ export default function ProductBrowser() {
                       key={item.productName}
                       data-testid={`row-product-${item.productName}`}
                       className={`cursor-pointer ${isSelected ? "bg-muted/50" : ""}`}
-                      onClick={() => setSelectedProduct(item.productName)}
+                      onClick={() => {
+                        setSelectedProduct(item.productName);
+                        setSelectedLanguageIndex(0);
+                      }}
                     >
                       <TableCell className="font-medium">{item.productName}</TableCell>
                       <TableCell>
@@ -246,111 +263,117 @@ export default function ProductBrowser() {
             </Button>
           </div>
 
+          {availableLanguages.length > 1 && (
+            <div className="flex items-center justify-between border-b px-6 py-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedLanguageIndex((prev) => (prev > 0 ? prev - 1 : availableLanguages.length - 1))}
+                data-testid="button-prev-language"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold text-sm">{currentLanguage}</span>
+                <Badge variant="outline">{getLanguageBadge(currentLanguage)}</Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedLanguageIndex((prev) => (prev < availableLanguages.length - 1 ? prev + 1 : 0))}
+                data-testid="button-next-language"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
           <ScrollArea className="flex-1">
-            <div className="p-6 space-y-8">
-              {Object.entries(groupVariantsByLanguage(selectedProductData.variants))
-                .sort(([langA], [langB]) => {
-                  if (langA === "English") return -1;
-                  if (langB === "English") return 1;
-                  return langA.localeCompare(langB);
-                })
-                .map(([language, variants]) => (
-                  <div key={language}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-sm">{language}</h3>
-                      <Badge variant="outline" className="ml-auto">
-                        {getLanguageBadge(language)}
+            <div className="p-6 space-y-4">
+              {groupVariantsByLanguage(selectedProductData.variants)[currentLanguage]?.map((variant, idx) => (
+                <Card
+                  key={`${variant.documentId}-${variant.copyType}-${idx}`}
+                  className="bg-background"
+                  data-testid={`card-variant-${variant.documentId}-${idx}`}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-muted-foreground">
+                          {variant.documentName}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {copyTypeLabels[variant.copyType]}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="ml-2">
+                        {copyTypeLabels[variant.copyType]}
                       </Badge>
                     </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {variant.product.Headlines &&
+                      variant.product.Headlines.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold mb-1">
+                            Headlines
+                          </p>
+                          <ul className="text-sm space-y-1 ml-2">
+                            {variant.product.Headlines.map((headline, i) => (
+                              <li key={i} className="text-muted-foreground">
+                                • {headline}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
-                    <div className="space-y-4 ml-6">
-                      {variants.map((variant, idx) => (
-                        <Card
-                          key={`${variant.documentId}-${variant.copyType}-${idx}`}
-                          className="bg-background"
-                          data-testid={`card-variant-${variant.documentId}-${idx}`}
-                        >
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <p className="text-sm font-semibold text-muted-foreground">
-                                  {variant.documentName}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {copyTypeLabels[variant.copyType]}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="ml-2">
-                                {copyTypeLabels[variant.copyType]}
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            {variant.product.Headlines &&
-                              variant.product.Headlines.length > 0 && (
-                                <div>
-                                  <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                    Headlines
-                                  </p>
-                                  <ul className="text-sm space-y-1 ml-2">
-                                    {variant.product.Headlines.map((headline, i) => (
-                                      <li key={i} className="text-muted-foreground">
-                                        • {headline}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
+                    {variant.product.AdvertisingCopy && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-semibold mb-1">
+                          Advertising Copy
+                        </p>
+                        <p className="text-sm text-foreground italic">
+                          {variant.product.AdvertisingCopy}
+                        </p>
+                      </div>
+                    )}
 
-                            {variant.product.AdvertisingCopy && (
-                              <div>
-                                <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                  Advertising Copy
-                                </p>
-                                <p className="text-sm text-foreground italic">
-                                  {variant.product.AdvertisingCopy}
-                                </p>
-                              </div>
-                            )}
+                    {variant.product.KeyFeatureBullets &&
+                      variant.product.KeyFeatureBullets.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold mb-1">
+                            Key Features
+                          </p>
+                          <ul className="text-sm space-y-1 ml-2">
+                            {variant.product.KeyFeatureBullets.map((bullet, i) => (
+                              <li key={i} className="text-muted-foreground">
+                                • {bullet}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
-                            {variant.product.KeyFeatureBullets &&
-                              variant.product.KeyFeatureBullets.length > 0 && (
-                                <div>
-                                  <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                    Key Features
-                                  </p>
-                                  <ul className="text-sm space-y-1 ml-2">
-                                    {variant.product.KeyFeatureBullets.map((bullet, i) => (
-                                      <li key={i} className="text-muted-foreground">
-                                        • {bullet}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                            {variant.product.LegalReferences &&
-                              variant.product.LegalReferences.length > 0 && (
-                                <div>
-                                  <p className="text-xs text-muted-foreground font-semibold mb-1">
-                                    Legal References
-                                  </p>
-                                  <ul className="text-sm space-y-1 ml-2">
-                                    {variant.product.LegalReferences.map((ref, i) => (
-                                      <li key={i} className="text-muted-foreground">
-                                        • {ref}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                    {variant.product.LegalReferences &&
+                      variant.product.LegalReferences.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold mb-1">
+                            Legal References
+                          </p>
+                          <ul className="text-sm space-y-1 ml-2">
+                            {variant.product.LegalReferences.map((ref, i) => (
+                              <li key={i} className="text-muted-foreground">
+                                • {ref}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </ScrollArea>
         </Panel>
