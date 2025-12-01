@@ -88,14 +88,14 @@ export function ExportModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl" data-testid="modal-export">
+      <DialogContent className="sm:max-w-3xl max-h-screen overflow-y-auto" data-testid="modal-export">
         <DialogHeader>
           <DialogTitle>Export Document</DialogTitle>
           <DialogDescription>
             Choose the format and filename for your export.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-2">
           <div className="space-y-3">
             <Label>Export Format</Label>
             <RadioGroup value={format} onValueChange={setFormat}>
@@ -143,13 +143,13 @@ export function ExportModal({
           </div>
 
           {format === "xlsx" && (
-            <Tabs defaultValue="sheets" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="sheets">Include</TabsTrigger>
-                <TabsTrigger value="fields">Fields</TabsTrigger>
-              </TabsList>
-              <TabsContent value="sheets" className="space-y-4">
-                <div className="space-y-3">
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <Tabs defaultValue="sheets" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="sheets">Include</TabsTrigger>
+                  <TabsTrigger value="fields">Fields</TabsTrigger>
+                </TabsList>
+                <TabsContent value="sheets" className="space-y-3 mt-4">
                   <Label>Sheets to Include</Label>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -242,10 +242,8 @@ export function ExportModal({
                       </Label>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="fields" className="space-y-4">
-                <div className="space-y-3">
+                </TabsContent>
+                <TabsContent value="fields" className="space-y-3 mt-4">
                   <Label>Columns to Include</Label>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -344,9 +342,9 @@ export function ExportModal({
                       </Label>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
 
           <div className="space-y-2">
