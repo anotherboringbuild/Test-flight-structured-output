@@ -5,9 +5,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X, AlertTriangle, CheckCircle, Shield } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X, AlertTriangle, CheckCircle, Shield, Clock } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
+import { VersionHistory } from "@/components/VersionHistory";
 
 interface ComparisonViewProps {
   documentId: string;
@@ -96,6 +97,7 @@ export function ComparisonView({
   const [showTranslation, setShowTranslation] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
   const [showValidationDetails, setShowValidationDetails] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
   const { toast } = useToast();
   
   // Search state
@@ -764,6 +766,15 @@ export function ComparisonView({
                 <Button
                   variant="outline"
                   size="icon"
+                  onClick={() => setShowVersionHistory(!showVersionHistory)}
+                  data-testid="button-version-history"
+                  className={showVersionHistory ? "bg-accent" : ""}
+                >
+                  <Clock className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => setIsEditing(true)}
                   data-testid="button-edit"
                 >
@@ -802,7 +813,7 @@ export function ComparisonView({
         </div>
       </div>
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-2">
+      <div className={`grid flex-1 min-h-0 grid-cols-1 overflow-hidden ${showVersionHistory ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
         <div className="flex flex-col border-r min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center justify-between gap-4 mb-3">
@@ -976,6 +987,23 @@ export function ComparisonView({
             )}
           </div>
         </div>
+
+        {/* Version History Panel */}
+        {showVersionHistory && (
+          <div className="flex flex-col border-l min-h-0 bg-muted/10">
+            <VersionHistory
+              documentId={documentId}
+              currentVersion={{
+                structuredData: JSON.parse(editedData),
+                validationConfidence: validationConfidence ?? null,
+                updatedAt: new Date().toISOString(),
+              }}
+              onVersionRestored={() => {
+                // Refresh will happen via query invalidation
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

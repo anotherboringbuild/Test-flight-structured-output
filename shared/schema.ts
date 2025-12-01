@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, json, real } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, json, real, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -36,7 +36,7 @@ export const documents = pgTable("documents", {
 export const documentVersions = pgTable("document_versions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   documentId: varchar("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
-  versionNumber: real("version_number").notNull(),
+  versionNumber: integer("version_number").notNull(),
   extractedText: text("extracted_text"),
   structuredData: json("structured_data"),
   validationConfidence: real("validation_confidence"),
