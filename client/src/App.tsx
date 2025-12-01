@@ -507,9 +507,8 @@ function AppContent() {
       
       const folderDocuments: DocumentType[] = await response.json();
       
-      // Extract the product from each document using ProductName matching (not index)
-      const [sectionName] = productId.split("-");
-      
+      // Extract the product from each document using ProductName matching within the specific section
+      // Use the explicit section parameter to prevent cross-section collisions
       const productsByLocale: Record<string, any> = {};
       const missingLocales: string[] = [];
       
@@ -517,7 +516,7 @@ function AppContent() {
         if (!doc.structuredData || !doc.language) return;
         
         const data = doc.structuredData as any;
-        const sectionData = data[sectionName];
+        const sectionData = data[section];
         
         if (Array.isArray(sectionData)) {
           // Match by ProductName (case-insensitive, trimmed) instead of index
@@ -551,7 +550,7 @@ function AppContent() {
       // Set the aggregated data and show export modal
       setExportProductData({
         productName,
-        section: sectionName,
+        section, // Explicit section parameter prevents cross-section collisions
         locales: productsByLocale,
       });
       setExportMode("product");
@@ -580,69 +579,99 @@ function AppContent() {
         const wb = XLSX.utils.book_new();
         const locales = selectedLocales || Object.keys(exportProductData.locales);
         
-        // Create a more structured layout with separate rows for each locale
+        // Build matrix layout: rows = fields, columns = locales
         const rows: any[][] = [];
         
-        // Header row
+        // Metadata block
         rows.push(["Product", exportProductData.productName]);
         rows.push(["Section", exportProductData.section]);
         rows.push(["Export Date", new Date().toLocaleDateString()]);
-        rows.push([]); // Empty row for spacing
+        rows.push([]); // Spacing
         
-        // Data header
-        rows.push(["Locale", "Field", "Content"]);
+        // Determine max array lengths across all locales for proper expansion
+        let maxHeadlines = 0;
+        let maxFeatureBullets = 0;
+        let maxLegalReferences = 0;
         
-        // For each locale, create multiple rows (one per field/value)
         locales.forEach((locale) => {
           const localeData = exportProductData.locales[locale];
-          if (!localeData) {
-            rows.push([locale, "Product", "[NOT FOUND IN THIS LOCALE]"]);
-            rows.push([]); // Spacing
-            return;
+          if (localeData?.product) {
+            const p = localeData.product;
+            maxHeadlines = Math.max(maxHeadlines, Array.isArray(p.Headlines) ? p.Headlines.length : 0);
+            maxFeatureBullets = Math.max(maxFeatureBullets, Array.isArray(p.KeyFeatureBullets) ? p.KeyFeatureBullets.length : 0);
+            maxLegalReferences = Math.max(maxLegalReferences, Array.isArray(p.LegalReferences) ? p.LegalReferences.length : 0);
           }
-          
-          const product = localeData.product;
-          const localeLabel = `${locale}${localeData.isOriginal ? " ★" : ""}`;
-          
-          // ProductName
-          rows.push([localeLabel, "ProductName", product.ProductName || ""]);
-          
-          // Headlines (one per line)
-          if (Array.isArray(product.Headlines) && product.Headlines.length > 0) {
-            product.Headlines.forEach((headline: string, idx: number) => {
-              rows.push([idx === 0 ? localeLabel : "", `Headline ${idx + 1}`, headline]);
-            });
-          } else {
-            rows.push([localeLabel, "Headlines", ""]);
-          }
-          
-          // AdvertisingCopy
-          rows.push([localeLabel, "AdvertisingCopy", product.AdvertisingCopy || ""]);
-          
-          // KeyFeatureBullets (one per line)
-          if (Array.isArray(product.KeyFeatureBullets) && product.KeyFeatureBullets.length > 0) {
-            product.KeyFeatureBullets.forEach((bullet: string, idx: number) => {
-              rows.push([idx === 0 ? localeLabel : "", `Feature Bullet ${idx + 1}`, bullet]);
-            });
-          } else {
-            rows.push([localeLabel, "KeyFeatureBullets", ""]);
-          }
-          
-          // LegalReferences (one per line)
-          if (Array.isArray(product.LegalReferences) && product.LegalReferences.length > 0) {
-            product.LegalReferences.forEach((legal: string, idx: number) => {
-              rows.push([idx === 0 ? localeLabel : "", `Legal Reference ${idx + 1}`, legal]);
-            });
-          } else {
-            rows.push([localeLabel, "LegalReferences", ""]);
-          }
-          
-          rows.push([]); // Empty row between locales
         });
         
+        // Header row: Field | Locale1 ★ | Locale2 | ...
+        const headerRow = ["Field"];
+        locales.forEach((locale) => {
+          const localeData = exportProductData.locales[locale];
+          // Always include locale column even if data is missing
+          headerRow.push(`${locale}${localeData?.isOriginal ? " ★" : ""}`);
+        });
+        rows.push(headerRow);
+        
+        // Helper to build a row: [fieldName, locale1Value, locale2Value, ...]
+        // Always renders all locale columns, using empty string for missing data
+        const buildRow = (fieldName: string, getValue: (locale: string) => string) => {
+          const row = [fieldName];
+          locales.forEach((locale) => {
+            const localeData = exportProductData.locales[locale];
+            if (!localeData || !localeData.product) {
+              // Missing locale data - render blank cell to maintain column structure
+              row.push("");
+            } else {
+              row.push(getValue(locale));
+            }
+          });
+          rows.push(row);
+        };
+        
+        // ProductName row
+        buildRow("ProductName", (locale) => {
+          const localeData = exportProductData.locales[locale];
+          return localeData?.product?.ProductName || "";
+        });
+        
+        // Headlines (expanded rows)
+        for (let i = 0; i < maxHeadlines; i++) {
+          buildRow(`Headline ${i + 1}`, (locale) => {
+            const headlines = exportProductData.locales[locale]?.product?.Headlines;
+            return Array.isArray(headlines) && headlines[i] ? headlines[i] : "";
+          });
+        }
+        
+        // AdvertisingCopy row
+        buildRow("AdvertisingCopy", (locale) => {
+          return exportProductData.locales[locale]?.product?.AdvertisingCopy || "";
+        });
+        
+        // KeyFeatureBullets (expanded rows)
+        for (let i = 0; i < maxFeatureBullets; i++) {
+          buildRow(`Feature Bullet ${i + 1}`, (locale) => {
+            const bullets = exportProductData.locales[locale]?.product?.KeyFeatureBullets;
+            return Array.isArray(bullets) && bullets[i] ? bullets[i] : "";
+          });
+        }
+        
+        // LegalReferences (expanded rows)
+        for (let i = 0; i < maxLegalReferences; i++) {
+          buildRow(`Legal Reference ${i + 1}`, (locale) => {
+            const legal = exportProductData.locales[locale]?.product?.LegalReferences;
+            return Array.isArray(legal) && legal[i] ? legal[i] : "";
+          });
+        }
+        
         const sheet = XLSX.utils.aoa_to_sheet(rows);
-        sheet["!cols"] = [{ wch: 15 }, { wch: 20 }, { wch: 60 }];
-        XLSX.utils.book_append_sheet(wb, sheet, "Product Export");
+        
+        // Set column widths: narrow Field column, wide locale columns
+        sheet["!cols"] = [
+          { wch: 20 }, // Field column
+          ...locales.map(() => ({ wch: 40 })) // Locale columns
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, sheet, `${exportProductData.productName.slice(0, 25)} - ${exportProductData.section.slice(0, 5)}`);
         
         XLSX.writeFile(wb, `${filename}.xlsx`);
       } else {
