@@ -114,9 +114,10 @@ function AppContent() {
     onSuccess: () => {
       console.log("Upload mutation onSuccess called");
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Success",
-        description: "Document processed successfully",
+        description: "Document processed and products extracted successfully",
       });
     },
     onError: (error: Error) => {
@@ -189,10 +190,12 @@ function AppContent() {
       console.log("Document set upload mutation onSuccess called");
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Success",
-        description: `Folder "${data.folder?.name || 'documents'}" with ${data.documents.length} file(s) processed successfully`,
+        description: `Folder "${data.folder?.name || 'documents'}" with ${data.documents.length} file(s) processed and products extracted successfully`,
       });
+      setCurrentView("products");
     },
     onError: (error: Error) => {
       console.error("Document set upload mutation onError called:", error);
@@ -280,8 +283,9 @@ function AppContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setSelectedDocumentId(null);
-      setCurrentView("upload");
+      setCurrentView("products");
       toast({
         title: "Document deleted",
         description: "The document has been deleted successfully.",
@@ -295,9 +299,10 @@ function AppContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Reprocessing complete",
-        description: "Document has been reprocessed with the latest AI extraction.",
+        description: "Document has been reprocessed and products updated.",
       });
     },
     onError: (error: Error) => {
@@ -1034,7 +1039,7 @@ function AppContent() {
                   folderId={selectedDocument.folderId}
                   onBack={() => {
                     setSelectedDocumentId(null);
-                    setCurrentView("all-documents");
+                    setCurrentView("products");
                   }}
                   onExport={handleExportDocument}
                   onExportProduct={(productId, productName, section) => {
@@ -1090,7 +1095,10 @@ function AppContent() {
               ) : currentView === "analytics" ? (
                 <Analytics />
               ) : currentView === "products" ? (
-                <ProductBrowser onUploadClick={() => setCurrentView("upload")} />
+                <ProductBrowser 
+                  onUploadClick={() => setCurrentView("upload")} 
+                  onDocumentClick={handleDocumentClick}
+                />
               ) : (
                 <DocumentUploadChat
                   onFilesSelected={handleUpload}

@@ -67,8 +67,8 @@ export function AppSidebar({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const mainItems = [
-    { id: "upload", title: "Upload New", icon: FileText },
     { id: "products", title: "Products", icon: Package },
+    { id: "upload", title: "Upload New", icon: FileText },
     { id: "analytics", title: "Analytics", icon: BarChart3 },
   ];
 
@@ -107,7 +107,7 @@ export function AppSidebar({
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Documents
+          Objects
         </h2>
       </SidebarHeader>
       <SidebarContent>

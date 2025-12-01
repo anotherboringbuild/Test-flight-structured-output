@@ -28,9 +28,10 @@ interface ProductWithVariants extends Product {
 
 interface ProductBrowserProps {
   onUploadClick?: () => void;
+  onDocumentClick?: (documentId: string) => void;
 }
 
-export default function ProductBrowser({ onUploadClick }: ProductBrowserProps) {
+export default function ProductBrowser({ onUploadClick, onDocumentClick }: ProductBrowserProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -58,18 +59,21 @@ export default function ProductBrowser({ onUploadClick }: ProductBrowserProps) {
       )
     : [];
 
-  const uniqueCopyTypes = ["all", ...Array.from(new Set(products.flatMap((p) => p.copyTypes)))];
-  const uniqueLocales = ["all", ...Array.from(new Set(products.flatMap((p) => p.locales)))];
+  const uniqueCopyTypes = ["all", ...Array.from(new Set(products.flatMap((p) => p.copyTypes || [])))];
+  const uniqueLocales = ["all", ...Array.from(new Set(products.flatMap((p) => p.locales || [])))];
 
   const filteredProducts = products.filter((product) => {
     const query = searchQuery.toLowerCase();
+    const locales = product.locales || [];
+    const copyTypes = product.copyTypes || [];
+    
     const matchesSearch =
       product.name.toLowerCase().includes(query) ||
-      product.locales.some((locale) => locale?.toLowerCase().includes(query)) ||
-      product.copyTypes.some((copyType) => copyType?.toLowerCase().includes(query));
+      locales.some((locale) => locale?.toLowerCase().includes(query)) ||
+      copyTypes.some((copyType) => copyType?.toLowerCase().includes(query));
 
-    const matchesCopyType = copyTypeFilter === "all" || product.copyTypes.includes(copyTypeFilter);
-    const matchesLocale = localeFilter === "all" || product.locales.includes(localeFilter);
+    const matchesCopyType = copyTypeFilter === "all" || copyTypes.includes(copyTypeFilter);
+    const matchesLocale = localeFilter === "all" || locales.includes(localeFilter);
 
     return matchesSearch && matchesCopyType && matchesLocale;
   });
@@ -485,9 +489,10 @@ export default function ProductBrowser({ onUploadClick }: ProductBrowserProps) {
                     </div>
                     <div className="space-y-2">
                       {sourceDocuments.map((doc) => (
-                        <div
+                        <button
                           key={doc.id}
-                          className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded hover-elevate"
+                          onClick={() => onDocumentClick?.(doc.id)}
+                          className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded hover-elevate w-full text-left cursor-pointer"
                           data-testid={`source-doc-${doc.id}`}
                         >
                           <File className="h-3 w-3" />
@@ -495,7 +500,7 @@ export default function ProductBrowser({ onUploadClick }: ProductBrowserProps) {
                           <Badge variant="secondary" className="text-xs">
                             {getLanguageBadge(doc.language)}
                           </Badge>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
