@@ -34,11 +34,8 @@ function formatDate(dateString: string): string {
 function AppContent() {
   const { toast } = useToast();
   
-  // Modal states for overlays (product-first architecture)
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [showDocLibraryModal, setShowDocLibraryModal] = useState(false);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  // View states - no modals
+  const [currentView, setCurrentView] = useState<"products" | "upload" | "comparison" | "documents" | "analytics">("products");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   
@@ -207,7 +204,7 @@ function AppContent() {
         title: "Success",
         description: `Folder "${data.folder?.name || 'documents'}" with ${data.documents.length} file(s) processed and products extracted successfully`,
       });
-      setShowUploadModal(false);
+      setCurrentView("products");
     },
     onError: (error: Error) => {
       console.error("Document set upload mutation onError called:", error);
@@ -297,7 +294,7 @@ function AppContent() {
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setSelectedDocumentId(null);
-      setShowComparisonModal(false);
+      setCurrentView("products");
       toast({
         title: "Document deleted",
         description: "The document has been deleted successfully.",
@@ -504,7 +501,7 @@ function AppContent() {
     const doc = documents.find((d) => d.id === id);
     if (doc && doc.isProcessed) {
       setSelectedDocumentId(id);
-      setShowComparisonModal(true);
+      setCurrentView("comparison");
     } else {
       toast({
         title: "Document not ready",
@@ -861,20 +858,21 @@ function AppContent() {
 
   const handleFolderClick = (id: string) => {
     setSelectedFolderId(id);
-    setShowDocLibraryModal(true);
+    setCurrentView("documents");
   };
   
   const handleViewChange = (view: string) => {
-    // Map old view names to new modal states
+    // Map view names to current view state
     if (view === "upload") {
-      setShowUploadModal(true);
+      setCurrentView("upload");
     } else if (view === "analytics") {
-      setShowAnalyticsModal(true);
+      setCurrentView("analytics");
     } else if (view === "all-documents") {
       setSelectedFolderId(null);
-      setShowDocLibraryModal(true);
+      setCurrentView("documents");
+    } else if (view === "products") {
+      setCurrentView("products");
     }
-    // "products" view is always visible, so no action needed
   };
 
   const handleMoveDocument = (document: DocumentType) => {
@@ -1040,125 +1038,122 @@ function AppContent() {
               }}
               hasApiKey={true}
             />
-            <main className="flex-1 relative overflow-auto">
-              {/* ProductBrowser is always visible - the product-first architecture */}
-              <ProductBrowser 
-                onUploadClick={() => setShowUploadModal(true)} 
-                onDocumentClick={handleDocumentClick}
-              />
+            <main className="flex-1 relative overflow-hidden">
+              {/* View-based routing - no modals */}
+              {currentView === "products" && (
+                <ProductBrowser 
+                  onUploadClick={() => setCurrentView("upload")} 
+                  onDocumentClick={handleDocumentClick}
+                />
+              )}
+              
+              {currentView === "upload" && (
+                <div className="h-full overflow-auto">
+                  <DocumentUploadChat
+                    onFilesSelected={handleUpload}
+                    onUploadReady={handleUploadReady}
+                    disabled={uploadMutation.isPending || uploadSetMutation.isPending}
+                    folders={folders}
+                    selectedFolderId={selectedFolderId}
+                    onFolderChange={setSelectedFolderId}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    selectedYear={selectedYear}
+                    onYearChange={setSelectedYear}
+                    onCreateFolder={handleCreateFolderFromUpload}
+                  />
+                </div>
+              )}
+              
+              {currentView === "comparison" && selectedDocument && (
+                <div className="h-full overflow-hidden">
+                  <ComparisonView
+                    documentId={selectedDocument.id}
+                    documentName={selectedDocument.name}
+                    extractedText={selectedDocument.extractedText || ""}
+                    translatedText={selectedDocument.translatedText}
+                    structuredData={
+                      selectedDocument.structuredData
+                        ? JSON.stringify(selectedDocument.structuredData, null, 2)
+                        : ""
+                    }
+                    language={selectedDocument.language}
+                    validationConfidence={selectedDocument.validationConfidence}
+                    validationIssues={selectedDocument.validationIssues}
+                    needsReview={selectedDocument.needsReview}
+                    isProcessing={reprocessDocumentMutation.isPending}
+                    isTranslating={translateDocumentMutation.isPending}
+                    isValidating={validateDocumentMutation.isPending}
+                    folderId={selectedDocument.folderId}
+                    onBack={() => setCurrentView("products")}
+                    onExport={handleExportDocument}
+                    onExportProduct={(productId, productName, section) => {
+                      handleExportProduct(selectedDocument.id, productId, productName, section);
+                    }}
+                    onSave={(newData) => {
+                      try {
+                        const parsedData = JSON.parse(newData);
+                        updateDocumentMutation.mutate({
+                          id: selectedDocument.id,
+                          data: parsedData,
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Invalid JSON",
+                          description: "Please check your JSON syntax and try again.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    onReprocess={() => {
+                      if (selectedDocument.id) {
+                        reprocessDocumentMutation.mutate(selectedDocument.id);
+                      }
+                    }}
+                    onTranslate={() => {
+                      if (selectedDocument.id) {
+                        translateDocumentMutation.mutate(selectedDocument.id);
+                      }
+                    }}
+                    onValidate={() => {
+                      if (selectedDocument.id) {
+                        validateDocumentMutation.mutate(selectedDocument.id);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+              
+              {currentView === "documents" && (
+                <div className="h-full overflow-auto">
+                  <DocumentLibrary
+                    documents={
+                      selectedFolderId
+                        ? documents.filter((d) => d.folderId === selectedFolderId)
+                        : documents
+                    }
+                    folders={folders}
+                    onDocumentClick={handleDocumentClick}
+                    onDeleteDocument={handleDeleteDocument}
+                    onMoveDocument={handleMoveDocument}
+                    onRenameDocument={handleRenameDocument}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkMove={handleBulkMove}
+                    onBulkExport={handleBulkExport}
+                  />
+                </div>
+              )}
+              
+              {currentView === "analytics" && (
+                <div className="h-full overflow-auto">
+                  <Analytics />
+                </div>
+              )}
             </main>
           </div>
         </div>
 
-        {/* Upload Modal */}
-        <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
-          <DialogContent className="max-w-4xl h-[80vh]">
-            <DocumentUploadChat
-              onFilesSelected={handleUpload}
-              onUploadReady={handleUploadReady}
-              disabled={uploadMutation.isPending || uploadSetMutation.isPending}
-              folders={folders}
-              selectedFolderId={selectedFolderId}
-              onFolderChange={setSelectedFolderId}
-              selectedMonth={selectedMonth}
-              onMonthChange={setSelectedMonth}
-              selectedYear={selectedYear}
-              onYearChange={setSelectedYear}
-              onCreateFolder={handleCreateFolderFromUpload}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {/* Comparison Modal */}
-        {selectedDocument && (
-          <Dialog open={showComparisonModal} onOpenChange={setShowComparisonModal}>
-            <DialogContent className="max-w-[95vw] h-[95vh]">
-              <ComparisonView
-                documentId={selectedDocument.id}
-                documentName={selectedDocument.name}
-                extractedText={selectedDocument.extractedText || ""}
-                translatedText={selectedDocument.translatedText}
-                structuredData={
-                  selectedDocument.structuredData
-                    ? JSON.stringify(selectedDocument.structuredData, null, 2)
-                    : ""
-                }
-                language={selectedDocument.language}
-                validationConfidence={selectedDocument.validationConfidence}
-                validationIssues={selectedDocument.validationIssues}
-                needsReview={selectedDocument.needsReview}
-                isProcessing={reprocessDocumentMutation.isPending}
-                isTranslating={translateDocumentMutation.isPending}
-                isValidating={validateDocumentMutation.isPending}
-                folderId={selectedDocument.folderId}
-                onBack={() => setShowComparisonModal(false)}
-                onExport={handleExportDocument}
-                onExportProduct={(productId, productName, section) => {
-                  handleExportProduct(selectedDocument.id, productId, productName, section);
-                }}
-                onSave={(newData) => {
-                  try {
-                    const parsedData = JSON.parse(newData);
-                    updateDocumentMutation.mutate({
-                      id: selectedDocument.id,
-                      data: parsedData,
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Invalid JSON",
-                      description: "Please check your JSON syntax and try again.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                onReprocess={() => {
-                  if (selectedDocument.id) {
-                    reprocessDocumentMutation.mutate(selectedDocument.id);
-                  }
-                }}
-                onTranslate={() => {
-                  if (selectedDocument.id) {
-                    translateDocumentMutation.mutate(selectedDocument.id);
-                  }
-                }}
-                onValidate={() => {
-                  if (selectedDocument.id) {
-                    validateDocumentMutation.mutate(selectedDocument.id);
-                  }
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Document Library Modal */}
-        <Dialog open={showDocLibraryModal} onOpenChange={setShowDocLibraryModal}>
-          <DialogContent className="max-w-[95vw] h-[90vh]">
-            <DocumentLibrary
-              documents={
-                selectedFolderId
-                  ? documents.filter((d) => d.folderId === selectedFolderId)
-                  : documents
-              }
-              folders={folders}
-              onDocumentClick={handleDocumentClick}
-              onDeleteDocument={handleDeleteDocument}
-              onMoveDocument={handleMoveDocument}
-              onRenameDocument={handleRenameDocument}
-              onBulkDelete={handleBulkDelete}
-              onBulkMove={handleBulkMove}
-              onBulkExport={handleBulkExport}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {/* Analytics Modal */}
-        <Dialog open={showAnalyticsModal} onOpenChange={setShowAnalyticsModal}>
-          <DialogContent className="max-w-[95vw] h-[90vh]">
-            <Analytics />
-          </DialogContent>
-        </Dialog>
-
+        {/* Export Modal - only modal remaining */}
         {(exportingDocument || exportProductData) && (
           <ExportModal
             open={showExportModal}
