@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import mammoth from "mammoth";
-import * as pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse";
 import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
@@ -31,8 +31,7 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       return result.value;
     } else if (fileType === "pdf") {
       const dataBuffer = fs.readFileSync(filePath);
-      const pdfParseFunc = (pdfParse as any).default || pdfParse;
-      const data = await pdfParseFunc(dataBuffer);
+      const data = await pdfParse(dataBuffer);
       return data.text;
     } else if (fileType === "pages") {
       // Pages files are proprietary zip archives that require specialized parsing
