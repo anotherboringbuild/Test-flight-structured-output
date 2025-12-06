@@ -247,7 +247,7 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
                 data-testid="button-upload-document"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Structured Output
+                Upload
               </Button>
             )}
           </div>
@@ -305,7 +305,7 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
               {products.length === 0 && onUploadClick && (
                 <Button variant="outline" size="sm" className="mt-4" onClick={onUploadClick}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Create your first structured output
+                  Upload your first document
                 </Button>
               )}
             </CardContent>
