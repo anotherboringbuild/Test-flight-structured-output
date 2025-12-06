@@ -3,11 +3,13 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
 import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
 import { validateExtraction, quickValidationChecks } from "./validation";
+
+// Dynamic import for CommonJS module
+const pdfParsePromise = import("pdf-parse").then(m => m.default || m);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,6 +33,7 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       return result.value;
     } else if (fileType === "pdf") {
       const dataBuffer = fs.readFileSync(filePath);
+      const pdfParse = await pdfParsePromise;
       const data = await pdfParse(dataBuffer);
       return data.text;
     } else if (fileType === "pages") {
