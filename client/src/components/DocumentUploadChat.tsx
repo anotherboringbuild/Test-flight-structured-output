@@ -159,10 +159,10 @@ export function DocumentUploadChat({
         <h1 className="text-5xl font-bold mb-4">
           Hello,
         </h1>
-        <div className="flex items-center justify-center gap-3 text-3xl font-semibold">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-2xl md:text-3xl font-semibold max-w-4xl mx-auto">
           <span>Help me create structured output from a</span>
           <Select value={uploadMode} onValueChange={(value) => setUploadMode(value as UploadMode)}>
-            <SelectTrigger className="w-auto text-3xl font-semibold border-0 shadow-none h-auto p-0 gap-2 focus:ring-0 [&_span]:bg-gradient-to-r [&_span]:from-blue-600 [&_span]:to-purple-600 [&_span]:bg-clip-text [&_span]:text-transparent" data-testid="select-upload-type">
+            <SelectTrigger className="w-auto text-2xl md:text-3xl font-semibold border-0 shadow-none h-auto p-0 gap-2 focus:ring-0 [&_span]:bg-gradient-to-r [&_span]:from-blue-600 [&_span]:to-purple-600 [&_span]:bg-clip-text [&_span]:text-transparent" data-testid="select-upload-type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
