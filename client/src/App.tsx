@@ -55,15 +55,6 @@ function AppContent() {
   // Document management states
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [movingDocument, setMovingDocument] = useState<DocumentType | null>(null);
-  
-  // Auto-populate month and year with current date
-  const now = new Date();
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const currentMonth = months[now.getMonth()];
-  const currentYear = now.getFullYear().toString();
-  
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(currentMonth);
-  const [selectedYear, setSelectedYear] = useState<string | null>(currentYear);
   const [showDeleteDocDialog, setShowDeleteDocDialog] = useState(false);
   const [deletingDocument, setDeletingDocument] = useState<DocumentType | null>(null);
 
@@ -79,18 +70,12 @@ function AppContent() {
 
   // Upload mutation for single documents
   const uploadMutation = useMutation({
-    mutationFn: async ({ file, folderId, month, year, addToAVA }: { file: File; folderId?: string | null; month?: string | null; year?: string | null; addToAVA?: boolean }) => {
-      console.log("Starting upload for file:", file.name, "to folder:", folderId, "month:", month, "year:", year, "addToAVA:", addToAVA);
+    mutationFn: async ({ file, folderId, addToAVA }: { file: File; folderId?: string | null; addToAVA?: boolean }) => {
+      console.log("Starting upload for file:", file.name, "to folder:", folderId, "addToAVA:", addToAVA);
       const formData = new FormData();
       formData.append("file", file);
       if (folderId) {
         formData.append("folderId", folderId);
-      }
-      if (month) {
-        formData.append("month", month);
-      }
-      if (year) {
-        formData.append("year", year);
       }
       if (addToAVA) {
         formData.append("addToAVA", "true");
@@ -162,12 +147,6 @@ function AppContent() {
       formData.append("originalIndex", uploadData.originalIndex.toString());
       if (uploadData.folderId) {
         formData.append("folderId", uploadData.folderId);
-      }
-      if (uploadData.month) {
-        formData.append("month", uploadData.month);
-      }
-      if (uploadData.year) {
-        formData.append("year", uploadData.year);
       }
       if (uploadData.addToAVA) {
         formData.append("addToAVA", "true");
@@ -437,9 +416,7 @@ function AppContent() {
       try {
         await uploadMutation.mutateAsync({ 
           file, 
-          folderId: selectedFolderId,
-          month: selectedMonth,
-          year: selectedYear
+          folderId: selectedFolderId
         });
       } catch (error) {
         console.error("Error in handleUpload:", error);
@@ -485,8 +462,6 @@ function AppContent() {
           await uploadMutation.mutateAsync({ 
             file, 
             folderId: uploadData.folderId,
-            month: uploadData.month,
-            year: uploadData.year,
             addToAVA: uploadData.addToAVA
           });
         } catch (error) {
@@ -1056,10 +1031,6 @@ function AppContent() {
                     folders={folders}
                     selectedFolderId={selectedFolderId}
                     onFolderChange={setSelectedFolderId}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
-                    selectedYear={selectedYear}
-                    onYearChange={setSelectedYear}
                     onCreateFolder={handleCreateFolderFromUpload}
                   />
                 </div>

@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, Star, Send, FolderOpen, Calendar, Database, Check, ChevronsUpDown, FolderPlus } from "lucide-react";
+import { Upload, FileText, X, Star, Send, FolderOpen, Database, Check, ChevronsUpDown, FolderPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,10 +31,6 @@ interface DocumentUploadChatProps {
   folders?: Folder[];
   selectedFolderId?: string | null;
   onFolderChange?: (folderId: string | null) => void;
-  selectedMonth?: string | null;
-  onMonthChange?: (month: string | null) => void;
-  selectedYear?: string | null;
-  onYearChange?: (year: string | null) => void;
   onCreateFolder?: (folderName: string) => Promise<string | null>;
 }
 
@@ -45,10 +41,6 @@ export function DocumentUploadChat({
   folders = [],
   selectedFolderId = null,
   onFolderChange,
-  selectedMonth = null,
-  onMonthChange,
-  selectedYear = null,
-  onYearChange,
   onCreateFolder,
 }: DocumentUploadChatProps) {
   const [uploadMode, setUploadMode] = useState<UploadMode>("single");
@@ -93,10 +85,6 @@ export function DocumentUploadChat({
     noKeyboard: true,
   });
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
 
   const handleRemoveFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
@@ -117,8 +105,6 @@ export function DocumentUploadChat({
       mode: "single",
       files: selectedFiles,
       folderId: selectedFolderId,
-      month: selectedMonth,
-      year: selectedYear,
       addToAVA,
     });
     
@@ -138,8 +124,6 @@ export function DocumentUploadChat({
         folderDescription: undefined,
         originalIndex,
         folderId: selectedFolderId,
-        month: selectedMonth,
-        year: selectedYear,
         addToAVA,
       };
       onUploadReady(uploadData);
@@ -342,36 +326,6 @@ export function DocumentUploadChat({
                 </Command>
               </PopoverContent>
             </Popover>
-          )}
-
-          {onMonthChange && (
-            <>
-              <span className="text-muted-foreground">~</span>
-              <Select value={selectedMonth || "none"} onValueChange={(value) => onMonthChange(value === "none" ? null : value)}>
-                <SelectTrigger className="w-auto h-9" data-testid="select-month-chat">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Month</SelectItem>
-                  {months.map((month) => (
-                    <SelectItem key={month} value={month}>{month}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-
-          {onYearChange && (
-            <Input
-              type="text"
-              placeholder="Year"
-              value={selectedYear || ""}
-              onChange={(e) => onYearChange(e.target.value || null)}
-              maxLength={4}
-              className="w-24 h-9"
-              data-testid="input-year-chat"
-            />
           )}
         </div>
 

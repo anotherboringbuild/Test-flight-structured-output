@@ -617,9 +617,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const { folderId, month, year } = req.body;
+      const { folderId } = req.body;
       const file = req.file;
       const fileType = file.originalname.split(".").pop()?.toLowerCase() || "";
+
+      // Automatically set month and year based on current date (auditing data)
+      const now = new Date();
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const currentMonth = months[now.getMonth()];
+      const currentYear = now.getFullYear().toString();
 
       // Extract text from the uploaded file
       const extractedText = await extractTextFromFile(file.path, fileType);
@@ -638,8 +644,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: `${(file.size / 1024).toFixed(2)} KB`,
         folderId: folderId || null,
         language,
-        month: month || null,
-        year: year || null,
+        month: currentMonth,
+        year: currentYear,
         isProcessed: true,
         extractedText,
         structuredData,
@@ -687,7 +693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No files uploaded" });
       }
 
-      const { folderName, folderDescription, originalIndex: originalIndexStr, folderId, month, year } = req.body;
+      const { folderName, folderDescription, originalIndex: originalIndexStr, folderId } = req.body;
       
       const originalIndex = Number(originalIndexStr ?? 0);
       
@@ -699,6 +705,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (originalIndex < 0 || originalIndex >= req.files.length) {
         return res.status(400).json({ error: "Invalid original file index: out of range" });
       }
+
+      // Automatically set month and year based on current date (auditing data)
+      const now = new Date();
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const currentMonth = months[now.getMonth()];
+      const currentYear = now.getFullYear().toString();
 
       // Create folder if folderName provided and no folderId, otherwise use existing folder
       let targetFolderId = folderId || null;
@@ -740,8 +752,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             folderId: targetFolderId,
             isOriginal,
             language,
-            month: month || null,
-            year: year || null,
+            month: currentMonth,
+            year: currentYear,
             isProcessed: true,
             extractedText,
             structuredData,

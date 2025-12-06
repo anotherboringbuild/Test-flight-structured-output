@@ -29,8 +29,6 @@ export interface DocumentSetUpload {
   folderDescription?: string;
   originalIndex: number;
   folderId?: string | null;
-  month?: string | null;
-  year?: string | null;
   addToAVA?: boolean;
 }
 
@@ -38,8 +36,6 @@ export interface SingleDocumentUpload {
   mode: "single";
   files: File[];
   folderId?: string | null;
-  month?: string | null;
-  year?: string | null;
   addToAVA?: boolean;
 }
 
@@ -141,8 +137,6 @@ export function DocumentUploadZone({
         folderDescription: folderDescription.trim() || undefined,
         originalIndex,
         folderId: selectedFolderId,
-        month: selectedMonth,
-        year: selectedYear,
       };
       onUploadReady(uploadData);
       
