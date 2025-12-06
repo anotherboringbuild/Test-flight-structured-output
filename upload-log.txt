@@ -1,0 +1,339 @@
+🔍 Collecting files...
+📦 Found 113 files to upload
+
+🔐 Authenticating with GitHub...
+
+📝 Creating README.md...
+
+📤 Uploading batch 1/12...
+  ✓ .upm/store.json
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-19%20at%204.35.20%E2%80%AFPM_1763598927649.png - 409 with id 9010:223A7D:3F7F6C:11ADF1B:69349254 in 547ms
+Failed to upload attached_assets/Screenshot 2025-11-19 at 4.35.20 PM_1763598927649.png: is at 913fa9926e616780c0542f2d889c75b480fd0828 but expected f41fe01309c58b8657cd31d82d0ff8eb0df7fee5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-19 at 4.35.20 PM_1763598927649.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-02%20at%205.37.47%E2%80%AFPM_1762133869559.png - 409 with id A95E:919AD:FF1221:47863E7:69349254 in 674ms
+Failed to upload attached_assets/Screenshot 2025-11-02 at 5.37.47 PM_1762133869559.png: is at 913fa9926e616780c0542f2d889c75b480fd0828 but expected f41fe01309c58b8657cd31d82d0ff8eb0df7fee5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-02 at 5.37.47 PM_1762133869559.png
+  ✓ attached_assets/Screenshot 2025-11-19 at 3.49.56 PM_1763596204678.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-03%20at%2011.23.01%E2%80%AFAM_1762197784122.png - 409 with id A962:B824:23D53A8:A1570FC:69349254 in 1415ms
+Failed to upload attached_assets/Screenshot 2025-11-03 at 11.23.01 AM_1762197784122.png: is at e453a9d183f10a76c701048d4dfa54a681e0f505 but expected 7cc91b326cb89f7d5f44594b99010294479e3d4d - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-03 at 11.23.01 AM_1762197784122.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-04%20at%208.53.15%E2%80%AFAM_1762275200518.png - 409 with id 8706:297147:2EBFD:D1FF9:69349254 in 1426ms
+Failed to upload attached_assets/Screenshot 2025-11-04 at 8.53.15 AM_1762275200518.png: is at e453a9d183f10a76c701048d4dfa54a681e0f505 but expected 7cc91b326cb89f7d5f44594b99010294479e3d4d - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-04 at 8.53.15 AM_1762275200518.png
+  ✓ attached_assets/Screenshot 2025-11-29 at 10.09.27 PM_1764482973140.png
+  ✓ attached_assets/Screenshot 2025-11-03 at 12.32.32 PM_1762201954635.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-04%20at%208.28.45%E2%80%AFAM_1762273732472.png - 409 with id 86F8:38D041:17D6D22:6B1DEA0:69349254 in 2495ms
+Failed to upload attached_assets/Screenshot 2025-11-04 at 8.28.45 AM_1762273732472.png: is at a68bfda976fae7c063793589cc126f4d52fb83c1 but expected e453a9d183f10a76c701048d4dfa54a681e0f505 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-04 at 8.28.45 AM_1762273732472.png
+  ✓ attached_assets/ChatGPT Image Nov 20, 2025 at 07_35_33 AM_1763675499301.png
+
+📤 Uploading batch 2/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Findex.html - 409 with id 86F8:38D041:17D7976:6B21633:69349256 in 393ms
+Failed to upload client/index.html: is at 256a80ac9df2badf55ae8f33affffd0e65064723 but expected 5101724ca2d38c893c80de849292c41b93a8a0d0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/index.html
+  ✓ client/public/favicon.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2FApp.tsx - 409 with id A964:20A4BE:FFCEE2:47275B2:69349255 in 455ms
+Failed to upload client/src/App.tsx: is at 256a80ac9df2badf55ae8f33affffd0e65064723 but expected 5101724ca2d38c893c80de849292c41b93a8a0d0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/App.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FApiKeyModal.tsx - 409 with id 9010:223A7D:3F89ED:11B0F4D:69349254 in 466ms
+Failed to upload client/src/components/ApiKeyModal.tsx: is at 256a80ac9df2badf55ae8f33affffd0e65064723 but expected 5101724ca2d38c893c80de849292c41b93a8a0d0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ApiKeyModal.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FAppSidebar.tsx - 409 with id A96E:39A6AE:F48E1A:43D0CE1:69349255 in 491ms
+Failed to upload client/src/components/AppSidebar.tsx: is at 256a80ac9df2badf55ae8f33affffd0e65064723 but expected 5101724ca2d38c893c80de849292c41b93a8a0d0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/AppSidebar.tsx
+  ✓ attached_assets/Screenshot 2025-11-29 at 10.28.58 PM_1764484143876.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-30%20at%209.04.32%E2%80%AFPM_1764565475547.png - 409 with id 86F6:61146:2D02F:C7CF7:69349256 in 859ms
+Failed to upload attached_assets/Screenshot 2025-11-30 at 9.04.32 PM_1764565475547.png: is at 7b204ec1422d840c97445534bdb0abba8863dc3d but expected 256a80ac9df2badf55ae8f33affffd0e65064723 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-30 at 9.04.32 PM_1764565475547.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-30%20at%206.49.42%E2%80%AFPM_1764557387773.png - 409 with id A95E:919AD:FF1D8D:4789879:69349254 in 1145ms
+Failed to upload attached_assets/Screenshot 2025-11-30 at 6.49.42 PM_1764557387773.png: is at 7b204ec1422d840c97445534bdb0abba8863dc3d but expected 256a80ac9df2badf55ae8f33affffd0e65064723 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-30 at 6.49.42 PM_1764557387773.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/attached_assets%2FScreenshot%202025-11-30%20at%208.55.56%E2%80%AFPM_1764564960039.png - 409 with id A962:B824:23D5FDF:A15AA1C:69349255 in 1296ms
+Failed to upload attached_assets/Screenshot 2025-11-30 at 8.55.56 PM_1764564960039.png: is at 980896d3fc3bb2a560b0af9ada0041a425bdf7fd but expected 7b204ec1422d840c97445534bdb0abba8863dc3d - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ attached_assets/Screenshot 2025-11-30 at 8.55.56 PM_1764564960039.png
+  ✓ attached_assets/Screenshot 2025-11-30 at 6.41.58 PM_1764556922473.png
+
+📤 Uploading batch 3/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FDocumentUploadZoneOld.tsx - 409 with id 86F8:38D041:17D7F23:6B23009:69349257 in 408ms
+Failed to upload client/src/components/DocumentUploadZoneOld.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/DocumentUploadZoneOld.tsx
+  ✓ client/src/components/TopBar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FComparisonView.tsx - 409 with id 86EA:9E46C:1E305:864E7:69349257 in 438ms
+Failed to upload client/src/components/ComparisonView.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ComparisonView.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FDocumentUploadChat.tsx - 409 with id A962:B824:23D6560:A15C2F0:69349258 in 440ms
+Failed to upload client/src/components/DocumentUploadChat.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/DocumentUploadChat.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FVersionHistory.tsx - 409 with id A96E:39A6AE:F49307:43D234C:69349257 in 440ms
+Failed to upload client/src/components/VersionHistory.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/VersionHistory.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FDocumentCard.tsx - 409 with id A94E:1DDD:D9CFEC:3C825E4:69349256 in 454ms
+Failed to upload client/src/components/DocumentCard.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/DocumentCard.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FDocumentUploadZone.tsx - 409 with id 86F6:61146:2D52E:C92FA:69349257 in 465ms
+Failed to upload client/src/components/DocumentUploadZone.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/DocumentUploadZone.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FThemeToggle.tsx - 409 with id A964:20A4BE:FFD45C:4728DD4:69349257 in 471ms
+Failed to upload client/src/components/ThemeToggle.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ThemeToggle.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FDocumentLibrary.tsx - 409 with id A95E:919AD:FF22F1:478B130:69349258 in 485ms
+Failed to upload client/src/components/DocumentLibrary.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/DocumentLibrary.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2FExportModal.tsx - 409 with id 8706:297147:2FC46:D683E:69349257 in 517ms
+Failed to upload client/src/components/ExportModal.tsx: is at 39546ab465db154d559ad49358bbce0fd360ea34 but expected 980896d3fc3bb2a560b0af9ada0041a425bdf7fd - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ExportModal.tsx
+
+📤 Uploading batch 4/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FThemeToggle.tsx - 409 with id A964:20A4BE:FFD67B:47297FF:69349258 in 428ms
+Failed to upload client/src/components/examples/ThemeToggle.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/ThemeToggle.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FApiKeyModal.tsx - 409 with id 86EA:9E46C:1E4D4:86CF7:69349258 in 448ms
+Failed to upload client/src/components/examples/ApiKeyModal.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/ApiKeyModal.tsx
+  ✓ client/src/components/examples/ExportModal.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FTopBar.tsx - 409 with id 9010:223A7D:3F90FA:11B2F16:69349258 in 442ms
+Failed to upload client/src/components/examples/TopBar.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/TopBar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FDocumentLibrary.tsx - 409 with id A962:B824:23D6763:A15CCBD:69349258 in 458ms
+Failed to upload client/src/components/examples/DocumentLibrary.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/DocumentLibrary.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FAppSidebar.tsx - 409 with id 900E:2EEBC:3B66CC:10982CA:69349258 in 470ms
+Failed to upload client/src/components/examples/AppSidebar.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/AppSidebar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FDocumentUploadZone.tsx - 409 with id 86F6:61146:2D729:C9BF3:69349258 in 478ms
+Failed to upload client/src/components/examples/DocumentUploadZone.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/DocumentUploadZone.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Faccordion.tsx - 409 with id A96E:39A6AE:F49510:43D2CDF:69349258 in 478ms
+Failed to upload client/src/components/ui/accordion.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/accordion.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FComparisonView.tsx - 409 with id A94E:1DDD:D9D207:3C82F07:69349258 in 496ms
+Failed to upload client/src/components/examples/ComparisonView.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/ComparisonView.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fexamples%2FDocumentCard.tsx - 409 with id A95E:919AD:FF2502:478BA5A:69349258 in 507ms
+Failed to upload client/src/components/examples/DocumentCard.tsx: is at c866548c8bf6cf49b84739afa9c33bb681b94a9b but expected 39546ab465db154d559ad49358bbce0fd360ea34 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/examples/DocumentCard.tsx
+
+📤 Uploading batch 5/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Faspect-ratio.tsx - 409 with id 900E:2EEBC:3B68DB:1098C16:69349259 in 388ms
+Failed to upload client/src/components/ui/aspect-ratio.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/aspect-ratio.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcarousel.tsx - 409 with id 9010:223A7D:3F92D0:11B3775:69349259 in 393ms
+Failed to upload client/src/components/ui/carousel.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/carousel.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fbutton.tsx - 409 with id 86F8:38D041:17D835A:6B243BC:69349259 in 407ms
+Failed to upload client/src/components/ui/button.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/button.tsx
+  ✓ client/src/components/ui/alert.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fbreadcrumb.tsx - 409 with id 86F6:61146:2D8FF:CA470:69349259 in 420ms
+Failed to upload client/src/components/ui/breadcrumb.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/breadcrumb.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcalendar.tsx - 409 with id 8706:297147:30003:D78E4:69349258 in 457ms
+Failed to upload client/src/components/ui/calendar.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/calendar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Favatar.tsx - 409 with id A94E:1DDD:D9D3D9:3C83797:69349259 in 467ms
+Failed to upload client/src/components/ui/avatar.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/avatar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fchart.tsx - 409 with id A96E:39A6AE:F4970F:43D35E9:69349259 in 474ms
+Failed to upload client/src/components/ui/chart.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/chart.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcard.tsx - 409 with id A964:20A4BE:FFD8AA:472A191:69349259 in 485ms
+Failed to upload client/src/components/ui/card.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/card.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fbadge.tsx - 409 with id A962:B824:23D6990:A15D680:69349259 in 496ms
+Failed to upload client/src/components/ui/badge.tsx: is at 92062b802d747c57652112e9d16357c6c435cffe but expected c866548c8bf6cf49b84739afa9c33bb681b94a9b - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/badge.tsx
+
+📤 Uploading batch 6/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fform.tsx - 409 with id 8706:297147:301EC:D8178:69349259 in 393ms
+Failed to upload client/src/components/ui/form.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/form.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcollapsible.tsx - 409 with id 900E:2EEBC:3B6ACE:1099556:69349259 in 402ms
+Failed to upload client/src/components/ui/collapsible.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/collapsible.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fhover-card.tsx - 409 with id A964:20A4BE:FFDAD7:472AB88:69349259 in 413ms
+Failed to upload client/src/components/ui/hover-card.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/hover-card.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Finput.tsx - 409 with id A96E:39A6AE:F498F0:43D3E3C:69349259 in 417ms
+Failed to upload client/src/components/ui/input.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/input.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Finput-otp.tsx - 409 with id 9010:223A7D:3F94BC:11B40AE:69349259 in 428ms
+Failed to upload client/src/components/ui/input-otp.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/input-otp.tsx
+  ✓ client/src/components/ui/checkbox.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcommand.tsx - 409 with id A94E:1DDD:D9D5AD:3C83FAB:69349259 in 444ms
+Failed to upload client/src/components/ui/command.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/command.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fdrawer.tsx - 409 with id 86F6:61146:2DAD3:CAC7C:69349259 in 454ms
+Failed to upload client/src/components/ui/drawer.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/drawer.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fdropdown-menu.tsx - 409 with id 86F8:38D041:17D8592:6B24D8B:69349259 in 460ms
+Failed to upload client/src/components/ui/dropdown-menu.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/dropdown-menu.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fcontext-menu.tsx - 409 with id A95E:919AD:FF28C5:478CC3C:69349259 in 491ms
+Failed to upload client/src/components/ui/context-menu.tsx: is at c6fa11264701f4e9d6bba33bd22757eff51e45d5 but expected 92062b802d747c57652112e9d16357c6c435cffe - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/context-menu.tsx
+
+📤 Uploading batch 7/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fradio-group.tsx - 409 with id 8706:297147:303A7:D896D:6934925A in 408ms
+Failed to upload client/src/components/ui/radio-group.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/radio-group.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fprogress.tsx - 409 with id 86F8:38D041:17D879B:6B2573D:6934925A in 414ms
+Failed to upload client/src/components/ui/progress.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/progress.tsx
+  ✓ client/src/components/ui/label.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fpopover.tsx - 409 with id 86F6:61146:2DC95:CB41E:6934925A in 429ms
+Failed to upload client/src/components/ui/popover.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/popover.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fselect.tsx - 409 with id A96E:39A6AE:F49AA4:43D460A:6934925A in 434ms
+Failed to upload client/src/components/ui/select.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/select.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fscroll-area.tsx - 409 with id 9010:223A7D:3F969F:11B48E2:6934925A in 443ms
+Failed to upload client/src/components/ui/scroll-area.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/scroll-area.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fpagination.tsx - 409 with id A962:B824:23D6DC9:A15EA0D:69349259 in 457ms
+Failed to upload client/src/components/ui/pagination.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/pagination.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fresizable.tsx - 409 with id A964:20A4BE:FFDCC1:472B460:6934925A in 468ms
+Failed to upload client/src/components/ui/resizable.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/resizable.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fmenubar.tsx - 409 with id 900E:2EEBC:3B6CDD:1099EDD:6934925A in 479ms
+Failed to upload client/src/components/ui/menubar.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/menubar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fnavigation-menu.tsx - 409 with id A94E:1DDD:D9D77D:3C847FD:6934925A in 498ms
+Failed to upload client/src/components/ui/navigation-menu.tsx: is at a9c475389fbd4ca4e970c1dd6d785a85288de9a0 but expected c6fa11264701f4e9d6bba33bd22757eff51e45d5 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/navigation-menu.tsx
+
+📤 Uploading batch 8/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fslider.tsx - 409 with id 86F6:61146:2DE4F:CBC20:6934925A in 389ms
+Failed to upload client/src/components/ui/slider.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/slider.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftextarea.tsx - 409 with id 9010:223A7D:3F9876:11B5189:6934925A in 395ms
+Failed to upload client/src/components/ui/textarea.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/textarea.tsx
+  ✓ client/src/components/ui/separator.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftable.tsx - 409 with id 8706:297147:30567:D9165:6934925A in 413ms
+Failed to upload client/src/components/ui/table.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/table.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftabs.tsx - 409 with id A964:20A4BE:FFDEB6:472BD50:6934925A in 421ms
+Failed to upload client/src/components/ui/tabs.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/tabs.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fsheet.tsx - 409 with id 900E:2EEBC:3B6ED9:109A80A:6934925A in 433ms
+Failed to upload client/src/components/ui/sheet.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/sheet.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fsidebar.tsx - 409 with id A95E:919AD:FF2CC4:478DF01:6934925A in 443ms
+Failed to upload client/src/components/ui/sidebar.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/sidebar.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftoast.tsx - 409 with id A96E:39A6AE:F49C96:43D4EB2:6934925A in 466ms
+Failed to upload client/src/components/ui/toast.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/toast.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fswitch.tsx - 409 with id 86F8:38D041:17D89AD:6B260FE:6934925A in 505ms
+Failed to upload client/src/components/ui/switch.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/switch.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Fskeleton.tsx - 409 with id A962:B824:23D6FDF:A15F34C:6934925A in 517ms
+Failed to upload client/src/components/ui/skeleton.tsx: is at 6da845bb0907bdc4de3a13d30764af50b6f44223 but expected a9c475389fbd4ca4e970c1dd6d785a85288de9a0 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/skeleton.tsx
+
+📤 Uploading batch 9/12...
+  ✓ client/src/lib/utils.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftoggle-group.tsx - 409 with id 900E:2EEBC:3B70F2:109B18B:6934925B in 374ms
+Failed to upload client/src/components/ui/toggle-group.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/toggle-group.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Findex.css - 409 with id 8706:297147:30753:D99F2:6934925B in 401ms
+Failed to upload client/src/index.css: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/index.css
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftoaster.tsx - 409 with id 86EA:9E46C:1ED5F:89340:6934925B in 418ms
+Failed to upload client/src/components/ui/toaster.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/toaster.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fhooks%2Fuse-toast.ts - 409 with id 86F8:38D041:17D8BF4:6B26B8C:6934925B in 421ms
+Failed to upload client/src/hooks/use-toast.ts: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/hooks/use-toast.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fhooks%2Fuse-mobile.tsx - 409 with id 86F6:61146:2E026:CC474:6934925B in 439ms
+Failed to upload client/src/hooks/use-mobile.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/hooks/use-mobile.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fmain.tsx - 409 with id A96E:39A6AE:F49E77:43D571C:6934925B in 460ms
+Failed to upload client/src/main.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/main.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftooltip.tsx - 409 with id A95E:919AD:FF2EE1:478E838:6934925B in 467ms
+Failed to upload client/src/components/ui/tooltip.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/tooltip.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Flib%2FqueryClient.ts - 409 with id A964:20A4BE:FFE0D7:472C70C:6934925B in 504ms
+Failed to upload client/src/lib/queryClient.ts: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/lib/queryClient.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fcomponents%2Fui%2Ftoggle.tsx - 409 with id A94E:1DDD:D9DB74:3C859AE:6934925A in 517ms
+Failed to upload client/src/components/ui/toggle.tsx: is at cd5aafa1d5da255988956e88d42d36faed5eb708 but expected 6da845bb0907bdc4de3a13d30764af50b6f44223 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/components/ui/toggle.tsx
+
+📤 Uploading batch 10/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/drizzle.config.ts - 409 with id 86F8:38D041:17D8E52:6B27653:6934925B in 330ms
+Failed to upload drizzle.config.ts: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ drizzle.config.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/design_guidelines.md - 409 with id 86F6:61146:2E1F1:CCCD3:6934925B in 336ms
+Failed to upload design_guidelines.md: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ design_guidelines.md
+  ✓ generated-icon.png
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/objects-app - 409 with id A964:20A4BE:FFE2B6:472CF4A:6934925B in 369ms
+Failed to upload objects-app: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ objects-app
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/components.json - 409 with id A962:B824:23D7467:A1607DD:6934925B in 376ms
+Failed to upload components.json: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ components.json
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fpages%2Fnot-found.tsx - 409 with id A95E:919AD:FF30F9:478F247:6934925B in 387ms
+Failed to upload client/src/pages/not-found.tsx: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/pages/not-found.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/package.json - 409 with id A96E:39A6AE:F4A076:43D6072:6934925B in 397ms
+Failed to upload package.json: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ package.json
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fpages%2FAnalytics.tsx - 409 with id 86EA:9E46C:1EF16:89B27:6934925B in 457ms
+Failed to upload client/src/pages/Analytics.tsx: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/pages/Analytics.tsx
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/package-lock.json - 409 with id 9010:223A7D:3F9C6A:11B63BD:6934925B in 499ms
+Failed to upload package-lock.json: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ package-lock.json
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/client%2Fsrc%2Fpages%2FProductBrowser.tsx - 409 with id 900E:2EEBC:3B7312:109BB7E:6934925B in 514ms
+Failed to upload client/src/pages/ProductBrowser.tsx: is at bd5d7046ea75f13398e3068c0c5a07bf42ee771f but expected cd5aafa1d5da255988956e88d42d36faed5eb708 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ client/src/pages/ProductBrowser.tsx
+
+📤 Uploading batch 11/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Froutes.ts - 409 with id 86F8:38D041:17D90AF:6B280D0:6934925C in 339ms
+Failed to upload server/routes.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/routes.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Fstorage.ts - 409 with id 8706:297147:30B1C:DAA37:6934925C in 349ms
+Failed to upload server/storage.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/storage.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/postcss.config.js - 409 with id 86EA:9E46C:1F0BF:8A252:6934925C in 363ms
+Failed to upload postcss.config.js: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ postcss.config.js
+  ✓ server/migrate-products.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Fvite.ts - 409 with id 9010:223A7D:3F9E41:11B6C32:6934925C in 367ms
+Failed to upload server/vite.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/vite.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/replit.md - 409 with id A94E:1DDD:D9DF95:3C86BF0:6934925B in 393ms
+Failed to upload replit.md: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ replit.md
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Fdb.ts - 409 with id A95E:919AD:FF32FC:478FB67:6934925C in 408ms
+Failed to upload server/db.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/db.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Findex.ts - 409 with id A962:B824:23D766C:A161142:6934925C in 427ms
+Failed to upload server/index.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/index.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/shared%2Fschema.ts - 409 with id A96E:39A6AE:F4A242:43D688E:6934925C in 439ms
+Failed to upload shared/schema.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ shared/schema.ts
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/server%2Fvalidation.ts - 409 with id A964:20A4BE:FFE487:472D7F0:6934925C in 512ms
+Failed to upload server/validation.ts: is at 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 but expected bd5d7046ea75f13398e3068c0c5a07bf42ee771f - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ server/validation.ts
+
+📤 Uploading batch 12/12...
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/vite.config.ts - 409 with id A94E:1DDD:D9E169:3C87468:6934925C in 377ms
+Failed to upload vite.config.ts: is at 52a83eff01999c21067fb44717183a7d7084f469 but expected 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ vite.config.ts
+  ✓ tsconfig.json
+PUT /repos/anotherboringbuild/objects-document-extraction/contents/tailwind.config.ts - 409 with id 86EA:9E46C:1F26D:8A99F:6934925C in 440ms
+Failed to upload tailwind.config.ts: is at 52a83eff01999c21067fb44717183a7d7084f469 but expected 2cb93a2f33745bda8d7903da4e2830c44df2f5a2 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+  ✗ tailwind.config.ts
+
+✅ Upload complete!
+   Uploaded: 18 files
+   Failed: 95 files
+
+🌐 Repository: https://github.com/anotherboringbuild/objects-document-extraction
