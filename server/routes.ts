@@ -72,6 +72,37 @@ async function detectLanguage(text: string): Promise<string> {
   }
 }
 
+async function checkCircularReference(folderId: string, targetParentId: string): Promise<boolean> {
+  // Check if moving folderId into targetParentId would create a circular reference
+  // This happens if targetParentId is folderId itself or any of its descendants
+  
+  if (folderId === targetParentId) {
+    return true; // Can't be its own parent
+  }
+  
+  // Walk up the parent chain from targetParentId
+  let currentId: string | null = targetParentId;
+  const visited = new Set<string>();
+  
+  while (currentId) {
+    if (visited.has(currentId)) {
+      // Cycle detected in existing structure
+      break;
+    }
+    visited.add(currentId);
+    
+    if (currentId === folderId) {
+      return true; // targetParentId is a descendant of folderId
+    }
+    
+    // Get parent of current folder
+    const folder = await storage.getFolder(currentId);
+    currentId = folder?.parentFolderId || null;
+  }
+  
+  return false;
+}
+
 async function processWithGPT5(extractedText: string): Promise<any> {
   try {
     // Note: Using gpt-4o-2024-08-06 or later for structured outputs
@@ -458,6 +489,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting folder:", error);
       res.status(400).json({ error: "Failed to delete folder" });
+    }
+  });
+
+  app.post("/api/folders/:id/move", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { parentFolderId } = req.body;
+      
+      // Check for circular reference
+      if (parentFolderId) {
+        const wouldCreateCircle = await checkCircularReference(id, parentFolderId);
+        if (wouldCreateCircle) {
+          return res.status(400).json({ error: "Cannot move folder into itself or its descendants" });
+        }
+      }
+      
+      const folder = await storage.updateFolder(id, { parentFolderId });
+      if (!folder) {
+        return res.status(404).json({ error: "Folder not found" });
+      }
+      res.json(folder);
+    } catch (error) {
+      console.error("Error moving folder:", error);
+      res.status(400).json({ error: "Failed to move folder" });
+    }
+  });
+
+  app.post("/api/documents/:id/move", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { folderId } = req.body;
+      
+      const document = await storage.updateDocument(id, { folderId: folderId || null });
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      console.error("Error moving document:", error);
+      res.status(400).json({ error: "Failed to move document" });
     }
   });
 
