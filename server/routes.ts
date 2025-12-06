@@ -7,9 +7,11 @@ import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
 import { validateExtraction, quickValidationChecks } from "./validation";
+import { createRequire } from "module";
 
-// Dynamic import for CommonJS module
-const pdfParsePromise = import("pdf-parse").then(m => m.default || m);
+// Load CommonJS module
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -33,7 +35,6 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       return result.value;
     } else if (fileType === "pdf") {
       const dataBuffer = fs.readFileSync(filePath);
-      const pdfParse = await pdfParsePromise;
       const data = await pdfParse(dataBuffer);
       return data.text;
     } else if (fileType === "pages") {
