@@ -11,7 +11,7 @@ import { createRequire } from "module";
 
 // Load CommonJS module
 const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,7 +35,7 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       return result.value;
     } else if (fileType === "pdf") {
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
+      const data = await PDFParse(dataBuffer);
       return data.text;
     } else if (fileType === "pages") {
       // Pages files are proprietary zip archives that require specialized parsing
