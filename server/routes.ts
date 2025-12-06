@@ -118,6 +118,15 @@ async function processWithGPT5(extractedText: string): Promise<any> {
     // Note: Using gpt-4o-2024-08-06 or later for structured outputs
     // This enforces strict JSON schema with guaranteed field order
     
+    // Truncate very large documents to stay within token limits
+    // Estimate ~4 characters per token, limit to ~20,000 tokens for safety
+    const maxChars = 80000;
+    let textToProcess = extractedText;
+    if (extractedText.length > maxChars) {
+      console.log(`Document too large (${extractedText.length} chars), truncating to ${maxChars} chars`);
+      textToProcess = extractedText.substring(0, maxChars) + "\n\n[Document truncated due to size limits]";
+    }
+    
     // Define the copy section schema (reusable for ProductCopy, BusinessCopy, UpgraderCopy)
     const copySectionSchema = {
       type: "object",
@@ -202,7 +211,7 @@ Extract sections that exist in the document. If a section is not present, omit i
         },
         {
           role: "user",
-          content: extractedText,
+          content: textToProcess,
         },
       ],
       response_format: {
