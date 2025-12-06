@@ -7,11 +7,7 @@ import { insertDocumentSchema, insertFolderSchema } from "@shared/schema";
 import OpenAI from "openai";
 import fs from "fs";
 import { validateExtraction, quickValidationChecks } from "./validation";
-import { createRequire } from "module";
-
-// Load CommonJS module
-const require = createRequire(import.meta.url);
-const { PDFParse } = require("pdf-parse");
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,8 +31,19 @@ async function extractTextFromFile(filePath: string, fileType: string): Promise<
       return result.value;
     } else if (fileType === "pdf") {
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await PDFParse(dataBuffer);
-      return data.text;
+      const uint8Array = new Uint8Array(dataBuffer);
+      const pdf = await getDocument({ data: uint8Array, useSystemFonts: true }).promise;
+      
+      let fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n";
+      }
+      return fullText.trim();
     } else if (fileType === "pages") {
       // Pages files are proprietary zip archives that require specialized parsing
       // For production use, recommend converting to PDF or DOCX first
