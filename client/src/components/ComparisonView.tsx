@@ -581,150 +581,44 @@ export function ComparisonView({
                 </div>
               )}
               {validationConfidence !== null && validationConfidence !== undefined && !isEditing && (
-                <div className="mt-3 rounded-md border bg-muted/30">
-                  <div className="flex items-center gap-3 px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-xs font-medium">AI Validation:</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {needsReview ? (
-                        <>
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          <span className="text-sm font-medium text-amber-500">
-                            {Math.round(validationConfidence * 100)}% - Needs Review
-                          </span>
-                        </>
-                      ) : validationConfidence >= 0.8 ? (
-                        <>
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                          <span className="text-sm font-medium text-emerald-500">
-                            {Math.round(validationConfidence * 100)}% - Validated
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium text-muted-foreground">
-                            {Math.round(validationConfidence * 100)}%
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {validationIssues && validationIssues.length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        {validationIssues.length} {validationIssues.length === 1 ? 'issue' : 'issues'}
-                      </Badge>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowValidationDetails(!showValidationDetails)}
-                      className="h-7 text-xs ml-auto"
-                      data-testid="button-toggle-validation-details"
-                    >
-                      {showValidationDetails ? (
-                        <>
-                          Hide Details
-                          <ChevronUp className="ml-1 h-3 w-3" />
-                        </>
-                      ) : (
-                        <>
-                          Show Criteria
-                          <ChevronDown className="ml-1 h-3 w-3" />
-                        </>
-                      )}
-                    </Button>
-                    {onValidate && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onValidate}
-                        disabled={isValidating}
-                        data-testid="button-revalidate"
-                        className="h-7 text-xs"
-                      >
-                        {isValidating ? (
-                          <>
-                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            Validating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="mr-1 h-3 w-3" />
-                            Re-validate
-                          </>
-                        )}
-                      </Button>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    {needsReview ? (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm font-medium text-amber-500">
+                          {Math.round(validationConfidence * 100)}% - Needs Review
+                        </span>
+                      </>
+                    ) : validationConfidence >= 0.8 ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        <span className="text-sm font-medium text-emerald-500">
+                          {Math.round(validationConfidence * 100)}% - Validated
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {Math.round(validationConfidence * 100)}%
+                      </span>
                     )}
                   </div>
-                  {showValidationDetails && (
-                    <div className="border-t px-3 py-3 space-y-3">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Validation Criteria:</p>
-                        <div className="space-y-1.5">
-                          <div className="flex items-start gap-2 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="font-medium">Field Names in English:</span>
-                              <span className="text-muted-foreground ml-1">
-                                JSON keys (ProductCopy, Headlines, etc.) must be in English
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="font-medium">Content Language Preserved:</span>
-                              <span className="text-muted-foreground ml-1">
-                                Product names, headlines, and copy remain in source language
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="font-medium">Superscript Handling:</span>
-                              <span className="text-muted-foreground ml-1">
-                                Footnotes use {`{{sup:N}}`} tokens, legal marks removed, units preserved
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="font-medium">Completeness:</span>
-                              <span className="text-muted-foreground ml-1">
-                                All expected fields present (ProductName, Headlines, etc.)
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="font-medium">Legal Reference Matching:</span>
-                              <span className="text-muted-foreground ml-1">
-                                Superscript tokens in content match corresponding legal references
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {validationIssues && validationIssues.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs font-medium text-amber-600 mb-1.5">Issues Found:</p>
-                          <ul className="space-y-1">
-                            {validationIssues.map((issue, index) => (
-                              <li key={index} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                                <span className="text-amber-500 mt-0.5">•</span>
-                                <span>{issue}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+                  {validationIssues && validationIssues.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {validationIssues.length} {validationIssues.length === 1 ? 'issue' : 'issues'}
+                    </Badge>
                   )}
+                  <Button
+                    variant={showValidationDetails ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => setShowValidationDetails(!showValidationDetails)}
+                    className="h-7 text-xs"
+                    data-testid="button-toggle-validation-details"
+                  >
+                    <Shield className="mr-1 h-3 w-3" />
+                    {showValidationDetails ? 'Hide Inspector' : 'Inspect'}
+                  </Button>
                 </div>
               )}
             </div>
@@ -813,7 +707,13 @@ export function ComparisonView({
         </div>
       </div>
 
-      <div className={`grid flex-1 min-h-0 grid-cols-1 overflow-hidden ${showVersionHistory ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+      <div className={`grid flex-1 min-h-0 grid-cols-1 overflow-hidden ${
+        showVersionHistory && showValidationDetails && validationConfidence !== null && validationConfidence !== undefined
+          ? 'lg:grid-cols-4' 
+          : (showVersionHistory || (showValidationDetails && validationConfidence !== null && validationConfidence !== undefined))
+            ? 'lg:grid-cols-3' 
+            : 'lg:grid-cols-2'
+      }`}>
         <div className="flex flex-col border-r min-h-0">
           <div className="border-b bg-muted/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center justify-between gap-4 mb-3">
@@ -987,6 +887,171 @@ export function ComparisonView({
             )}
           </div>
         </div>
+
+        {/* Validation Inspector Panel */}
+        {showValidationDetails && validationConfidence !== null && validationConfidence !== undefined && (
+          <div className="flex flex-col border-l min-h-0 bg-muted/10">
+            <div className="border-b bg-muted/30 px-4 py-3 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-medium text-sm">Validation Inspector</h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setShowValidationDetails(false)}
+                  data-testid="button-close-validation-inspector"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto p-4 space-y-4">
+              {/* Confidence Score */}
+              <div className="rounded-lg border bg-background p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Confidence</span>
+                  {onValidate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onValidate}
+                      disabled={isValidating}
+                      data-testid="button-revalidate"
+                      className="h-7 text-xs"
+                    >
+                      {isValidating ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Validating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-1 h-3 w-3" />
+                          Re-validate
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          needsReview 
+                            ? 'bg-amber-500' 
+                            : validationConfidence >= 0.8 
+                              ? 'bg-emerald-500' 
+                              : 'bg-muted-foreground'
+                        }`}
+                        style={{ width: `${validationConfidence * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className={`text-lg font-semibold ${
+                    needsReview 
+                      ? 'text-amber-500' 
+                      : validationConfidence >= 0.8 
+                        ? 'text-emerald-500' 
+                        : 'text-muted-foreground'
+                  }`}>
+                    {Math.round(validationConfidence * 100)}%
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  {needsReview ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <span className="text-sm text-amber-500">Needs Review</span>
+                    </>
+                  ) : validationConfidence >= 0.8 ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      <span className="text-sm text-emerald-500">Validated</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Low Confidence</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Validation Criteria */}
+              <div className="rounded-lg border bg-background p-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Validation Criteria</p>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2 text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Field Names in English</span>
+                      <p className="text-muted-foreground mt-0.5">
+                        JSON keys must be in English
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Content Language Preserved</span>
+                      <p className="text-muted-foreground mt-0.5">
+                        Product content in source language
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Superscript Handling</span>
+                      <p className="text-muted-foreground mt-0.5">
+                        {`{{sup:N}}`} tokens for footnotes
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Completeness</span>
+                      <p className="text-muted-foreground mt-0.5">
+                        All expected fields present
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Legal Reference Matching</span>
+                      <p className="text-muted-foreground mt-0.5">
+                        Tokens match legal references
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Issues Found */}
+              {validationIssues && validationIssues.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <p className="text-xs font-medium text-amber-700 dark:text-amber-500 uppercase tracking-wide">
+                      Issues Found ({validationIssues.length})
+                    </p>
+                  </div>
+                  <ul className="space-y-2">
+                    {validationIssues.map((issue, index) => (
+                      <li key={index} className="text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                        <span className="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                        <span>{issue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Version History Panel */}
         {showVersionHistory && (
