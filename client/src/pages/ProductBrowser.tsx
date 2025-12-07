@@ -406,7 +406,6 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <span className="font-semibold text-sm">{currentLanguage}</span>
-                <Badge variant="outline">{getLanguageBadge(currentLanguage)}</Badge>
               </div>
             </div>
           )}
@@ -421,20 +420,15 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
                   data-testid={`card-variant-${variant.id}-${idx}`}
                 >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {copyTypeLabels[variant.copyType] || variant.copyType}
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {copyTypeLabels[variant.copyType] || variant.copyType}
+                      </p>
+                      {variant.versionNumber !== null && (
+                        <p className="text-xs text-muted-foreground">
+                          Version {variant.versionNumber}
                         </p>
-                        {variant.versionNumber !== null && (
-                          <p className="text-xs text-muted-foreground">
-                            Version {variant.versionNumber}
-                          </p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="ml-2">
-                        {getLanguageBadge(variant.locale)}
-                      </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
