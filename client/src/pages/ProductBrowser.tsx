@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { Search, FileText, Globe, X, ChevronLeft, ChevronRight, Upload, Download, FolderOpen, File } from "lucide-react";
+import { Search, FileText, Globe, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Upload, Download, FolderOpen, File } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +36,7 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
+  const [selectedCopyTypeIndex, setSelectedCopyTypeIndex] = useState(0);
   const [copyTypeFilter, setCopyTypeFilter] = useState<string>("all");
   const [localeFilter, setLocaleFilter] = useState<string>("all");
 
@@ -213,6 +214,19 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
   const availableLanguages = selectedProduct ? getAvailableLanguages(selectedProduct.variants) : [];
   const currentLanguage = availableLanguages[selectedLanguageIndex] || "English";
 
+  // Get available copy types for the current language
+  const getAvailableCopyTypes = (variants: ProductVariant[], language: string): string[] => {
+    const languageVariants = variants.filter((v) => (v.locale || "English") === language);
+    const copyTypes = Array.from(new Set(languageVariants.map((v) => v.copyType)));
+    return copyTypes.sort((a, b) => {
+      const order = ["ProductCopy", "BusinessCopy", "UpgraderCopy"];
+      return order.indexOf(a) - order.indexOf(b);
+    });
+  };
+
+  const availableCopyTypes = selectedProduct ? getAvailableCopyTypes(selectedProduct.variants, currentLanguage) : [];
+  const currentCopyType = availableCopyTypes[selectedCopyTypeIndex] || availableCopyTypes[0] || "ProductCopy";
+
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
@@ -380,36 +394,73 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
             </div>
           </div>
 
-          {/* Language selector */}
-          {availableLanguages.length > 1 && (
-            <div className="flex items-center gap-2 border-b px-6 py-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setSelectedLanguageIndex((prev) => (prev > 0 ? prev - 1 : availableLanguages.length - 1))}
-                data-testid="button-prev-language"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setSelectedLanguageIndex((prev) => (prev < availableLanguages.length - 1 ? prev + 1 : 0))}
-                data-testid="button-next-language"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Globe className="h-4 w-4 text-muted-foreground ml-1" />
-              <span className="text-sm">{currentLanguage}</span>
-            </div>
-          )}
+          {/* Language and Copy Type selector */}
+          <div className="flex items-center gap-4 border-b px-6 py-2">
+            {/* Language navigation */}
+            {availableLanguages.length > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    setSelectedLanguageIndex((prev) => (prev > 0 ? prev - 1 : availableLanguages.length - 1));
+                    setSelectedCopyTypeIndex(0);
+                  }}
+                  data-testid="button-prev-language"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    setSelectedLanguageIndex((prev) => (prev < availableLanguages.length - 1 ? prev + 1 : 0));
+                    setSelectedCopyTypeIndex(0);
+                  }}
+                  data-testid="button-next-language"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Globe className="h-4 w-4 text-muted-foreground ml-1" />
+                <span className="text-sm">{currentLanguage}</span>
+              </div>
+            )}
+
+            {/* Copy Type navigation */}
+            {availableCopyTypes.length > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setSelectedCopyTypeIndex((prev) => (prev > 0 ? prev - 1 : availableCopyTypes.length - 1))}
+                  data-testid="button-prev-copy-type"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setSelectedCopyTypeIndex((prev) => (prev < availableCopyTypes.length - 1 ? prev + 1 : 0))}
+                  data-testid="button-next-copy-type"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                <FileText className="h-4 w-4 text-muted-foreground ml-1" />
+                <span className="text-sm">{copyTypeLabels[currentCopyType] || currentCopyType}</span>
+              </div>
+            )}
+          </div>
 
           <ScrollArea className="flex-1">
             <div className="p-6 space-y-6">
-              {/* Product variants */}
-              {groupVariantsByLanguage(selectedProduct.variants)[currentLanguage]?.map((variant, idx) => (
+              {/* Product variants - filtered by current copy type */}
+              {groupVariantsByLanguage(selectedProduct.variants)[currentLanguage]
+                ?.filter((variant) => variant.copyType === currentCopyType)
+                .map((variant, idx) => (
                 <Card
                   key={`${variant.id}-${idx}`}
                   className="bg-background"
