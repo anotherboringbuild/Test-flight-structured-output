@@ -712,13 +712,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
-      if (!document.filePath || !fs.existsSync(document.filePath)) {
-        return res.status(404).json({ error: "Document file not found" });
+      if (!document.filePath) {
+        return res.status(404).json({ error: "Document file path not found" });
+      }
+
+      // Try to download from object storage
+      const documentStorage = new DocumentStorageService();
+      let fileBuffer: Buffer;
+      
+      try {
+        fileBuffer = await documentStorage.downloadDocument(document.filePath);
+      } catch (error) {
+        if (error instanceof DocumentNotFoundError) {
+          return res.status(404).json({ error: "Document file not found in storage" });
+        }
+        throw error;
       }
 
       if (document.fileType === "docx") {
-        // Convert DOCX to HTML
-        const result = await mammoth.convertToHtml({ path: document.filePath });
+        // Convert DOCX to HTML from buffer
+        const result = await mammoth.convertToHtml({ buffer: fileBuffer });
         res.json({
           type: "html",
           content: result.value,
@@ -726,8 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else if (document.fileType === "pdf") {
         // Get PDF page count
-        const dataBuffer = fs.readFileSync(document.filePath);
-        const uint8Array = new Uint8Array(dataBuffer);
+        const uint8Array = new Uint8Array(fileBuffer);
         const pdf = await getDocument({ data: uint8Array, useSystemFonts: true }).promise;
         
         res.json({
@@ -754,8 +766,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Document not found" });
       }
 
-      if (!document.filePath || !fs.existsSync(document.filePath)) {
-        return res.status(404).json({ error: "Document file not found" });
+      if (!document.filePath) {
+        return res.status(404).json({ error: "Document file path not found" });
       }
 
       const mimeTypes: Record<string, string> = {
@@ -765,11 +777,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const mimeType = mimeTypes[document.fileType] || "application/octet-stream";
       
-      res.setHeader("Content-Type", mimeType);
-      res.setHeader("Content-Disposition", `inline; filename="${document.name}"`);
-      
-      const fileStream = fs.createReadStream(document.filePath);
-      fileStream.pipe(res);
+      // Stream file from object storage
+      const documentStorage = new DocumentStorageService();
+      try {
+        await documentStorage.streamDocument(
+          document.filePath,
+          res,
+          document.name,
+          mimeType
+        );
+      } catch (error) {
+        if (error instanceof DocumentNotFoundError) {
+          return res.status(404).json({ error: "Document file not found in storage" });
+        }
+        throw error;
+      }
     } catch (error) {
       console.error("Error serving document file:", error);
       res.status(500).json({ error: "Failed to serve document file" });
