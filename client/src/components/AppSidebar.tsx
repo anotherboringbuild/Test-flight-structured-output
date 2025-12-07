@@ -18,11 +18,10 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library, BarChart3, ChevronRight, Languages, Star, Package, Search, X, ArrowUpDown, Folder } from "lucide-react";
+import { FileText, FolderOpen, Plus, CheckCircle2, Pencil, Trash2, Library, BarChart3, ChevronRight, Languages, Star, Package, ArrowUpDown, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -74,7 +73,6 @@ export function AppSidebar({
   onDeleteDocument,
 }: AppSidebarProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "date" | "count">("name");
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -192,20 +190,10 @@ export function AppSidebar({
     }
   };
 
-  // Filter and sort folders (only root level for initial display)
+  // Sort folders (only root level for initial display)
   const rootFolders = folders.filter(f => !f.parentFolderId);
   
-  const filteredRootFolders = rootFolders
-    .filter(folder => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      // Search by folder name or document names within folder
-      const folderMatches = folder.name.toLowerCase().includes(query);
-      const docsInFolder = getDocumentsForFolder(folder.id);
-      const docMatches = docsInFolder.some(doc => doc.name.toLowerCase().includes(query));
-      return folderMatches || docMatches;
-    })
-    .sort((a, b) => {
+  const filteredRootFolders = rootFolders.sort((a, b) => {
       if (sortBy === "name") {
         return a.name.localeCompare(b.name);
       } else if (sortBy === "count") {
@@ -459,28 +447,8 @@ export function AppSidebar({
             </Button>
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            {/* Search and Sort */}
-            <div className="px-2 pb-2 space-y-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search folders..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-7 pr-7 text-xs"
-                  data-testid="input-search-folders"
-                />
-                {searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2"
-                    onClick={() => setSearchQuery("")}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
+            {/* Sort */}
+            <div className="px-2 pb-2">
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as "name" | "date" | "count")}>
                 <SelectTrigger className="h-7 text-xs" data-testid="select-sort-folders">
                   <ArrowUpDown className="mr-1 h-3 w-3" />
@@ -520,11 +488,6 @@ export function AppSidebar({
                 </SidebarMenuItem>
 
                 {/* Folders */}
-                {filteredRootFolders.length === 0 && searchQuery && (
-                  <div className="px-2 py-4 text-center">
-                    <p className="text-xs text-muted-foreground">No folders found</p>
-                  </div>
-                )}
                 {filteredRootFolders.map(folder => renderFolder(folder, 0))}
               </SidebarMenu>
             </ScrollArea>
