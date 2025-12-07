@@ -1017,7 +1017,6 @@ function AppContent() {
               {/* View-based routing - no modals */}
               {currentView === "products" && (
                 <ProductBrowser 
-                  onUploadClick={() => setCurrentView("upload")} 
                   onDocumentClick={handleDocumentClick}
                 />
               )}
@@ -1049,6 +1048,7 @@ function AppContent() {
                         : ""
                     }
                     language={selectedDocument.language}
+                    fileType={selectedDocument.fileType}
                     validationConfidence={selectedDocument.validationConfidence}
                     validationIssues={selectedDocument.validationIssues}
                     needsReview={selectedDocument.needsReview}

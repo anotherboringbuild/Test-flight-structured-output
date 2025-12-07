@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X, AlertTriangle, CheckCircle, Shield, Clock } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit, Loader2, RefreshCw, Languages, Search, ChevronUp, ChevronDown, X, AlertTriangle, CheckCircle, Shield, Clock, FileText, Eye } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useToast } from "@/hooks/use-toast";
 import { VersionHistory } from "@/components/VersionHistory";
@@ -17,6 +18,7 @@ interface ComparisonViewProps {
   translatedText?: string | null;
   structuredData: string;
   language?: string | null;
+  fileType?: string | null;
   validationConfidence?: number | null;
   validationIssues?: string[] | null;
   needsReview?: boolean;
@@ -31,6 +33,13 @@ interface ComparisonViewProps {
   onReprocess?: () => void;
   onTranslate?: () => void;
   onValidate?: () => void;
+}
+
+interface DocumentPreview {
+  type: "html" | "pdf";
+  content?: string;
+  pageCount?: number;
+  documentId?: string;
 }
 
 interface TextSegment {
@@ -76,6 +85,7 @@ export function ComparisonView({
   translatedText,
   structuredData,
   language,
+  fileType,
   validationConfidence,
   validationIssues,
   needsReview,
@@ -98,6 +108,7 @@ export function ComparisonView({
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
   const [showValidationDetails, setShowValidationDetails] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showOriginalDocument, setShowOriginalDocument] = useState(false);
   const { toast } = useToast();
   
   // Search state
@@ -105,6 +116,12 @@ export function ComparisonView({
   const [jsonSearchQuery, setJsonSearchQuery] = useState("");
   const [textSearchIndex, setTextSearchIndex] = useState(0);
   const [jsonSearchIndex, setJsonSearchIndex] = useState(0);
+
+  // Fetch document preview (HTML for DOCX, page info for PDF)
+  const { data: preview, isLoading: isLoadingPreview } = useQuery<DocumentPreview>({
+    queryKey: ["/api/documents", documentId, "preview"],
+    enabled: showOriginalDocument,
+  });
 
   // Auto-enable translation toggle when translation becomes available
   useEffect(() => {
@@ -714,7 +731,20 @@ export function ComparisonView({
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {onTranslate && (
+                {/* View toggle: Extracted Text vs Original Document */}
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="original-doc-toggle"
+                    checked={showOriginalDocument}
+                    onCheckedChange={setShowOriginalDocument}
+                    data-testid="switch-original-document"
+                  />
+                  <Label htmlFor="original-doc-toggle" className="text-sm cursor-pointer flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    Original
+                  </Label>
+                </div>
+                {!showOriginalDocument && onTranslate && (
                   <div className="flex items-center gap-2">
                     <Switch
                       id="translation-toggle"
@@ -735,61 +765,91 @@ export function ComparisonView({
                   </div>
                 )}
                 <Badge variant="secondary">
-                  {showTranslation && translatedText ? 'Translated' : 'Extracted Text'}
+                  {showOriginalDocument ? (fileType === 'pdf' ? 'PDF' : 'DOCX') : (showTranslation && translatedText ? 'Translated' : 'Extracted Text')}
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={textSearchQuery}
-                  onChange={(e) => setTextSearchQuery(e.target.value)}
-                  placeholder="Search in document..."
-                  className="pl-8 pr-8 h-8"
-                  data-testid="input-search-text"
-                />
-                {textSearchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() => setTextSearchQuery("")}
-                    data-testid="button-clear-text-search"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+            {!showOriginalDocument && (
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={textSearchQuery}
+                    onChange={(e) => setTextSearchQuery(e.target.value)}
+                    placeholder="Search in document..."
+                    className="pl-8 pr-8 h-8"
+                    data-testid="input-search-text"
+                  />
+                  {textSearchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                      onClick={() => setTextSearchQuery("")}
+                      data-testid="button-clear-text-search"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {textMatches.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-xs px-2">
+                      {textSearchIndex + 1} / {textMatches.length}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={goToPrevTextMatch}
+                      data-testid="button-prev-text-match"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={goToNextTextMatch}
+                      data-testid="button-next-text-match"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
               </div>
-              {textMatches.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="text-xs px-2">
-                    {textSearchIndex + 1} / {textMatches.length}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={goToPrevTextMatch}
-                    data-testid="button-prev-text-match"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={goToNextTextMatch}
-                    data-testid="button-next-text-match"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-          <div className="flex-1 min-h-0 overflow-auto p-6" data-testid="text-extracted">
-            {renderHighlightedText()}
+          <div className="flex-1 min-h-0 overflow-auto" data-testid="text-extracted">
+            {showOriginalDocument ? (
+              <div className="h-full w-full">
+                {isLoadingPreview ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : preview?.type === "pdf" ? (
+                  <iframe
+                    src={`/api/documents/${documentId}/file`}
+                    className="w-full h-full border-0"
+                    title="PDF Preview"
+                  />
+                ) : preview?.type === "html" ? (
+                  <div 
+                    className="p-6 prose prose-sm max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: preview.content || "" }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <FileText className="h-12 w-12 mb-4" />
+                    <p>Preview not available</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-6">
+                {renderHighlightedText()}
+              </div>
+            )}
           </div>
         </div>
 
