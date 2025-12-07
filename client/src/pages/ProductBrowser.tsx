@@ -382,31 +382,27 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
 
           {/* Language selector */}
           {availableLanguages.length > 1 && (
-            <div className="flex items-center justify-center gap-3 border-b px-6 py-3">
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setSelectedLanguageIndex((prev) => (prev > 0 ? prev - 1 : availableLanguages.length - 1))}
-                  data-testid="button-prev-language"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setSelectedLanguageIndex((prev) => (prev < availableLanguages.length - 1 ? prev + 1 : 0))}
-                  data-testid="button-next-language"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold text-sm">{currentLanguage}</span>
-              </div>
+            <div className="flex items-center gap-2 border-b px-6 py-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setSelectedLanguageIndex((prev) => (prev > 0 ? prev - 1 : availableLanguages.length - 1))}
+                data-testid="button-prev-language"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setSelectedLanguageIndex((prev) => (prev < availableLanguages.length - 1 ? prev + 1 : 0))}
+                data-testid="button-next-language"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Globe className="h-4 w-4 text-muted-foreground ml-1" />
+              <span className="text-sm">{currentLanguage}</span>
             </div>
           )}
 
