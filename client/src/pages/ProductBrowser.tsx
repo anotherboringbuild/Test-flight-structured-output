@@ -214,17 +214,16 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
   const availableLanguages = selectedProduct ? getAvailableLanguages(selectedProduct.variants) : [];
   const currentLanguage = availableLanguages[selectedLanguageIndex] || "English";
 
-  // Get available copy types for the current language
-  const getAvailableCopyTypes = (variants: ProductVariant[], language: string): string[] => {
-    const languageVariants = variants.filter((v) => (v.locale || "English") === language);
-    const copyTypes = Array.from(new Set(languageVariants.map((v) => v.copyType)));
+  // Get all available copy types for the product (across all languages)
+  const getAllCopyTypes = (variants: ProductVariant[]): string[] => {
+    const copyTypes = Array.from(new Set(variants.map((v) => v.copyType)));
     return copyTypes.sort((a, b) => {
       const order = ["ProductCopy", "BusinessCopy", "UpgraderCopy"];
       return order.indexOf(a) - order.indexOf(b);
     });
   };
 
-  const availableCopyTypes = selectedProduct ? getAvailableCopyTypes(selectedProduct.variants, currentLanguage) : [];
+  const availableCopyTypes = selectedProduct ? getAllCopyTypes(selectedProduct.variants) : [];
   const currentCopyType = availableCopyTypes[selectedCopyTypeIndex] || availableCopyTypes[0] || "ProductCopy";
 
   if (isLoading) {
