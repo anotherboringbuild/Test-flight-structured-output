@@ -839,9 +839,13 @@ export function ComparisonView({
                     dangerouslySetInnerHTML={{ __html: preview.content || "" }}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <FileText className="h-12 w-12 mb-4" />
-                    <p>Preview not available</p>
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
+                    <FileText className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="text-center font-medium mb-2">Original file no longer available</p>
+                    <p className="text-center text-sm max-w-md">
+                      The original document file has been removed from temporary storage. 
+                      The extracted text is still available - toggle off "Original" to view it.
+                    </p>
                   </div>
                 )}
               </div>
