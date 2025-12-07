@@ -701,6 +701,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get document preview (HTML for DOCX, page info for PDF)
+  app.get("/api/documents/:id/preview", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      if (!document.filePath || !fs.existsSync(document.filePath)) {
+        return res.status(404).json({ error: "Document file not found" });
+      }
+
+      if (document.fileType === "docx") {
+        // Convert DOCX to HTML
+        const result = await mammoth.convertToHtml({ path: document.filePath });
+        res.json({
+          type: "html",
+          content: result.value,
+          messages: result.messages,
+        });
+      } else if (document.fileType === "pdf") {
+        // Get PDF page count
+        const dataBuffer = fs.readFileSync(document.filePath);
+        const uint8Array = new Uint8Array(dataBuffer);
+        const pdf = await getDocument({ data: uint8Array, useSystemFonts: true }).promise;
+        
+        res.json({
+          type: "pdf",
+          pageCount: pdf.numPages,
+          documentId: id,
+        });
+      } else {
+        res.status(400).json({ error: "Unsupported file type for preview" });
+      }
+    } catch (error) {
+      console.error("Error generating document preview:", error);
+      res.status(500).json({ error: "Failed to generate document preview" });
+    }
+  });
+
+  // Serve original document file (for PDF viewer)
+  app.get("/api/documents/:id/file", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await storage.getDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      if (!document.filePath || !fs.existsSync(document.filePath)) {
+        return res.status(404).json({ error: "Document file not found" });
+      }
+
+      const mimeTypes: Record<string, string> = {
+        pdf: "application/pdf",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+
+      const mimeType = mimeTypes[document.fileType] || "application/octet-stream";
+      
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${document.name}"`);
+      
+      const fileStream = fs.createReadStream(document.filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error serving document file:", error);
+      res.status(500).json({ error: "Failed to serve document file" });
+    }
+  });
+
   app.post("/api/documents/upload", upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
