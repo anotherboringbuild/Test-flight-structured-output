@@ -8,6 +8,7 @@ import OpenAI from "openai";
 import fs from "fs";
 import { validateExtraction, quickValidationChecks } from "./validation";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { DocumentStorageService, DocumentNotFoundError } from "./documentStorage";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -791,8 +792,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentMonth = months[now.getMonth()];
       const currentYear = now.getFullYear().toString();
 
-      // Extract text from the uploaded file
+      // Extract text from the uploaded file (before we upload to object storage)
       const extractedText = await extractTextFromFile(file.path, fileType);
+
+      // Upload file to persistent object storage
+      const documentStorage = new DocumentStorageService();
+      const fileBuffer = fs.readFileSync(file.path);
+      const mimeTypes: Record<string, string> = {
+        pdf: "application/pdf",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+      const storagePath = await documentStorage.uploadDocument(
+        fileBuffer,
+        file.originalname,
+        mimeTypes[fileType] || "application/octet-stream"
+      );
+
+      // Clean up temp file
+      try {
+        fs.unlinkSync(file.path);
+      } catch (cleanupError) {
+        console.error("Failed to clean up temp file:", cleanupError);
+      }
 
       // Detect language and process with GPT-4o in parallel
       const [language, structuredData] = await Promise.all([
@@ -800,11 +821,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         processWithGPT5(extractedText)
       ]);
 
-      // Save document to database
+      // Save document to database with object storage path
       let document = await storage.createDocument({
         name: file.originalname,
         fileType,
-        filePath: file.path,
+        filePath: storagePath,
         size: `${(file.size / 1024).toFixed(2)} KB`,
         folderId: folderId || null,
         language,
@@ -891,6 +912,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const uploadedDocuments = [];
 
+      const documentStorage = new DocumentStorageService();
+      const mimeTypes: Record<string, string> = {
+        pdf: "application/pdf",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+
       // Process all files
       for (let i = 0; i < req.files.length; i++) {
         const file = req.files[i];
@@ -898,8 +925,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isOriginal = i === originalIndex;
 
         try {
-          // Extract text from the uploaded file
+          // Extract text from the uploaded file (before uploading to object storage)
           const extractedText = await extractTextFromFile(file.path, fileType);
+
+          // Upload file to persistent object storage
+          const fileBuffer = fs.readFileSync(file.path);
+          const storagePath = await documentStorage.uploadDocument(
+            fileBuffer,
+            file.originalname,
+            mimeTypes[fileType] || "application/octet-stream"
+          );
+
+          // Clean up temp file
+          try {
+            fs.unlinkSync(file.path);
+          } catch (cleanupError) {
+            console.error("Failed to clean up temp file:", cleanupError);
+          }
 
           // Detect language and process with GPT-4o in parallel
           const [language, structuredData] = await Promise.all([
@@ -907,11 +949,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             processWithGPT5(extractedText)
           ]);
 
-          // Save document to database
+          // Save document to database with object storage path
           let document = await storage.createDocument({
             name: file.originalname,
             fileType,
-            filePath: file.path,
+            filePath: storagePath,
             size: `${(file.size / 1024).toFixed(2)} KB`,
             folderId: targetFolderId,
             isOriginal,
