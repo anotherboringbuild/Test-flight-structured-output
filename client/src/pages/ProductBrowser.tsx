@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { Search, FileText, Globe, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Upload, Download, FolderOpen, File } from "lucide-react";
+import { Search, FileText, Globe, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Download, FolderOpen, File } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,11 +27,10 @@ interface ProductWithVariants extends Product {
 }
 
 interface ProductBrowserProps {
-  onUploadClick?: () => void;
   onDocumentClick?: (documentId: string) => void;
 }
 
-export default function ProductBrowser({ onUploadClick, onDocumentClick }: ProductBrowserProps) {
+export default function ProductBrowser({ onDocumentClick }: ProductBrowserProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -252,17 +251,6 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
                 data-testid="input-search-products"
               />
             </div>
-            {onUploadClick && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={onUploadClick}
-                data-testid="button-upload-document"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -315,12 +303,6 @@ export default function ProductBrowser({ onUploadClick, onDocumentClick }: Produ
               <p className="text-sm text-muted-foreground">
                 {products.length === 0 ? "No products yet" : "No products match your filters"}
               </p>
-              {products.length === 0 && onUploadClick && (
-                <Button variant="outline" size="sm" className="mt-4" onClick={onUploadClick}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload your first document
-                </Button>
-              )}
             </CardContent>
           </Card>
         ) : (
