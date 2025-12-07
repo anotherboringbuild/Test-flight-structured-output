@@ -544,84 +544,72 @@ export function ComparisonView({
 
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className="border-b bg-background px-6 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="border-b bg-background px-4 py-2 flex-shrink-0">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
               data-testid="button-back"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h2 className="text-lg font-semibold" data-testid="text-document-title">
-                {documentName}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Document to JSON extraction • Hover to highlight matching sections
-              </p>
-              {allProducts.length > 1 && !isEditing && (
-                <div className="mt-3 flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">View Product:</Label>
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger className="w-[280px] h-8 text-xs" data-testid="select-product-filter">
-                      <SelectValue placeholder="Select a product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Products ({allProducts.length})</SelectItem>
-                      {allProducts.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} ({product.section})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {validationConfidence !== null && validationConfidence !== undefined && !isEditing && (
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    {needsReview ? (
-                      <>
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm font-medium text-amber-500">
-                          {Math.round(validationConfidence * 100)}% - Needs Review
-                        </span>
-                      </>
-                    ) : validationConfidence >= 0.8 ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        <span className="text-sm font-medium text-emerald-500">
-                          {Math.round(validationConfidence * 100)}% - Validated
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {Math.round(validationConfidence * 100)}%
-                      </span>
-                    )}
-                  </div>
-                  {validationIssues && validationIssues.length > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {validationIssues.length} {validationIssues.length === 1 ? 'issue' : 'issues'}
-                    </Badge>
-                  )}
-                  <Button
-                    variant={showValidationDetails ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => setShowValidationDetails(!showValidationDetails)}
-                    className="h-7 text-xs"
-                    data-testid="button-toggle-validation-details"
-                  >
-                    <Shield className="mr-1 h-3 w-3" />
-                    {showValidationDetails ? 'Hide Inspector' : 'Inspect'}
-                  </Button>
-                </div>
-              )}
-            </div>
+            <h2 className="text-sm font-semibold truncate" data-testid="text-document-title">
+              {documentName}
+            </h2>
+            {allProducts.length > 1 && !isEditing && (
+              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                <SelectTrigger className="w-[200px] h-8 text-xs" data-testid="select-product-filter">
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products ({allProducts.length})</SelectItem>
+                  {allProducts.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.name} ({product.section})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {validationConfidence !== null && validationConfidence !== undefined && !isEditing && (
+              <div className="flex items-center gap-2">
+                {needsReview ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-medium text-amber-500">
+                      {Math.round(validationConfidence * 100)}%
+                    </span>
+                  </>
+                ) : validationConfidence >= 0.8 ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 text-emerald-500" />
+                    <span className="text-xs font-medium text-emerald-500">
+                      {Math.round(validationConfidence * 100)}%
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {Math.round(validationConfidence * 100)}%
+                  </span>
+                )}
+                {validationIssues && validationIssues.length > 0 && (
+                  <Badge variant="outline" className="text-xs h-5 px-1.5">
+                    {validationIssues.length}
+                  </Badge>
+                )}
+                <Button
+                  variant={showValidationDetails ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setShowValidationDetails(!showValidationDetails)}
+                  data-testid="button-toggle-validation-details"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {isProcessing ? (
